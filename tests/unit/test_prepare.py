@@ -7,25 +7,28 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from flight_delay.data.download import YearMonth
-from flight_delay.data.manifest import validate_manifest, with_manifest_digest
+from flight_delay.data.download import YearMonth, sha256_file
+from flight_delay.data.manifest import validate_manifest, with_manifest_digest, write_manifest
 from flight_delay.data.prepare import (
     CANDIDATE_A_FEATURES,
     OUTPUT_COLUMNS,
     PROCESSED_FEATURES,
+    prepare_dataset,
     process_month_archive,
 )
 from flight_delay.data.preprocessing import DataQualityError
 from flight_delay.features.leakage import validate_model_features
 
 
-def _source_rows(month: int, rows: int = 20, *, one_class: bool = False) -> pd.DataFrame:
+def _source_rows(
+    month: int, rows: int = 20, *, year: int = 2025, one_class: bool = False
+) -> pd.DataFrame:
     return pd.DataFrame(
         {
             "Month": [month] * rows,
             "DayofMonth": [(index % 28) + 1 for index in range(rows)],
             "DayOfWeek": [(index % 7) + 1 for index in range(rows)],
-            "FlightDate": [f"2025-{month:02d}-{(index % 28) + 1:02d}" for index in range(rows)],
+            "FlightDate": [f"{year}-{month:02d}-{(index % 28) + 1:02d}" for index in range(rows)],
             "Reporting_Airline": ["UA"] * rows,
             "Origin": ["DEN"] * rows,
             "Dest": ["LAX"] * rows,
@@ -109,3 +112,53 @@ def test_processed_manifest_digest_is_stable() -> None:
     second = with_manifest_digest({key: payload[key] for key in reversed(payload)})
     assert first["manifest_digest"] == second["manifest_digest"]
     assert validate_manifest(first) == first["manifest_digest"]
+
+
+def test_prepare_dataset_reproduces_all_chronological_splits(tmp_path: Path) -> None:
+    raw = tmp_path / "raw"
+    processed = tmp_path / "processed"
+    manifests = tmp_path / "manifests"
+    raw.mkdir()
+    records = []
+    for year, month in ((2025, 1), (2025, 11), (2026, 1)):
+        filename = f"month-{year}-{month:02d}.zip"
+        member = "data.csv"
+        archive = raw / filename
+        _write_zip(archive, member, _source_rows(month, year=year))
+        records.append(
+            {
+                "year": year,
+                "month": month,
+                "archive_filename": filename,
+                "sha256": sha256_file(archive),
+                "selected_csv_member": member,
+            }
+        )
+    source_path = manifests / "source.json"
+    write_manifest(source_path, {"schema_version": 1, "files": records})
+    processed_path = manifests / "processed.json"
+    arguments = {
+        "source_manifest_path": source_path,
+        "raw_directory": raw,
+        "processed_directory": processed,
+        "processed_manifest_path": processed_path,
+        "sample_cap": 10,
+        "seed": 42,
+        "train_start": "2025-01-01",
+        "validation_start": "2025-11-01",
+        "test_start": "2026-01-01",
+        "test_end": "2026-06-01",
+    }
+
+    first = prepare_dataset(**arguments)
+    first_hashes = {name: sha256_file(path) for name, path in first.split_paths.items()}
+    second = prepare_dataset(**arguments)
+
+    assert first.manifest["split_counts"] == {
+        "train": {"row_count": 10, "target_prevalence": 0.5},
+        "validation": {"row_count": 10, "target_prevalence": 0.5},
+        "test": {"row_count": 10, "target_prevalence": 0.5},
+    }
+    assert first.manifest["manifest_digest"] == second.manifest["manifest_digest"]
+    assert first_hashes == {name: sha256_file(path) for name, path in second.split_paths.items()}
+    assert all("ArrDel15" not in pd.read_parquet(path) for path in second.split_paths.values())

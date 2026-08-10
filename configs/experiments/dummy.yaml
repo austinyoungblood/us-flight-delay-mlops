@@ -1,0 +1,8 @@
+experiment_name: dummy-prior-baseline
+candidate_id: dummy
+random_seed: 42
+threshold: 0.5
+dataset_artifact: flight-delay-bts-sampled:latest
+model:
+  strategy: prior
+latency_sample_count: 200

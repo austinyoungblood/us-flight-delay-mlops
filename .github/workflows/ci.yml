@@ -23,7 +23,9 @@ jobs:
       - name: Check formatting
         run: ruff format --check .
       - name: Test with coverage
-        run: pytest --cov=flight_delay --cov-report=term-missing
+        run: pytest --cov=flight_delay --cov-branch --cov-report=term-missing --cov-fail-under=80
+        env:
+          WANDB_MODE: disabled
       - name: Build API image
         run: docker build -f services/api/Dockerfile -t flight-delay-api:scaffold .
       - name: Build user UI image
