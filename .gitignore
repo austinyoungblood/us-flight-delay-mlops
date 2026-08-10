@@ -1,0 +1,39 @@
+# Secrets and local configuration
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Python and tooling
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.venv/
+venv/
+dist/
+build/
+*.egg-info/
+
+# Data, models, and experiment artifacts
+data/raw/
+data/interim/
+data/processed/
+models/
+artifacts/
+wandb/
+*.csv
+*.parquet
+*.pkl
+*.joblib
+*.zip
+
+# Local state and editor files
+.DS_Store
+.idea/
+.vscode/
+*.log

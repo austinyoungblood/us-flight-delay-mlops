@@ -1,0 +1,25 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: services/api/Dockerfile
+    ports:
+      - "8000:8000"
+
+  user-ui:
+    build:
+      context: .
+      dockerfile: services/user_ui/Dockerfile
+    environment:
+      API_URL: http://api:8000
+    ports:
+      - "8501:8501"
+    depends_on:
+      - api
+
+  monitor-ui:
+    build:
+      context: .
+      dockerfile: services/monitor_ui/Dockerfile
+    ports:
+      - "8502:8501"

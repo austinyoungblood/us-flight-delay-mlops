@@ -1,0 +1,17 @@
+project:
+  name: us-flight-delay-mlops
+  python_minor: "3.11"
+
+data:
+  date_column: FlightDate
+  target_column: ArrDel15
+  monthly_sample_cap: 75000
+  random_seed: 42
+  splits:
+    train_start: "2025-01-01"
+    validation_start: "2025-11-01"
+    test_start: "2026-01-01"
+    test_end: "2026-06-01"
+
+route_reliability:
+  minimum_support: 30
