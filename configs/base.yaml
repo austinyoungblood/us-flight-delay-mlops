@@ -3,10 +3,25 @@ project:
   python_minor: "3.11"
 
 data:
+  dataset_name: DOT/BTS Reporting Carrier On-Time Performance
+  source_directory_url: https://transtats.bts.gov/PREZIP/
+  start_month: "2025-01"
+  end_month: "2026-05"
+  expected_archive_count: 17
+  raw_directory: data/raw/bts_reporting_carrier
+  source_manifest: data/manifests/source_manifest.json
+  processed_directory: data/processed
+  processed_manifest: data/manifests/processed_manifest.json
   date_column: FlightDate
   target_column: ArrDel15
   monthly_sample_cap: 75000
   random_seed: 42
+  parquet_compression: zstd
+  download:
+    connect_timeout_seconds: 10
+    read_timeout_seconds: 120
+    max_attempts: 3
+    backoff_seconds: 2
   splits:
     train_start: "2025-01-01"
     validation_start: "2025-11-01"
