@@ -18,6 +18,11 @@ it had the highest November 16-30 average precision (`0.2823880567429311`) and R
 (`0.6281178113133866`) among the six calibrated finalists. Its exact previously selected threshold
 must be reconstructed from the existing Brief 04 evidence and must not be recomputed.
 
+Reconstruction metrics must match the Brief 04 evidence within an absolute floating-point tolerance
+of `1e-9`. This tolerance accommodates sub-nanounit numerical drift between the original Python
+3.11.15 run and the Python 3.11.14 release environment; it is orders of magnitude below the
+precision of every release gate and does not permit a model or threshold change.
+
 ## Final-test production gate
 
 The immutable staged candidate receives `production` only if every gate below passes on the single
