@@ -6,10 +6,12 @@ import math
 from collections.abc import Mapping
 from datetime import UTC, date, datetime, time
 from decimal import Decimal
+from enum import Enum
 from typing import Any
 
 import boto3
 from botocore.exceptions import ClientError
+from pydantic import BaseModel
 
 
 class PersistenceError(RuntimeError):
@@ -23,6 +25,10 @@ class PersistenceConflict(PersistenceError):
 def to_dynamodb(value: Any) -> Any:
     """Recursively convert Python values to DynamoDB-safe values."""
 
+    if isinstance(value, BaseModel):
+        return to_dynamodb(value.model_dump(mode="python"))
+    if isinstance(value, Enum):
+        return to_dynamodb(value.value)
     if isinstance(value, bool) or value is None or isinstance(value, str | Decimal):
         return value
     if isinstance(value, float):
@@ -68,9 +74,12 @@ class DynamoDBRepository:
         *,
         table_name: str = "flight-delay-events",
         region_name: str = "us-west-2",
+        endpoint_url: str | None = None,
         resource: Any | None = None,
     ) -> None:
-        resource = resource or boto3.resource("dynamodb", region_name=region_name)
+        resource = resource or boto3.resource(
+            "dynamodb", region_name=region_name, endpoint_url=endpoint_url
+        )
         self.table = resource.Table(table_name)
 
     def connect(self) -> None:

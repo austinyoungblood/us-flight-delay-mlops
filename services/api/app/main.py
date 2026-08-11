@@ -44,6 +44,7 @@ class Settings:
 
     aws_region: str = "us-west-2"
     dynamodb_table: str = "flight-delay-events"
+    dynamodb_endpoint_url: str | None = None
     model_download_dir: Path = Path("/tmp/flight-delay-model")
     prediction_cache_maxsize: int = 1_024
     prediction_cache_ttl_seconds: float = 300
@@ -55,6 +56,7 @@ class Settings:
             return cls(
                 aws_region=os.getenv("AWS_REGION", "us-west-2"),
                 dynamodb_table=os.getenv("DYNAMODB_TABLE", "flight-delay-events"),
+                dynamodb_endpoint_url=os.getenv("DYNAMODB_ENDPOINT_URL") or None,
                 model_download_dir=Path(os.getenv("MODEL_DOWNLOAD_DIR", "/tmp/flight-delay-model")),
                 prediction_cache_maxsize=int(os.getenv("PREDICTION_CACHE_MAXSIZE", "1024")),
                 prediction_cache_ttl_seconds=float(
@@ -137,7 +139,9 @@ def create_app(
     )
     repository_factory = repository_factory or (
         lambda: DynamoDBRepository(
-            table_name=settings.dynamodb_table, region_name=settings.aws_region
+            table_name=settings.dynamodb_table,
+            region_name=settings.aws_region,
+            endpoint_url=settings.dynamodb_endpoint_url,
         )
     )
     state_holder = ApplicationState()
