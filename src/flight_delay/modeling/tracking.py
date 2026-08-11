@@ -77,7 +77,7 @@ def dataset_artifact_metadata(
     processed = read_manifest(processed_manifest_path)
     preprocessing = processed["preprocessing"]
     return {
-        "month_range": source["month_range"],
+        "month_range": {"start": source["start_month"], "end": source["end_month"]},
         "split_boundaries": processed["split_boundaries"],
         "split_counts": processed["split_counts"],
         "random_seed": preprocessing["random_seed"],

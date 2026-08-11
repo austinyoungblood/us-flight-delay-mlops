@@ -76,7 +76,7 @@ def _manifests(tmp_path: Path) -> tuple[Path, Path, Path]:
     processed_directory.mkdir()
     source = write_manifest(
         source_path,
-        {"schema_version": 1, "month_range": {"start": "2025-01", "end": "2026-05"}},
+        {"schema_version": 1, "start_month": "2025-01", "end_month": "2026-05"},
     )
     write_manifest(
         processed_path,
