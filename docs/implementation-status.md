@@ -109,9 +109,10 @@ final-project completion.
   execution, AWS API call, or AWS resource interaction occurred
 - Published the audited reachable history to the public repository, protected `main`, opened Brief
   08 draft PR #1, and proved its complete `validate` job green in GitHub Actions
-- Published three source-labeled images by immutable GHCR digest, materialized the strict deployment
-  manifest, and passed the exact-digest local rehearsal with two persisted predictions, cache hit,
-  feedback revision, direct DynamoDB Local verification, both UI health checks, and 30 demo events
+- Published three source-labeled public images by immutable GHCR digest, proved all three exact
+  references anonymously pullable, materialized the strict deployment manifest, and passed the
+  exact-digest local rehearsal with two persisted predictions, cache hit, feedback revision, direct
+  DynamoDB Local verification, both UI health checks, and 30 demo events
 
 ## Partially complete
 

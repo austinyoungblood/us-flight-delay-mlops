@@ -29,6 +29,7 @@ The three frozen GHCR artifacts are:
 - `ghcr.io/austinyoungblood/us-flight-delay-mlops-traveler@sha256:3e9c7962b3867001a3c7636eb714d9dec5d97a0d24e5c1097ceb0cac5f33e987`
 - `ghcr.io/austinyoungblood/us-flight-delay-mlops-monitor@sha256:2360169bd7398bc21dd8b9b5864567f64795caad46768aace32a8253dc0efb64`
 
-All three carry source revision `8cfaf275e579bd9d6420450dec8e537014df5f2a`. Public visibility and
-anonymous exact-digest pulls are a final publication gate and must be proven independently of an
-authenticated publisher pull.
+All three carry source revision `8cfaf275e579bd9d6420450dec8e537014df5f2a`. On 2026-08-11 the GitHub
+Packages API reported each package `public`. After `docker logout ghcr.io`, anonymous pulls of all
+three exact references succeeded and returned the expected digests; no publisher credential was
+available to those pulls.
