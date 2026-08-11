@@ -16,10 +16,10 @@ import joblib
 import matplotlib.pyplot as plt
 import pandas as pd
 import sklearn
+import wandb
 import yaml
 from sklearn.metrics import average_precision_score, roc_auc_score
 
-import wandb
 from flight_delay.data.manifest import canonical_json_bytes
 from flight_delay.features.leakage import validate_model_features
 from flight_delay.modeling.artifacts import build_training_baseline

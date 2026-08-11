@@ -56,5 +56,8 @@ extend-exclude = ["data", "evidence"]
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM", "RUF"]
 
+[tool.ruff.lint.isort]
+known-third-party = ["wandb"]
+
 [tool.ruff.format]
 quote-style = "double"

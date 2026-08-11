@@ -12,9 +12,9 @@ from typing import Any
 
 import joblib
 import pandas as pd
+import wandb
 from dotenv import load_dotenv
 
-import wandb
 from flight_delay.data.download import sha256_file
 from flight_delay.data.manifest import read_manifest
 from flight_delay.features.leakage import validate_model_features
