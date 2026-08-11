@@ -1,0 +1,56 @@
+policy_version: brief05-v1
+effective_before_final_test: true
+
+dataset:
+  artifact: austin-youngblood-university-of-denver/us-flight-delay-mlops/flight-delay-bts-sampled:v0
+  digest: 2ecdb5a6a60b23ed1ee1d603fb976516
+
+candidate:
+  configuration_id: R3
+  calibrator: sigmoid
+  selection_basis: strongest_observed_brief04_november_ap_then_roc_auc
+  re_rank_candidates: false
+  retune_model: false
+  retune_threshold: false
+
+historical_brief04_gates:
+  status: retired_for_release_decision_preserved_as_historical_evidence
+  average_precision_min: 0.320719
+  f1_min: 0.41
+  rationale:
+    - absolute_average_precision_is_not_portable_across_periods_with_different_prevalence
+    - f1_is_threshold_dependent_and_was_not_a_course_rubric_requirement
+
+final_test:
+  period:
+    start: 2026-01-01
+    end: 2026-05-31
+  one_time_evaluation: true
+  production_gates:
+    roc_auc_min: 0.58
+    average_precision_lift_over_prevalence_min: 1.20
+    brier_skill_score_min_exclusive: 0.0
+    log_loss_must_beat_constant_prior: true
+    mean_probability_gap_max: 0.05
+    equal_frequency_ece_15_max: 0.05
+    inference_latency_p95_ms_max_exclusive: 25.0
+    bundle_size_bytes_max_exclusive: 10485760
+    require_exact_lineage: true
+    require_feature_schema: true
+    require_leakage_guard: true
+    require_serialization: true
+    require_model_load: true
+    require_inference_contract: true
+  reported_not_gated:
+    - accuracy
+    - precision
+    - recall
+    - f1
+    - confusion_matrix
+    - predicted_positive_rate
+
+decision:
+  all_gates_pass: production
+  any_gate_fails: staging
+  allow_post_test_retraining: false
+  allow_post_test_threshold_adjustment: false

@@ -12,7 +12,9 @@ def _summarize(
     scope: str,
     min_support: int,
 ) -> pd.DataFrame:
-    grouped = frame.groupby(group_columns, dropna=False, sort=True)
+    # observed=True preserves the object-column behavior when callers use categorical dtypes for
+    # memory-efficient full-year aggregation: only routes that actually occurred are emitted.
+    grouped = frame.groupby(group_columns, dropna=False, sort=True, observed=True)
     summary = grouped["ArrDel15"].agg(eligible_flights="size", delayed_count="sum").reset_index()
     summary["delayed_count"] = summary["delayed_count"].astype(int)
     summary["eligible_flights"] = summary["eligible_flights"].astype(int)
@@ -65,7 +67,10 @@ def compute_route_reliability(frame: pd.DataFrame, *, min_support: int = 30) -> 
         scope="all_carriers",
         min_support=min_support,
     )
-    all_carriers.insert(0, "Reporting_Airline", pd.NA)
+    carrier["Reporting_Airline"] = carrier["Reporting_Airline"].astype("string")
+    all_carriers.insert(
+        0, "Reporting_Airline", pd.Series(pd.NA, index=all_carriers.index, dtype="string")
+    )
     columns = [
         "scope",
         "Reporting_Airline",

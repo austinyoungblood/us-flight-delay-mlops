@@ -45,3 +45,18 @@ def test_route_reliability_rejects_invalid_arrival_delay() -> None:
     )
     with pytest.raises(DataQualityError, match="ArrDelay has invalid"):
         compute_route_reliability(frame)
+
+
+def test_categorical_inputs_do_not_emit_unobserved_route_combinations() -> None:
+    frame = pd.DataFrame(
+        {
+            "Reporting_Airline": pd.Categorical(["UA", "WN"]),
+            "Origin": pd.Categorical(["DEN", "SFO"]),
+            "Dest": pd.Categorical(["LAX", "SEA"]),
+            "ArrDel15": [0, 1],
+            "ArrDelay": [-5, 30],
+        }
+    )
+    result = compute_route_reliability(frame)
+    assert len(result[result["scope"].eq("carrier_route")]) == 2
+    assert len(result[result["scope"].eq("all_carriers")]) == 2
