@@ -2,7 +2,14 @@ from __future__ import annotations
 
 import pytest
 
-from flight_delay.modeling.selection import choose_winner, select_threshold, validation_gates
+from flight_delay.modeling.selection import (
+    choose_remediation_winner,
+    choose_winner,
+    november_gates,
+    select_threshold,
+    select_threshold_remediation,
+    validation_gates,
+)
 
 
 def _passing_metrics() -> dict[str, float | bool]:
@@ -54,3 +61,32 @@ def test_no_gate_eligible_candidate_stops_selection() -> None:
                 }
             }
         )
+
+
+def test_remediation_threshold_is_deterministic_and_recall_constrained() -> None:
+    first = select_threshold_remediation([0, 0, 1, 1], [0.1, 0.4, 0.6, 0.9])
+    second = select_threshold_remediation([0, 0, 1, 1], [0.1, 0.4, 0.6, 0.9])
+    assert first == second
+    assert first.recall >= 0.60
+    assert first.f1 == 1.0
+
+
+def test_november_gates_and_remediation_winner() -> None:
+    metrics = {
+        **_passing_metrics(),
+        "mean_probability_gap": 0.01,
+        "schema_check_passed": True,
+        "convergence_check_passed": True,
+        "serialization_check_passed": True,
+    }
+    prior = {"brier_score": 0.18, "log_loss": 0.55}
+    gates = november_gates(metrics, prior=prior, ece=0.02, latency_p95_ms=4.0, bundle_bytes=1000)
+    assert all(gates.values())
+    candidate = {
+        "finalist_id": "R1-sigmoid",
+        "metrics": metrics,
+        "calibration": {"equal_frequency_ece_15": 0.02},
+        "latency": {"p95_ms": 4.0},
+        "gates": gates,
+    }
+    assert choose_remediation_winner([candidate]) == candidate

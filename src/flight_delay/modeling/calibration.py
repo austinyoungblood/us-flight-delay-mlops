@@ -88,6 +88,20 @@ def fit_sigmoid_calibrator(
     return calibrator
 
 
+def fit_calibrator(
+    fitted_estimator: Any,
+    features: pd.DataFrame,
+    target: pd.Series,
+    *,
+    method: Literal["sigmoid", "isotonic"],
+) -> CalibratedClassifierCV:
+    """Fit one predeclared calibration method around an already-fitted estimator."""
+
+    calibrator = CalibratedClassifierCV(FrozenEstimator(fitted_estimator), method=method)
+    calibrator.fit(features, target)
+    return calibrator
+
+
 def _calibration_inputs(
     target: Any, probabilities: Any, bins: int
 ) -> tuple[np.ndarray, np.ndarray]:

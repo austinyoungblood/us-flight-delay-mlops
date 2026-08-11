@@ -45,6 +45,7 @@ def candidate_a_pipeline(parameters: Mapping[str, Any]) -> Pipeline:
         alpha=float(parameters.get("alpha", 0.0001)),
         max_iter=int(parameters.get("max_iter", 1000)),
         tol=float(parameters.get("tol", 0.001)),
+        average=bool(parameters.get("average", False)),
         random_state=42,
     )
     return Pipeline([("preprocessing", preprocessing), ("classifier", estimator)])
