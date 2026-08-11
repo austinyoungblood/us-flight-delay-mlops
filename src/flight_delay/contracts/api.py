@@ -1,19 +1,13 @@
-"""Pydantic contracts shared by the API and user interface."""
+"""Pydantic contracts shared by the API and future presentation clients."""
 
-from datetime import date, time
+from datetime import date, datetime, time
 from enum import StrEnum
-from typing import Annotated, Literal
+from typing import Annotated, Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator
 
-CarrierCode = Annotated[
-    str,
-    StringConstraints(pattern=r"^[A-Z0-9]{2}$"),
-]
-AirportCode = Annotated[
-    str,
-    StringConstraints(pattern=r"^[A-Z]{3}$"),
-]
+CarrierCode = Annotated[str, StringConstraints(pattern=r"^[A-Z0-9]{2}$")]
+AirportCode = Annotated[str, StringConstraints(pattern=r"^[A-Z]{3}$")]
 
 
 class StrictContract(BaseModel):
@@ -87,7 +81,7 @@ class RouteReliability(StrictContract):
 
 
 class FlightPredictionResponse(StrictContract):
-    """Contract reserved for the future prediction endpoint."""
+    """Public prediction response with immutable serving provenance."""
 
     prediction_id: str = Field(min_length=1)
     delay_probability: float = Field(ge=0, le=1)
@@ -95,10 +89,13 @@ class FlightPredictionResponse(StrictContract):
     risk_band: RiskBand
     classification_threshold: float = Field(gt=0, lt=1)
     route_reliability: list[RouteReliability] = Field(default_factory=list)
+    support_warning: str | None = None
     model_alias: str = Field(min_length=1)
     model_version: str = Field(min_length=1)
+    model_digest: str = Field(min_length=1)
     cache_hit: bool
     latency_ms: float = Field(ge=0)
+    created_at: datetime
 
 
 class FeedbackRequest(StrictContract):
@@ -107,12 +104,68 @@ class FeedbackRequest(StrictContract):
     actual_delayed: bool
     arrival_delay_minutes: float | None = Field(default=None, ge=-300, le=2_880)
     notes: str | None = Field(default=None, max_length=1_000)
+    source: str = Field(default="user", min_length=1, max_length=100)
+
+
+class FeedbackRecord(FeedbackRequest):
+    """Persisted, revisioned post-flight outcome."""
+
+    feedback_correct: bool
+    feedback_at: datetime
+    feedback_revision: int = Field(ge=1)
+
+
+class PredictionRecord(FlightPredictionResponse):
+    """Stored event returned by the prediction retrieval endpoint."""
+
+    request: FlightPredictionRequest
+    event_date: date
+    request_status: Literal["success"]
+    inference_latency_ms: float = Field(ge=0)
+    persistence_latency_ms: float = Field(ge=0)
+    total_latency_ms: float = Field(ge=0)
+    bundle_digest: str = Field(min_length=1)
+    feedback: FeedbackRecord | None = None
+
+
+class DependencyHealth(StrictContract):
+    """Sanitized startup state for one external dependency."""
+
+    status: Literal["ready", "unavailable"]
+    detail: str
 
 
 class HealthResponse(StrictContract):
-    """Dependency status returned by the scaffold health endpoint."""
+    """Readiness status for model and persistence dependencies."""
 
     service: Literal["flight-delay-api"] = "flight-delay-api"
-    status: Literal["healthy"] = "healthy"
-    model_loaded: bool = False
-    database_connected: bool = False
+    status: Literal["ready", "degraded"]
+    model_loaded: bool
+    database_connected: bool
+    dependencies: dict[str, DependencyHealth]
+
+
+class ModelInfoResponse(StrictContract):
+    """Exact immutable identity of the active staging or production runtime."""
+
+    registry_path: str
+    serving_alias: str
+    registry_version: str
+    registry_digest: str
+    source_artifact_digest: str
+    bundle_digest: str
+    selection_lock_sha256: str
+    route_asset_sha256: str
+    classification_threshold: float
+    feature_schema: list[str]
+    training_partitions: dict[str, str]
+    release_decision: dict[str, Any]
+    release_git_sha: str
+    loaded_at: datetime
+    serving_stage_notice: str
+
+
+class ErrorResponse(StrictContract):
+    """Sanitized API error body."""
+
+    detail: str
