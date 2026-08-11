@@ -34,7 +34,8 @@ Brief 08 intentionally performs no AWS Academy action or AWS service call. See t
 [final-test report](docs/final-test-report.md), and the
 [API/DynamoDB status report](docs/api-dynamodb-status.md), the
 [Brief 07 UI/monitoring report](docs/ui-monitoring-status.md), and the
-[detailed status ledger](docs/implementation-status.md). The public GitHub/PR and external image
+[detailed status ledger](docs/implementation-status.md), and the
+[public-deliverable audit](docs/public-deliverables.md). The public GitHub/PR and external image
 links are published only after the audited-history publication gate is explicitly authorized.
 
 ## Architecture summary
