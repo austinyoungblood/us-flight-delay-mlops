@@ -243,7 +243,15 @@ def reconstruct_r3(dataset_root: Path) -> ReconstructionResult:
     metrics["serialization_check_passed"] = True
     reproduction = compare_development_metrics(metrics)
     if not reproduction["all_metrics_reproduced"]:
-        raise ReleaseGuardError("R3 development metrics did not reproduce within tolerance")
+        failures = {
+            name: evidence
+            for name, evidence in reproduction["comparisons"].items()
+            if not evidence["within_tolerance"]
+        }
+        raise ReleaseGuardError(
+            "R3 development metrics did not reproduce within tolerance: "
+            f"{json.dumps(failures, sort_keys=True)}"
+        )
     return ReconstructionResult(
         calibrated,
         tuple(schema),
