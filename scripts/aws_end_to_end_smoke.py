@@ -100,8 +100,8 @@ def main() -> int:
     try:
         manifest = load_and_validate_manifest(
             args.manifest,
-            release_decision_path=ROOT / "artifacts/release/release_decision.json",
-            selection_lock_path=ROOT / "artifacts/selection/selection_lock.json",
+            release_decision_path=ROOT / "release/release_decision.json",
+            selection_lock_path=ROOT / "release/selection_lock.json",
             repository_root=ROOT,
         )
         with httpx.Client(timeout=args.timeout_seconds, follow_redirects=False) as client:
