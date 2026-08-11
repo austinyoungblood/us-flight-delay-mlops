@@ -1,6 +1,6 @@
 # Implementation status
 
-Status reflects completed Brief 01/02 work and the mandatory Brief 03 validation stop; it is not
+Status reflects completed Brief 01/02 work and the mandatory Brief 03/04 validation stops; it is not
 final-project completion.
 
 ## Completed in Brief 01
@@ -37,6 +37,9 @@ final-project completion.
 
 ## Partially complete
 
+- Brief 04: independent calibration metrics, six fixed rolling-origin bases, and six calibrated
+  November finalists are complete. Every finalist failed AP and F1, so December qualification and
+  all downstream release work correctly did not start.
 - Brief 03: exact time partitions, calibrated Candidate A, bounded Candidate B tuning, validation
   evaluation, thresholds, model artifacts, and W&B audit are complete. No candidate passed every
   mandatory validation gate, so selection/freeze, Registry, and final-test tasks did not start.
@@ -47,7 +50,8 @@ final-project completion.
 
 ## Not started
 
-- Frozen winning bundle and one-time final-test evaluation (blocked by the validation gate)
+- December qualification, frozen winning bundle, and one-time final-test evaluation (blocked by the
+  Brief 04 November gate)
 - W&B Registry collection and `staging`/`production` aliases
 - DynamoDB table, serialization, seed events, persistence adapters, and monitoring queries
 - Prediction/reliability/model-info/retrieval/feedback endpoints and TTL inference cache

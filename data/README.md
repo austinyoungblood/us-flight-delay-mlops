@@ -30,3 +30,8 @@ January–August base fit (600,000 rows), September tuning (75,000), January–S
 (675,000), October calibration (75,000), and November–December validation (150,000). Both calibrated
 candidates failed at least one mandatory validation gate, so the January–May 2026 test split remains
 unread, unscored, and sealed.
+
+Brief 04 reused the same immutable artifact and source hashes. It used January–October only for four
+rolling-origin base folds and final refit, November 1–15 for calibration, and November 16–30 for
+selection. No finalist passed the November gate, so December and the final test were not read by the
+Brief 04 evaluators.
