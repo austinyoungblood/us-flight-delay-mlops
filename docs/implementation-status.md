@@ -1,6 +1,6 @@
 # Implementation status
 
-Status reflects completed Brief 01/02 work and the mandatory Brief 03/04 validation stops; it is not
+Status reflects completed Brief 01-05 work, including the governed `staging` release; it is not
 final-project completion.
 
 ## Completed in Brief 01
@@ -35,6 +35,22 @@ final-project completion.
   metric keys; metadata records no test evaluation and no Registry promotion
 - Hermetic fake-W&B/model/data tests and branch-aware coverage enforcement at or above 80%
 
+## Completed in Brief 05
+
+- Accepted and merged the controlled Brief 04 stop, then committed a revised course-aligned release
+  policy before final-test access
+- Reconstructed only R3 sigmoid with the locked threshold and reproduced Brief 04 metrics within a
+  documented `1e-9` floating-point tolerance
+- Built and hashed the exact eight-file bundle plus a display-only route asset covering 6,879,484
+  eligible completed 2025 flights
+- Logged source artifact `flight-delay-r3-sigmoid-release:v0` and linked the identical bytes to the
+  restricted Registry collection `wandb-registry-Model/us-flight-arrival-delay-15m:v0:staging`
+- Clean-downloaded `staging` and verified every locked hash before opening the final test
+- Evaluated January-May 2026 exactly once in W&B run
+  [w4te9tla](https://wandb.ai/austin-youngblood-university-of-denver/us-flight-delay-mlops/runs/w4te9tla)
+- Retained `staging` because Brier skill, prior log-loss, probability-gap, and ECE gates failed;
+  emitted a durable one-use marker and `release/release_decision.json` with `serving_alias=staging`
+
 ## Partially complete
 
 - Brief 04: independent calibration metrics, six fixed rolling-origin bases, and six calibrated
@@ -43,16 +59,13 @@ final-project completion.
 - Brief 03: exact time partitions, calibrated Candidate A, bounded Candidate B tuning, validation
   evaluation, thresholds, model artifacts, and W&B audit are complete. No candidate passed every
   mandatory validation gate, so selection/freeze, Registry, and final-test tasks did not start.
-- Data pipeline: download and preparation are complete; final-test model evaluation remains sealed.
+- Data pipeline and one-time final-test evaluation are complete; the final test is consumed.
 - FastAPI: only `/health` exists; model, cache, persistence, prediction, retrieval, and feedback do not.
 - UIs: processes can render an honest placeholder; interactive workflows are not implemented.
 - CI: workflow definition exists; repository-hosted pull-request evidence and branch protection remain.
 
 ## Not started
 
-- December qualification, frozen winning bundle, and one-time final-test evaluation (blocked by the
-  Brief 04 November gate)
-- W&B Registry collection and `staging`/`production` aliases
 - DynamoDB table, serialization, seed events, persistence adapters, and monitoring queries
 - Prediction/reliability/model-info/retrieval/feedback endpoints and TTL inference cache
 - Production user interface, monitoring metrics/drift dashboard, AWS deployment, and teardown runbook

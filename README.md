@@ -15,23 +15,26 @@ flight status or a guarantee about an individual flight.
 
 ## Current implementation status
 
-Brief 04 independently validated the calibration metrics, ran exactly six linear configurations over
-four rolling-origin folds, and evaluated six sigmoid/isotonic finalists on a newly isolated November
-selection period. The audit confirmed Brief 03's ECE values were legitimate. No Brief 04 finalist
-passed both the fixed average-precision and F1 gates, so the workflow again stopped before December,
-route-asset construction, Registry aliases, or final-test access.
+Brief 05 accepted the controlled Brief 04 stop, committed a course-aligned release policy before test
+access, and reconstructed the fixed R3 sigmoid candidate without search or threshold changes. The
+immutable artifact is W&B Registry version `us-flight-arrival-delay-15m:v0` under `staging`.
 
-The final test split remains sealed. No model is loaded by the API, and Registry promotion, database
-work, monitoring implementation, AWS, and deployment have not started. See the
+The January-May 2026 final test was evaluated exactly once. R3 passed discrimination, AP-lift,
+latency, size, and integrity gates but failed calibration and proper-scoring gates, so `production`
+was not created and `release/release_decision.json` declares `serving_alias=staging`. No model is yet
+loaded by the API, and database, monitoring implementation, AWS, and deployment have not started.
+See the
 [model-selection report](docs/model-selection-report.md) and
-[remediation report](docs/model-remediation-report.md), plus the
+[remediation report](docs/model-remediation-report.md), the
+[final-test report](docs/final-test-report.md), and the
 [detailed status ledger](docs/implementation-status.md).
 
 ## Architecture summary
 
 The intended final system has three independently deployed services: a traveler Streamlit UI that
-calls FastAPI, a FastAPI service that loads the W&B Registry `production` artifact and writes every
-event to DynamoDB, and a monitoring Streamlit app that reads DynamoDB separately. Offline training
+calls FastAPI, a FastAPI service that consumes the exact alias in `release/release_decision.json`
+(`staging` for this release) and writes every event to DynamoDB, and a monitoring Streamlit app that
+reads DynamoDB separately. Offline training
 will log datasets, runs, and model artifacts to W&B. The [architecture document](docs/architecture.md)
 marks current and future components explicitly.
 
@@ -144,9 +147,9 @@ names and non-secret defaults only.
 
 ## Planned reviewed phases
 
-- **Next, only after review of the Brief 04 stop:** make an explicit governance decision about the
-  achievable quality gates and project release path. The sealed test must remain unopened.
-- **Later:** FastAPI inference/cache, DynamoDB event persistence, traveler workflow,
+- **Next:** FastAPI Registry loading plus DynamoDB prediction/feedback persistence, consuming the
+  exact `staging` alias from `release/release_decision.json`.
+- **Later:** traveler workflow,
   database-backed monitoring/drift, AWS deployment, and operational evidence.
 
 These are future plans, not completed features.
