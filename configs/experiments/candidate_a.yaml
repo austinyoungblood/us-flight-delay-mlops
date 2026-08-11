@@ -2,7 +2,7 @@ experiment_name: candidate-a-sgd-log-loss
 candidate_id: candidate_a
 random_seed: 42
 threshold: 0.5
-dataset_artifact: flight-delay-bts-sampled:latest
+dataset_artifact: austin-youngblood-university-of-denver/us-flight-delay-mlops/flight-delay-bts-sampled:v0
 model:
   loss: log_loss
   class_weight: balanced
