@@ -35,8 +35,9 @@ Brief 08 intentionally performs no AWS Academy action or AWS service call. See t
 [API/DynamoDB status report](docs/api-dynamodb-status.md), the
 [Brief 07 UI/monitoring report](docs/ui-monitoring-status.md), and the
 [detailed status ledger](docs/implementation-status.md), and the
-[public-deliverable audit](docs/public-deliverables.md). The public GitHub/PR and external image
-links are published only after the audited-history publication gate is explicitly authorized.
+[public-deliverable audit](docs/public-deliverables.md). The audited repository and Brief 08 draft
+pull request are public; the immutable image references and their source revision are frozen in
+[`deploy/deployment_manifest.json`](deploy/deployment_manifest.json).
 
 ## Architecture summary
 

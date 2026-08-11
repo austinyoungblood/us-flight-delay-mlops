@@ -107,8 +107,11 @@ final-project completion.
   evidence matrix, and phase-gated four-hour runbook with recovery/abort criteria
 - Continued the hard zero-AWS boundary: no Learner Lab activation, credential validation, Console
   execution, AWS API call, or AWS resource interaction occurred
-- Public GitHub/PR CI, GHCR digest publication, final manifest materialization, and exact-image
-  rehearsal remain acceptance gates pending explicit authorization for public publication
+- Published the audited reachable history to the public repository, protected `main`, opened Brief
+  08 draft PR #1, and proved its complete `validate` job green in GitHub Actions
+- Published three source-labeled images by immutable GHCR digest, materialized the strict deployment
+  manifest, and passed the exact-digest local rehearsal with two persisted predictions, cache hit,
+  feedback revision, direct DynamoDB Local verification, both UI health checks, and 30 demo events
 
 ## Partially complete
 
@@ -119,7 +122,8 @@ final-project completion.
   evaluation, thresholds, model artifacts, and W&B audit are complete. No candidate passed every
   mandatory validation gate, so selection/freeze, Registry, and final-test tasks did not start.
 - Data pipeline and one-time final-test evaluation are complete; the final test is consumed.
-- CI: workflow definition exists; repository-hosted pull-request evidence and branch protection remain.
+- CI: repository-hosted pull-request evidence is green and `main` branch protection requires the
+  `validate` context, one approving review, and resolved conversations.
 - Cloud deployment remains deliberately untested in Brief 08; local DynamoDB evidence is not presented
   as AWS evidence.
 
@@ -127,4 +131,5 @@ final-project completion.
 
 - After separate review only: one AWS Academy session for DynamoDB recovery, three-EC2 deployment,
   end-to-end evidence capture, and teardown
-- Public GitHub/PR/GHCR publication, EC2 deployment, live validation, screenshots, and rubric evidence
+- One AWS Academy live session, EC2/DynamoDB deployment, live validation, screenshots, and rubric
+  evidence capture
