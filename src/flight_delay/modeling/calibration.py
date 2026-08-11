@@ -34,16 +34,22 @@ def partition_development_data(
             raise DataQualityError(f"{name} contains invalid dates")
     train_dates = pd.to_datetime(train[date_column]).dt.normalize()
     validation_dates = pd.to_datetime(validation[date_column]).dt.normalize()
-    base_fit = train.loc[train_dates.between("2025-01-01", "2025-08-31")].copy()
-    tuning = train.loc[train_dates.between("2025-09-01", "2025-09-30")].copy()
-    refit = train.loc[train_dates.between("2025-01-01", "2025-09-30")].copy()
-    calibration = train.loc[train_dates.between("2025-10-01", "2025-10-31")].copy()
+
+    def select_period(frame: pd.DataFrame, dates: pd.Series, start: str, end: str) -> pd.DataFrame:
+        selected = frame.loc[dates.between(start, end, inclusive="left")].copy()
+        return selected.sort_values(date_column, kind="stable")
+
+    base_fit = select_period(train, train_dates, "2025-01-01", "2025-09-01")
+    tuning = select_period(train, train_dates, "2025-09-01", "2025-10-01")
+    refit = select_period(train, train_dates, "2025-01-01", "2025-10-01")
+    calibration = select_period(train, train_dates, "2025-10-01", "2025-11-01")
+    validation = validation.sort_values(date_column, kind="stable").copy()
     expected = {
         "base_fit": (base_fit, "2025-01-01", "2025-09-01"),
         "tuning": (tuning, "2025-09-01", "2025-10-01"),
         "refit": (refit, "2025-01-01", "2025-10-01"),
         "calibration": (calibration, "2025-10-01", "2025-11-01"),
-        "validation": (validation.copy(), "2025-11-01", "2026-01-01"),
+        "validation": (validation, "2025-11-01", "2026-01-01"),
     }
     for name, (frame, start, end) in expected.items():
         dates = pd.to_datetime(frame[date_column]).dt.normalize()
@@ -57,7 +63,7 @@ def partition_development_data(
         raise DataQualityError("refit and calibration overlap")
     if validation_dates.min() <= train_dates.max():
         raise DataQualityError("validation must follow all training partitions")
-    return DevelopmentPartitions(base_fit, tuning, refit, calibration, validation.copy())
+    return DevelopmentPartitions(base_fit, tuning, refit, calibration, validation)
 
 
 def fit_sigmoid_calibrator(

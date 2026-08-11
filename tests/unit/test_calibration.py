@@ -25,7 +25,7 @@ def test_development_partitions_are_exact_and_disjoint() -> None:
     train = pd.concat(
         [_month("2025-01-01"), _month("2025-09-01"), _month("2025-10-01")],
         ignore_index=True,
-    ).sort_values("flight_date", ignore_index=True)
+    ).sample(frac=1, random_state=42)
     validation = _month("2025-11-01")
 
     partitions = partition_development_data(train, validation)
@@ -35,6 +35,8 @@ def test_development_partitions_are_exact_and_disjoint() -> None:
     assert len(partitions.refit) == 6
     assert len(partitions.calibration) == 3
     assert len(partitions.validation) == 3
+    assert partitions.base_fit["flight_date"].is_monotonic_increasing
+    assert partitions.refit["flight_date"].is_monotonic_increasing
     assert set(partitions.refit.index).isdisjoint(partitions.calibration.index)
 
 
