@@ -1,6 +1,6 @@
 # Implementation status
 
-Status reflects completed Brief 01-07 work, including the governed `staging` release; it is not
+Status reflects completed Brief 01-08 local work, including the governed `staging` release; it is not
 final-project completion.
 
 ## Completed in Brief 01
@@ -91,6 +91,25 @@ final-project completion.
 - Passed 143 tests at 80.87% branch coverage and rebuilt all three non-root Python 3.11 images; no AWS
   Academy session or AWS service call occurred
 
+## Brief 08 deployment preflight
+
+- Revalidated all Brief 07 acceptance evidence and merged it to `main` at
+  `02dccc4e3bd862b65df2e15b0de01215c24ca528`
+- Added strict deployment-manifest and evidence-manifest validators, including exact committed
+  release identity, digest-only GHCR references, environment-name allowlists, and safe filenames
+- Added supported-host bootstrap plus API/traveler/monitor deployment scripts that validate mode-0600
+  host env files, reject AWS credential/endpoint variables, replace only named containers, and prove
+  health; all offer no-network dry-run validation
+- Added a typed local/live smoke sequence for exact staging identity, unique persisted events, cache,
+  retrieval, feedback revision, UI health, optional direct table verification, and explicitly gated
+  labeled demo data
+- Froze the three-host security group/environment topology, copy-ready live command sheet, complete
+  evidence matrix, and phase-gated four-hour runbook with recovery/abort criteria
+- Continued the hard zero-AWS boundary: no Learner Lab activation, credential validation, Console
+  execution, AWS API call, or AWS resource interaction occurred
+- Public GitHub/PR CI, GHCR digest publication, final manifest materialization, and exact-image
+  rehearsal remain acceptance gates pending explicit authorization for public publication
+
 ## Partially complete
 
 - Brief 04: independent calibration metrics, six fixed rolling-origin bases, and six calibrated
@@ -101,12 +120,11 @@ final-project completion.
   mandatory validation gate, so selection/freeze, Registry, and final-test tasks did not start.
 - Data pipeline and one-time final-test evaluation are complete; the final test is consumed.
 - CI: workflow definition exists; repository-hosted pull-request evidence and branch protection remain.
-- Cloud deployment remains deliberately untested in Brief 07; local DynamoDB evidence is not presented
+- Cloud deployment remains deliberately untested in Brief 08; local DynamoDB evidence is not presented
   as AWS evidence.
 
 ## Not started
 
-- Deployment preflight and evidence runbook, explicitly without AWS calls
 - After separate review only: one AWS Academy session for DynamoDB recovery, three-EC2 deployment,
   end-to-end evidence capture, and teardown
-- Public GitHub/W&B setup, EC2 deployment, live validation, screenshots, and rubric evidence
+- Public GitHub/PR/GHCR publication, EC2 deployment, live validation, screenshots, and rubric evidence

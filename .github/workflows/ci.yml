@@ -26,6 +26,11 @@ jobs:
         run: pytest --cov=flight_delay --cov-branch --cov-report=term-missing --cov-fail-under=80
         env:
           WANDB_MODE: disabled
+      - name: Validate frozen deployment and evidence package
+        run: |
+          python scripts/validate_deployment_manifest.py
+          python scripts/validate_evidence_manifest.py
+          bash -n deploy/*.sh deploy/lib/*.sh
       - name: Build API image
         run: docker build -f services/api/Dockerfile -t flight-delay-api:scaffold .
       - name: Build user UI image

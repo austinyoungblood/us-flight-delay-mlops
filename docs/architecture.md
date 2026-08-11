@@ -1,13 +1,14 @@
 # Architecture
 
-## Brief 07 boundary
+## Brief 08 frozen deployment boundary
 
 The production-shaped backend is implemented. FastAPI resolves the immutable W&B Registry alias
 declared by the committed release decision, verifies all locked bytes, loads the model and route asset
 once during lifespan, and requires DynamoDB persistence for every successful prediction. The traveler
 application calls FastAPI only. The monitoring application reads DynamoDB only and never imports or
 loads the model. DynamoDB Local is the sole persistence runtime used in this increment. No AWS Academy
-session activation, AWS service call, or EC2 deployment is part of Brief 07.
+session activation, AWS service call, or EC2 deployment is part of Brief 08. Brief 08 adds only a
+validated, immutable deployment/evidence control plane around the accepted application.
 
 ```mermaid
 flowchart LR
@@ -22,6 +23,23 @@ flowchart LR
     EXP --> MODEL
     GH["GitHub pull request"] --> CI["Ruff, pytest, branch coverage,<br/>three Python 3.11 images"]
 ```
+
+## Final live topology (documented, not executed)
+
+```mermaid
+flowchart LR
+    B["Grader / traveler browser"] -->|"TCP 8501"| UEC2["flight-user-ui EC2<br/>Traveler container"]
+    UEC2 -->|"private TCP 8000"| AEC2["flight-api EC2<br/>FastAPI container"]
+    AEC2 -->|"HTTPS 443"| W["W&B Registry<br/>staging v0"]
+    AEC2 -->|"instance role / HTTPS"| D["DynamoDB<br/>flight-delay-events"]
+    O["Grader / operator browser"] -->|"TCP 8501"| MEC2["flight-monitor EC2<br/>Monitor container"]
+    MEC2 -->|"instance role / HTTPS"| D
+```
+
+The API ingress source is the traveler security group (private `/32` only as a documented Academy
+fallback). Public Streamlit ingress is limited to the grader/demo range when known. All three images
+are selected from `deployment_manifest.json` by registry content digest, and no temporary AWS
+credentials enter an image or host environment file.
 
 ## Runtime sequence
 

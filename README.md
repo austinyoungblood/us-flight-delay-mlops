@@ -15,7 +15,8 @@ flight status or a guarantee about an individual flight.
 
 ## Current implementation status
 
-Brief 07 implements the local three-service application and monitoring plane. FastAPI reads the serving alias only from
+Brief 08 freezes the zero-AWS deployment and evidence package on top of the accepted Brief 07 local
+three-service application. FastAPI reads the serving alias only from
 `release/release_decision.json`, verifies the exact W&B Registry version/digest and every locked
 artifact hash, loads the immutable model once during lifespan, and fails closed if Registry or
 DynamoDB is unavailable. This release remains `staging`: Registry `v0`, digest
@@ -24,14 +25,17 @@ DynamoDB is unavailable. This release remains `staging`: Registry `v0`, digest
 The traveler Streamlit application calls FastAPI only. The separate monitoring Streamlit application
 reads DynamoDB only through bounded UTC GSI queries and provides operational, distribution, drift,
 model-version, and feedback views plus revisioned adjudication. DynamoDB Local, deterministic labeled
-demo data, and one-command Compose startup are implemented. Brief 07 made no AWS Academy or AWS
-service call and performed no cloud deployment. See the
+demo data, and one-command Compose startup are implemented. The digest-only deployment manifest,
+idempotent host scripts, local/live smoke sequence, least-privilege topology, evidence mapping, and
+strict four-hour runbook are prepared under `deploy/`, `scripts/`, `docs/`, and `evidence/`.
+Brief 08 intentionally performs no AWS Academy action or AWS service call. See the
 [model-selection report](docs/model-selection-report.md) and
 [remediation report](docs/model-remediation-report.md), the
 [final-test report](docs/final-test-report.md), and the
 [API/DynamoDB status report](docs/api-dynamodb-status.md), the
 [Brief 07 UI/monitoring report](docs/ui-monitoring-status.md), and the
-[detailed status ledger](docs/implementation-status.md).
+[detailed status ledger](docs/implementation-status.md). The public GitHub/PR and external image
+links are published only after the audited-history publication gate is explicitly authorized.
 
 ## Architecture summary
 
@@ -39,6 +43,10 @@ The system boundary has three independently deployable services. FastAPI consume
 release and owns validation, inference, route context, caching, and required event persistence. The
 traveler UI calls only FastAPI; the operations UI queries only the DynamoDB event plane. The
 [architecture document](docs/architecture.md) records those ownership boundaries.
+
+The frozen live topology is three same-VPC EC2 hosts: traveler Streamlit on 8501 calls the API's
+private port 8000; FastAPI calls W&B over HTTPS and shares DynamoDB with the separate monitor on
+8501. API and monitor use an EC2 instance profile; traveler receives no AWS or W&B credentials.
 
 ## Python setup and validation
 
@@ -164,6 +172,7 @@ The model artifacts are
 ├── src/flight_delay/
 │   ├── contracts/
 │   ├── data/
+│   ├── deployment/
 │   ├── features/
 │   ├── modeling/
 │   ├── monitoring/
@@ -182,8 +191,7 @@ Raw/processed BTS data, trained models, W&B files, AWS credentials, `.env`, cach
 artifacts must never be committed. Tests use only small in-memory fixtures. `.env.example` contains
 names and non-secret defaults only.
 
-## Next reviewed phase
+## Next reviewed action
 
-The exact next increment is **deployment preflight and evidence runbook with no AWS calls; only after
-that review, activate one AWS Academy session for DynamoDB recovery + three-EC2 deployment +
-end-to-end evidence capture**.
+After every pre-activation gate is green, the exact next action is: **activate one AWS Academy
+session and execute the frozen four-hour runbook; no feature development during that session.**
