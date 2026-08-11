@@ -1,0 +1,13 @@
+experiment_name: brief03-calibrated-candidate-a-control
+candidate_id: candidate_a_calibrated
+dataset_artifact: austin-youngblood-university-of-denver/us-flight-delay-mlops/flight-delay-bts-sampled:v0
+dataset_digest: 2ecdb5a6a60b23ed1ee1d603fb976516
+random_seed: 42
+calibration_method: sigmoid
+model:
+  loss: log_loss
+  class_weight: balanced
+  alpha: 0.0001
+  max_iter: 1000
+  tol: 0.001
+latency_sample_count: 200
