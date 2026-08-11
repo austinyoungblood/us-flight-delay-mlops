@@ -15,17 +15,17 @@ flight status or a guarantee about an individual flight.
 
 ## Current implementation status
 
-Brief 02 adds a verified official BTS Reporting Carrier downloader, canonical source/processed
-manifests, deterministic chronological Parquet splits, and online W&B tracking for a Dummy baseline
-and Candidate A. The online [W&B project](https://wandb.ai/austin-youngblood-university-of-denver/us-flight-delay-mlops)
-contains dataset artifact
-[`flight-delay-bts-sampled:v0`](https://wandb.ai/austin-youngblood-university-of-denver/us-flight-delay-mlops/artifacts/dataset/flight-delay-bts-sampled/v0),
-the [Dummy run](https://wandb.ai/austin-youngblood-university-of-denver/us-flight-delay-mlops/runs/g0cnsglm),
-and the [Candidate A run](https://wandb.ai/austin-youngblood-university-of-denver/us-flight-delay-mlops/runs/7mt7qz71).
+Brief 03 added time-aware development partitions, a sigmoid-calibrated Candidate A control,
+Candidate B's bounded six-configuration search, deterministic validation-only threshold selection,
+and complete online W&B evidence. Neither candidate passed every predeclared validation gate, so the
+workflow stopped as required before route-asset freezing, Registry aliases, or final-test access.
+The closest model, calibrated Candidate A, missed average precision by `0.003406`, ECE by `0.000811`,
+and the mean-probability gap by `0.000811`.
 
-The final test split is prepared and versioned but remains evaluation-sealed. No model is loaded by
-the API, and Registry promotion, database work, monitoring implementation, AWS, and deployment have
-not started. See [the detailed status ledger](docs/implementation-status.md).
+The final test split remains sealed. No model is loaded by the API, and Registry promotion, database
+work, monitoring implementation, AWS, and deployment have not started. See the
+[model-selection report](docs/model-selection-report.md) and
+[detailed status ledger](docs/implementation-status.md).
 
 ## Architecture summary
 
@@ -144,8 +144,8 @@ names and non-secret defaults only.
 
 ## Planned reviewed phases
 
-- **Next, only after Brief 02 review:** Candidate B, validation threshold selection, frozen model
-  bundle, one-time final-test evaluation, and W&B Registry `staging`/`production` aliases.
+- **Next, only after review of the Brief 03 stop:** decide whether a new bounded modeling brief may
+  change the predeclared model or calibration protocol. The sealed test must remain unopened.
 - **Later:** FastAPI inference/cache, DynamoDB event persistence, traveler workflow,
   database-backed monitoring/drift, AWS deployment, and operational evidence.
 

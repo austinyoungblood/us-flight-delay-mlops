@@ -24,6 +24,8 @@ ALLOWED_MODEL_FEATURES: frozenset[str] = frozenset(
         "scheduled_departure_cos",
         "scheduled_arrival_sin",
         "scheduled_arrival_cos",
+        "month_sin",
+        "month_cos",
     }
 )
 

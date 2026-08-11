@@ -1,6 +1,7 @@
 # Implementation status
 
-Status reflects completed Brief 01 and Brief 02 work only; it is not final-project completion.
+Status reflects completed Brief 01/02 work and the mandatory Brief 03 validation stop; it is not
+final-project completion.
 
 ## Completed in Brief 01
 
@@ -36,6 +37,9 @@ Status reflects completed Brief 01 and Brief 02 work only; it is not final-proje
 
 ## Partially complete
 
+- Brief 03: exact time partitions, calibrated Candidate A, bounded Candidate B tuning, validation
+  evaluation, thresholds, model artifacts, and W&B audit are complete. No candidate passed every
+  mandatory validation gate, so selection/freeze, Registry, and final-test tasks did not start.
 - Data pipeline: download and preparation are complete; final-test model evaluation remains sealed.
 - FastAPI: only `/health` exists; model, cache, persistence, prediction, retrieval, and feedback do not.
 - UIs: processes can render an honest placeholder; interactive workflows are not implemented.
@@ -43,7 +47,7 @@ Status reflects completed Brief 01 and Brief 02 work only; it is not final-proje
 
 ## Not started
 
-- Candidate B, validation threshold selection, frozen winning bundle, and one-time final-test evaluation
+- Frozen winning bundle and one-time final-test evaluation (blocked by the validation gate)
 - W&B Registry collection and `staging`/`production` aliases
 - DynamoDB table, serialization, seed events, persistence adapters, and monitoring queries
 - Prediction/reliability/model-info/retrieval/feedback endpoints and TTL inference cache

@@ -25,6 +25,8 @@ digest `2ecdb5a6a60b23ed1ee1d603fb976516`.
 
 Run `make download-data` and `make prepare-data` from the repository root. Raw ZIPs, processed
 Parquet files, models, W&B cache, `.env`, and credentials are ignored and must never be committed.
-Only the small canonical JSON manifests are versioned. The test split may be prepared and uploaded,
-but model code must not read, score, plot, or report final-test performance before the reviewed next
-increment.
+Only the small canonical JSON manifests are versioned. Brief 03 subdivides the development data into
+January–August base fit (600,000 rows), September tuning (75,000), January–September refit
+(675,000), October calibration (75,000), and November–December validation (150,000). Both calibrated
+candidates failed at least one mandatory validation gate, so the January–May 2026 test split remains
+unread, unscored, and sealed.
