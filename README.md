@@ -15,16 +15,16 @@ flight status or a guarantee about an individual flight.
 
 ## Current implementation status
 
-Brief 03 added time-aware development partitions, a sigmoid-calibrated Candidate A control,
-Candidate B's bounded six-configuration search, deterministic validation-only threshold selection,
-and complete online W&B evidence. Neither candidate passed every predeclared validation gate, so the
-workflow stopped as required before route-asset freezing, Registry aliases, or final-test access.
-The closest model, calibrated Candidate A, missed average precision by `0.003406`, ECE by `0.000811`,
-and the mean-probability gap by `0.000811`.
+Brief 04 independently validated the calibration metrics, ran exactly six linear configurations over
+four rolling-origin folds, and evaluated six sigmoid/isotonic finalists on a newly isolated November
+selection period. The audit confirmed Brief 03's ECE values were legitimate. No Brief 04 finalist
+passed both the fixed average-precision and F1 gates, so the workflow again stopped before December,
+route-asset construction, Registry aliases, or final-test access.
 
 The final test split remains sealed. No model is loaded by the API, and Registry promotion, database
 work, monitoring implementation, AWS, and deployment have not started. See the
 [model-selection report](docs/model-selection-report.md) and
+[remediation report](docs/model-remediation-report.md), plus the
 [detailed status ledger](docs/implementation-status.md).
 
 ## Architecture summary
@@ -144,8 +144,8 @@ names and non-secret defaults only.
 
 ## Planned reviewed phases
 
-- **Next, only after review of the Brief 03 stop:** decide whether a new bounded modeling brief may
-  change the predeclared model or calibration protocol. The sealed test must remain unopened.
+- **Next, only after review of the Brief 04 stop:** make an explicit governance decision about the
+  achievable quality gates and project release path. The sealed test must remain unopened.
 - **Later:** FastAPI inference/cache, DynamoDB event persistence, traveler workflow,
   database-backed monitoring/drift, AWS deployment, and operational evidence.
 

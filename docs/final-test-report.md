@@ -15,3 +15,9 @@ required the workflow to stop before selection lock, Registry staging, or sealed
 The January–May 2026 test split remains sealed. A future brief must not open it unless a candidate
 first passes every predeclared validation gate and all remaining selection-lock and Registry guards
 are satisfied.
+
+## Brief 04 reaffirmation
+
+Brief 04 also stopped before December because all six calibrated finalists failed the November AP
+and F1 gates. It created no qualification lock, route asset, release artifact, Registry alias, or
+final-test marker. The status above therefore remains unchanged.
