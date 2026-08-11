@@ -1,6 +1,6 @@
 # Implementation status
 
-Status reflects completed Brief 01-05 work, including the governed `staging` release; it is not
+Status reflects completed Brief 01-06 work, including the governed `staging` release; it is not
 final-project completion.
 
 ## Completed in Brief 01
@@ -51,6 +51,26 @@ final-project completion.
 - Retained `staging` because Brier skill, prior log-loss, probability-gap, and ECE gates failed;
   emitted a durable one-use marker and `release/release_decision.json` with `serving_alias=staging`
 
+## Completed in Brief 06
+
+- Revalidated Brief 05 locally and against live W&B, reproduced all three accepted image digests,
+  merged it into `main` at `3bc9208c06f125f7d741699f7f89b441d1295dc3`, and created clean
+  `feat/api-dynamodb` from that SHA
+- Implemented the fail-closed Registry runtime: release-decision parsing, alias/version/digest/source
+  anti-drift checks, clean external cache, selection-lock and all-file hash verification, leakage
+  validation, asset loading, deterministic canary and exact serving metadata
+- Real loader verified `staging` `v0`, digest `865ddd18f6debd44f24a79fc71739f2a`, bundle digest
+  `2677b7093d66637852705d33bca006c3b78d8119f4d7268801453aa18c22f572`, 19 features and
+  20,112 route rows
+- Implemented lifespan dependency initialization, bounded thread-safe TTL inference cache, structured
+  ready/degraded health, model info, prediction, route reliability, retrieval and revisioned feedback
+- Implemented recursive Decimal-safe serialization, conditional event/model/feedback persistence,
+  strongly consistent reads and exact active-model baseline/identity metadata
+- Added an idempotent, non-destructive DynamoDB provisioner for PAY_PER_REQUEST table
+  `flight-delay-events` and GSI `event-date-created-at-index`
+- Proved 119 hermetic tests at 80.67% branch coverage plus ready/degraded API container behavior; all
+  three non-root Python 3.11 images build
+
 ## Partially complete
 
 - Brief 04: independent calibration metrics, six fixed rolling-origin bases, and six calibrated
@@ -60,13 +80,15 @@ final-project completion.
   evaluation, thresholds, model artifacts, and W&B audit are complete. No candidate passed every
   mandatory validation gate, so selection/freeze, Registry, and final-test tasks did not start.
 - Data pipeline and one-time final-test evaluation are complete; the final test is consumed.
-- FastAPI: only `/health` exists; model, cache, persistence, prediction, retrieval, and feedback do not.
 - UIs: processes can render an honest placeholder; interactive workflows are not implemented.
 - CI: workflow definition exists; repository-hosted pull-request evidence and branch protection remain.
+- AWS Academy external smoke: W&B access passed, but DynamoDB `DescribeTable` returned
+  `UnrecognizedClientException: The security token included in the request is invalid`; no AWS table
+  mutation or real prediction smoke occurred.
 
 ## Not started
 
-- DynamoDB table, serialization, seed events, persistence adapters, and monitoring queries
-- Prediction/reliability/model-info/retrieval/feedback endpoints and TTL inference cache
-- Production user interface, monitoring metrics/drift dashboard, AWS deployment, and teardown runbook
+- Real DynamoDB table validation and API/DynamoDB smoke after AWS Academy credentials are refreshed
+- User Streamlit and separate DynamoDB-backed monitoring dashboard consuming the API/data plane
+- Monitoring metrics/drift dashboard, AWS deployment, and teardown runbook
 - Public GitHub/W&B setup, EC2 deployment, live validation, screenshots, and rubric evidence

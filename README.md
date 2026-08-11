@@ -15,28 +15,29 @@ flight status or a guarantee about an individual flight.
 
 ## Current implementation status
 
-Brief 05 accepted the controlled Brief 04 stop, committed a course-aligned release policy before test
-access, and reconstructed the fixed R3 sigmoid candidate without search or threshold changes. The
-immutable artifact is W&B Registry version `us-flight-arrival-delay-15m:v0` under `staging`.
+Brief 06 implements the backend data plane. FastAPI reads the serving alias only from
+`release/release_decision.json`, verifies the exact W&B Registry version/digest and every locked
+artifact hash, loads the immutable model once during lifespan, and fails closed if Registry or
+DynamoDB is unavailable. This release remains `staging`: Registry `v0`, digest
+`865ddd18f6debd44f24a79fc71739f2a`, threshold `0.1840285229739868`.
 
-The January-May 2026 final test was evaluated exactly once. R3 passed discrimination, AP-lift,
-latency, size, and integrity gates but failed calibration and proper-scoring gates, so `production`
-was not created and `release/release_decision.json` declares `serving_alias=staging`. No model is yet
-loaded by the API, and database, monitoring implementation, AWS, and deployment have not started.
-See the
+All six backend endpoints, bounded inference-only caching, conditional prediction/feedback writes,
+active-model metadata, Decimal-safe DynamoDB serialization, and the idempotent table provisioner are
+implemented and hermetically tested. The real W&B loader passed; the AWS Academy smoke is blocked
+because `DescribeTable` rejected the configured session token as invalid. No table mutation, UI,
+monitoring dashboard, EC2 deployment, or demo seeding occurred. See the
 [model-selection report](docs/model-selection-report.md) and
 [remediation report](docs/model-remediation-report.md), the
 [final-test report](docs/final-test-report.md), and the
+[API/DynamoDB status report](docs/api-dynamodb-status.md), and the
 [detailed status ledger](docs/implementation-status.md).
 
 ## Architecture summary
 
-The intended final system has three independently deployed services: a traveler Streamlit UI that
-calls FastAPI, a FastAPI service that consumes the exact alias in `release/release_decision.json`
-(`staging` for this release) and writes every event to DynamoDB, and a monitoring Streamlit app that
-reads DynamoDB separately. Offline training
-will log datasets, runs, and model artifacts to W&B. The [architecture document](docs/architecture.md)
-marks current and future components explicitly.
+The system boundary has three independently deployable services. FastAPI now consumes the exact
+`staging` release and owns validation, inference, route context, caching, and required event
+persistence. The traveler and monitoring Streamlit processes remain honest placeholders for the next
+brief. The [architecture document](docs/architecture.md) marks current and future components.
 
 ## Python setup and validation
 
@@ -52,13 +53,32 @@ ruff check .
 ruff format --check .
 pytest --cov=flight_delay --cov-branch --cov-report=term-missing --cov-fail-under=80
 
-docker build -f services/api/Dockerfile -t flight-delay-api:scaffold .
-docker build -f services/user_ui/Dockerfile -t flight-delay-user-ui:scaffold .
-docker build -f services/monitor_ui/Dockerfile -t flight-delay-monitor-ui:scaffold .
+docker build -f services/api/Dockerfile -t flight-delay-api:brief06 .
+docker build -f services/user_ui/Dockerfile -t flight-delay-user-ui:brief06 .
+docker build -f services/monitor_ui/Dockerfile -t flight-delay-monitor-ui:brief06 .
 ```
 
-Run all local service shells with `docker compose up --build`. The API health endpoint is
-`http://localhost:8000/health`; user and monitoring placeholders use ports 8501 and 8502.
+## API and DynamoDB runtime
+
+Copy `.env.example` to ignored `.env` and supply `WANDB_API_KEY`, `WANDB_ENTITY`, current AWS Academy
+session credentials, `AWS_REGION`, and `DYNAMODB_TABLE`. Do not set a model alias: the committed
+release decision is deliberately the sole serving control plane.
+
+```bash
+PYTHONPATH=src python infra/provision_dynamodb.py --dry-run
+PYTHONPATH=src python infra/provision_dynamodb.py
+uvicorn services.api.app.main:app --host 127.0.0.1 --port 8000
+```
+
+The required table is `flight-delay-events`, PAY_PER_REQUEST, with String partition key `pk` and ALL
+projection GSI `event-date-created-at-index` (`event_date`, `created_at`). `/health` returns 200 only
+when both the verified Registry runtime and DynamoDB are ready; otherwise it returns structured 503
+without a local-model fallback. Successful prediction responses are returned only after their unique
+event is persisted.
+
+Implemented endpoints are `GET /health`, `GET /model-info`, `POST /predict`,
+`GET /route-reliability`, `GET /predictions/{id}`, and `POST /feedback/{id}`. Interactive docs are at
+`/docs`. User and monitoring placeholders remain on ports 8501 and 8502 under Compose.
 
 ## Data and experiment workflow
 
@@ -131,7 +151,8 @@ The model artifacts are
 │   ├── features/
 │   ├── modeling/
 │   ├── monitoring/
-│   └── persistence/
+│   ├── persistence/
+│   └── serving/
 ├── tests/unit/
 ├── tests/integration/
 ├── docker-compose.yml
@@ -145,11 +166,8 @@ Raw/processed BTS data, trained models, W&B files, AWS credentials, `.env`, cach
 artifacts must never be committed. Tests use only small in-memory fixtures. `.env.example` contains
 names and non-secret defaults only.
 
-## Planned reviewed phases
+## Next reviewed phase
 
-- **Next:** FastAPI Registry loading plus DynamoDB prediction/feedback persistence, consuming the
-  exact `staging` alias from `release/release_decision.json`.
-- **Later:** traveler workflow,
-  database-backed monitoring/drift, AWS deployment, and operational evidence.
-
-These are future plans, not completed features.
+The exact next increment is **user Streamlit + separate DynamoDB-backed monitoring dashboard
+consuming this API/data plane**. EC2 deployment, CloudWatch setup, drift automation, and demo-data
+seeding remain outside Brief 06.
