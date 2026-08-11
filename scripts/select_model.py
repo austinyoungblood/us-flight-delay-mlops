@@ -451,10 +451,16 @@ def main(argv: list[str] | None = None) -> int:
             git=git,
         )
         candidates = {control["candidate_id"]: control, candidate["candidate_id"]: candidate}
-        winner = choose_winner(candidates)
-        winner_run = wandb.Api().run(f"{entity}/{project}/{candidates[winner]['run_id']}")
-        winner_run.tags = tuple(sorted(set(winner_run.tags) | {"brief03-release-candidate"}))
-        winner_run.update()
+        try:
+            winner = choose_winner(candidates)
+        except ValueError as error:
+            winner = None
+            stop_reason = str(error)
+        else:
+            stop_reason = None
+            winner_run = wandb.Api().run(f"{entity}/{project}/{candidates[winner]['run_id']}")
+            winner_run.tags = tuple(sorted(set(winner_run.tags) | {"brief03-release-candidate"}))
+            winner_run.update()
         result = {
             "dataset_artifact": candidate_b["dataset_artifact"],
             "dataset_digest": candidate_b["dataset_digest"],
@@ -464,12 +470,16 @@ def main(argv: list[str] | None = None) -> int:
             "tuning": tuning,
             "candidates": candidates,
             "winner": winner,
+            "selection_status": "selected" if winner else "blocked",
+            "stop_reason": stop_reason,
+            "final_test_evaluated": False,
+            "registry_aliases_created": False,
         }
         output = Path("artifacts/brief03/validation_selection_report.json")
         output.parent.mkdir(parents=True, exist_ok=True)
         _json(output, result)
         print(json.dumps(result, sort_keys=True))
-        return 0
+        return 0 if winner else 2
     except (KeyError, OSError, TypeError, ValueError, TrackingError) as error:
         print(f"model selection failed: {error}", file=sys.stderr)
         return 1
