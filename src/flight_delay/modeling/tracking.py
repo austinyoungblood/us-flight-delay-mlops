@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import re
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
@@ -37,6 +38,14 @@ class ArtifactReference:
 def git_provenance(repository: Path = Path(".")) -> GitProvenance:
     """Read the current Git SHA and dirty flag without mutating the repository."""
 
+    environment_sha = os.getenv("FLIGHT_DELAY_GIT_SHA")
+    environment_dirty = os.getenv("FLIGHT_DELAY_GIT_DIRTY")
+    if environment_sha is not None or environment_dirty is not None:
+        if not environment_sha or not re.fullmatch(r"[0-9a-f]{40}", environment_sha):
+            raise TrackingError("FLIGHT_DELAY_GIT_SHA must be a 40-character lowercase Git SHA")
+        if environment_dirty not in {"true", "false"}:
+            raise TrackingError("FLIGHT_DELAY_GIT_DIRTY must be true or false")
+        return GitProvenance(sha=environment_sha, dirty=environment_dirty == "true")
     try:
         sha = subprocess.run(
             ["git", "rev-parse", "HEAD"],

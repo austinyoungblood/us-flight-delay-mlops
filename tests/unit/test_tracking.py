@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Any
 
 from flight_delay.data.manifest import write_manifest
-from flight_delay.modeling.tracking import GitProvenance, publish_dataset_artifact
+from flight_delay.modeling.tracking import GitProvenance, git_provenance, publish_dataset_artifact
 
 
 class FakeCompletedArtifact:
@@ -125,3 +125,10 @@ def test_publish_dataset_uses_fake_run_and_waits(monkeypatch: Any, tmp_path: Pat
         "data/manifests/processed_manifest.json",
     ]
     assert fake.init_kwargs["config"]["git_sha"] == "abc123"
+
+
+def test_git_provenance_accepts_validated_container_environment(monkeypatch: Any) -> None:
+    monkeypatch.setenv("FLIGHT_DELAY_GIT_SHA", "a" * 40)
+    monkeypatch.setenv("FLIGHT_DELAY_GIT_DIRTY", "false")
+
+    assert git_provenance() == GitProvenance("a" * 40, False)
