@@ -61,6 +61,7 @@ def _tracking() -> tuple[str, str]:
 
 
 def _registry_artifact(alias: str) -> Any:
+    load_dotenv()
     api = wandb.Api()
     return api.artifact(f"{REGISTRY_PATH}:{alias}")
 
