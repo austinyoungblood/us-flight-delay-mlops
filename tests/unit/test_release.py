@@ -18,8 +18,11 @@ from flight_delay.modeling.release import (
     compare_development_metrics,
     create_one_time_marker,
     final_test_metrics,
+    git_sha,
     load_release_policy,
     reconstruct_r3,
+    require_clean_worktree,
+    require_git_ancestor,
     validate_release_policy,
     verify_locked_files,
     write_release_bundle,
@@ -238,3 +241,24 @@ def test_reconstructs_only_locked_candidate_without_test_access(
     assert result.reproduction["all_metrics_reproduced"] is True
     assert opened == ["train.parquet", "validation.parquet"]
     assert "test.parquet" not in opened
+
+
+def test_git_release_guards(monkeypatch: pytest.MonkeyPatch) -> None:
+    def clean_run(arguments: list[str], **_kwargs: object) -> SimpleNamespace:
+        if arguments[1:3] == ["rev-parse", "HEAD"]:
+            return SimpleNamespace(stdout="abc123\n", returncode=0)
+        return SimpleNamespace(stdout="", returncode=0)
+
+    monkeypatch.setattr("flight_delay.modeling.release.subprocess.run", clean_run)
+    assert git_sha() == "abc123"
+    require_clean_worktree()
+    require_git_ancestor("abc123")
+
+    monkeypatch.setattr(
+        "flight_delay.modeling.release.subprocess.run",
+        lambda *_args, **_kwargs: SimpleNamespace(stdout=" M file.py\n", returncode=1),
+    )
+    with pytest.raises(ReleaseGuardError, match="clean Git worktree"):
+        require_clean_worktree()
+    with pytest.raises(ReleaseGuardError, match="not an ancestor"):
+        require_git_ancestor("def456")
