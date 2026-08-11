@@ -68,3 +68,16 @@ The model retained useful ranking lift and high recall, but its probabilities we
 high relative to 2026 prevalence and did not beat the contemporaneous constant-prior predictor on
 proper scores. The result is a governed `staging` release, not production qualification. The final
 test is consumed and must never be used for retraining, recalibration, or threshold selection.
+
+## Final validation
+
+- Python 3.11.14
+- Ruff check and formatting: pass; 48 files formatted
+- Pytest: 91 passed
+- Branch coverage: 80.29% with an enforced 80% minimum
+- Marker rerun audit: refused before test access with `final-test marker already exists`
+- W&B audit: exactly one finished final-test run with locked data and bundle lineage
+- Registry audit: `v0` has `latest` and `staging`; `production` is absent
+- API image: `sha256:532f260988b78ffbcaa039dabf8cf6734fd9caa99877bdb4c8ecfa5d7c210de8`
+- User UI image: `sha256:0fc962b14ee704da034498e0137a7b19475917808ad1804fac20c37ab203fb6f`
+- Monitor UI image: `sha256:3e50b103f21b27e32dfbc10864397eca0b566c60cc632b74caf170494e2c8dbf`
