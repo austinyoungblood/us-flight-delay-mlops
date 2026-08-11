@@ -102,10 +102,15 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--table", default=os.getenv("DYNAMODB_TABLE", "flight-delay-events"))
     parser.add_argument("--region", default=os.getenv("AWS_REGION", "us-west-2"))
+    parser.add_argument("--endpoint-url", default=os.getenv("DYNAMODB_ENDPOINT_URL"))
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
     try:
-        client = boto3.client("dynamodb", region_name=args.region) if not args.dry_run else None
+        client = (
+            boto3.client("dynamodb", region_name=args.region, endpoint_url=args.endpoint_url)
+            if not args.dry_run
+            else None
+        )
         result = provision(client=client, table_name=args.table, dry_run=args.dry_run)
     except (ClientError, TableContractError) as error:
         print(f"DynamoDB provisioning failed: {error}", file=sys.stderr)

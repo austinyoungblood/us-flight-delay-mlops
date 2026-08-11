@@ -13,6 +13,7 @@ COPY src ./src
 RUN python -m pip install --no-cache-dir -c requirements.lock .
 
 COPY release ./release
+COPY infra ./infra
 COPY services ./services
 USER app
 EXPOSE 8000

@@ -1,19 +1,53 @@
 services:
+  dynamodb-local:
+    image: amazon/dynamodb-local:2.6.1
+    command: -jar DynamoDBLocal.jar -sharedDb -inMemory
+    ports:
+      - "${DYNAMODB_LOCAL_PORT:-8001}:8000"
+
+  table-init:
+    build:
+      context: .
+      dockerfile: services/api/Dockerfile
+    entrypoint: ["python", "infra/provision_dynamodb.py"]
+    environment: &local-dynamodb-environment
+      AWS_ACCESS_KEY_ID: local
+      AWS_SECRET_ACCESS_KEY: local
+      AWS_REGION: us-west-2
+      DYNAMODB_TABLE: flight-delay-events
+      DYNAMODB_ENDPOINT_URL: http://dynamodb-local:8000
+    depends_on:
+      - dynamodb-local
+    restart: on-failure
+
   api:
     build:
       context: .
       dockerfile: services/api/Dockerfile
     ports:
-      - "8000:8000"
+      - "${API_HOST_PORT:-8000}:8000"
+    environment:
+      <<: *local-dynamodb-environment
+      WANDB_API_KEY: ${WANDB_API_KEY:-}
+      WANDB_ENTITY: ${WANDB_ENTITY:-}
+      WANDB_PROJECT: ${WANDB_PROJECT:-us-flight-delay-mlops}
+      WANDB_CACHE_DIR: /tmp/wandb-cache
+      WANDB_CONFIG_DIR: /tmp/wandb-config
+      WANDB_DATA_DIR: /tmp/wandb-data
+      WANDB_DIR: /tmp/wandb
+    depends_on:
+      table-init:
+        condition: service_completed_successfully
 
   user-ui:
     build:
       context: .
       dockerfile: services/user_ui/Dockerfile
     environment:
-      API_URL: http://api:8000
+      API_BASE_URL: http://api:8000
+      STREAMLIT_BROWSER_GATHER_USAGE_STATS: "false"
     ports:
-      - "8501:8501"
+      - "${USER_UI_HOST_PORT:-8501}:8501"
     depends_on:
       - api
 
@@ -22,4 +56,13 @@ services:
       context: .
       dockerfile: services/monitor_ui/Dockerfile
     ports:
-      - "8502:8501"
+      - "${MONITOR_UI_HOST_PORT:-8502}:8501"
+    depends_on:
+      table-init:
+        condition: service_completed_successfully
+    environment:
+      <<: *local-dynamodb-environment
+      MONITOR_DEFAULT_DAYS: 7
+      MONITOR_MAX_DAYS: 31
+      MONITOR_QUERY_CACHE_TTL_SECONDS: 30
+      STREAMLIT_BROWSER_GATHER_USAGE_STATS: "false"

@@ -1,21 +1,23 @@
 # Architecture
 
-## Brief 06 boundary
+## Brief 07 boundary
 
 The production-shaped backend is implemented. FastAPI resolves the immutable W&B Registry alias
 declared by the committed release decision, verifies all locked bytes, loads the model and route asset
 once during lifespan, and requires DynamoDB persistence for every successful prediction. The traveler
-and monitoring Streamlit services remain placeholders. No EC2 deployment or monitoring computation is
-part of this brief.
+application calls FastAPI only. The monitoring application reads DynamoDB only and never imports or
+loads the model. DynamoDB Local is the sole persistence runtime used in this increment. No AWS Academy
+session activation, AWS service call, or EC2 deployment is part of Brief 07.
 
 ```mermaid
 flowchart LR
-    U["Traveler browser"] -. "next brief" .-> UI["User Streamlit<br/>placeholder"]
-    UI -. "next brief HTTP JSON" .-> API["FastAPI<br/>six endpoints"]
+    U["Traveler browser"] --> UI["Traveler Streamlit"]
+    UI -->|"typed HTTP JSON"| API["FastAPI<br/>six endpoints"]
     API -->|"release decision: staging"| MODEL["W&B Registry<br/>v0 verified at lifespan"]
     API -->|"conditional event writes"| DB["DynamoDB<br/>flight-delay-events"]
-    O["Operations browser"] -. "next brief" .-> MON["Monitoring Streamlit<br/>placeholder"]
-    MON -. "next brief queries" .-> DB
+    O["Operations browser"] --> MON["Monitoring Streamlit"]
+    MON -->|"bounded UTC GSI queries"| DB
+    LOCAL["DynamoDB Local<br/>development only"] -. "same table contract" .-> DB
     TRAIN["Completed offline pipeline"] --> EXP["W&B experiments"]
     EXP --> MODEL
     GH["GitHub pull request"] --> CI["Ruff, pytest, branch coverage,<br/>three Python 3.11 images"]
@@ -34,7 +36,9 @@ flowchart LR
 6. A prediction caches only deterministic inference/route output. Every request still receives a new
    UUID/timestamp and a conditional `PREDICTION#<uuid>` write before success.
 7. Feedback conditionally revisions the existing prediction item. Strongly consistent reads power
-   retrieval and prepare the data plane for the separate monitoring UI.
+   retrieval.
+8. Monitoring queries one UTC `event_date` GSI partition at a time, consumes every page, and enforces
+   a 31-day interactive limit. GSI aggregates are explicitly eventually consistent.
 
 ## DynamoDB access pattern
 
@@ -44,12 +48,14 @@ flowchart LR
   `created_at`, projection ALL.
 - Writes: no-overwrite prediction put; immutable-identity model metadata update; existing-item,
   optimistic-revision feedback update.
-- Reads: strongly consistent prediction reads. The next monitoring brief can query event days through
-  the GSI without direct model access.
+- Reads: strongly consistent prediction inspection and bounded, fully paginated, eventually
+  consistent GSI queries for monitoring. The only normal-path scan is a bounded metadata-only lookup.
 
 ## Leakage and ownership boundaries
 
 Only scheduled pre-departure fields reach the model; the central leakage guard revalidates the
 downloaded feature schema. Historical route reliability is descriptive output and never a model
-feature. FastAPI owns model access and prediction/feedback writes. The future traveler UI will only
-call FastAPI; the separate future monitoring UI will consume the DynamoDB data plane.
+feature. FastAPI owns model access and prediction writes. The traveler UI calls FastAPI for every
+operation, including feedback. The separate monitoring UI consumes only the DynamoDB data plane and
+may revision feedback for adjudication. Demo records are deterministic, explicitly labeled, and never
+represented as real inference.

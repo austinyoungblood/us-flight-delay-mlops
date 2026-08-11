@@ -7,12 +7,36 @@ from typing import Any
 import pytest
 from botocore.exceptions import ClientError
 
+from flight_delay.contracts import RiskBand, RouteReliability
 from flight_delay.persistence.dynamodb import (
     DynamoDBRepository,
     PersistenceConflict,
     from_dynamodb,
     to_dynamodb,
 )
+
+
+def test_to_dynamodb_serializes_contract_models_and_enums() -> None:
+    payload = {
+        "risk_band": RiskBand.HIGH,
+        "route": RouteReliability(
+            scope="all_carriers",
+            origin="DEN",
+            destination="LAX",
+            eligible_flights=100,
+            on_time_count=70,
+            on_time_rate=0.7,
+            delayed_count=30,
+            delayed_rate=0.3,
+            meets_minimum_support=True,
+        ),
+    }
+
+    serialized = to_dynamodb(payload)
+
+    assert serialized["risk_band"] == "high"
+    assert serialized["route"]["origin"] == "DEN"
+    assert serialized["route"]["on_time_rate"] == Decimal("0.7")
 
 
 def conditional_error() -> ClientError:
