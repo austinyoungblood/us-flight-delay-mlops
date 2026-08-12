@@ -175,6 +175,27 @@ def test_deployment_manifest_file_loader(tmp_path: Path) -> None:
     )
 
 
+def test_host_manifest_reader_uses_only_standard_library() -> None:
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-S",
+            "deploy/read_manifest.py",
+            "image",
+            "api",
+            "--manifest",
+            "deploy/deployment_manifest.json",
+        ],
+        cwd=ROOT,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    assert result.stdout.strip().startswith(
+        "ghcr.io/austinyoungblood/us-flight-delay-mlops-api@sha256:"
+    )
+
+
 def model_info(manifest: dict[str, Any]) -> dict[str, Any]:
     model = manifest["model"]
     return {

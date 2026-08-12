@@ -2,7 +2,7 @@
 set -Eeuo pipefail
 
 if [[ "${DEPLOY_DRY_RUN:-0}" == "1" ]]; then
-  printf 'dry-run bootstrap: detect Amazon Linux or Ubuntu; install/start Docker; create /opt/us-flight-delay-mlops with mode 750\n'
+  printf 'dry-run bootstrap: detect Amazon Linux or Ubuntu; install Git/Python/Docker/curl; start Docker; create /opt/us-flight-delay-mlops with mode 750\n'
   exit 0
 fi
 
@@ -14,11 +14,11 @@ esac
 source /etc/os-release
 case "${ID}" in
   amzn)
-    dnf install -y docker
+    dnf install -y curl docker git python3
     ;;
   ubuntu)
     apt-get update
-    DEBIAN_FRONTEND=noninteractive apt-get install -y docker.io curl
+    DEBIAN_FRONTEND=noninteractive apt-get install -y curl docker.io git python3
     ;;
   *)
     printf 'bootstrap failed: unsupported operating system %s\n' "${ID}" >&2

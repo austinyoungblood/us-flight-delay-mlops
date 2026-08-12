@@ -44,6 +44,8 @@ pull request are public; the immutable image references and their source revisio
 [`deploy/deployment_manifest.json`](deploy/deployment_manifest.json).
 The controlled lifecycle design and operator commands are documented in
 [`docs/model-promotion.md`](docs/model-promotion.md).
+The authorized single-session AWS deployment is documented as a gated operator walkthrough in
+[`docs/brief09-step-by-step.md`](docs/brief09-step-by-step.md).
 
 ## Architecture summary
 
