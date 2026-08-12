@@ -39,7 +39,7 @@ artifact, manual dry-run/apply workflow, and hermetic multi-candidate tests. See
 [API/DynamoDB status report](docs/api-dynamodb-status.md), the
 [Brief 07 UI/monitoring report](docs/ui-monitoring-status.md), and the
 [detailed status ledger](docs/implementation-status.md), and the
-[public-deliverable audit](docs/public-deliverables.md). The audited repository and Brief 08 draft
+[public-deliverable audit](docs/public-deliverables.md). The audited repository and Brief 09 draft
 pull request are public; the immutable image references and their source revision are frozen in
 [`deploy/deployment_manifest.json`](deploy/deployment_manifest.json).
 The controlled lifecycle design and operator commands are documented in
