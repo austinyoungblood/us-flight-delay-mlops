@@ -155,8 +155,18 @@ st.subheader("Active model")
 if metadata:
     model = metadata.get("model_metadata") or metadata
     alias = model.get("serving_alias", "unknown")
-    if alias != "production":
-        st.warning("Staging model — demonstration/academic use")
+    release_decision = model.get("release_decision") or {}
+    deployment_purpose = model.get("deployment_purpose", release_decision.get("deployment_purpose"))
+    internal_gate = model.get(
+        "internal_production_gate_passed",
+        release_decision.get("internal_production_gate_passed"),
+    )
+    if deployment_purpose == "academic_demo" or internal_gate is False:
+        st.warning(
+            model.get("governance_notice")
+            or "Academic demonstration — W&B production alias used for course deployment; "
+            "the model did not pass the project's stricter internal production-quality gate."
+        )
     st.write(
         f"**Alias/version:** {alias} / {model.get('registry_version', 'unknown')}  \n"
         f"**Registry digest:** `{model.get('registry_digest', 'unknown')}`  \n"

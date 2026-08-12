@@ -8,10 +8,12 @@
   "deployment_git_sha": "8cfaf275e579bd9d6420450dec8e537014df5f2a",
   "model": {
     "registry_collection": "wandb-registry-Model/us-flight-arrival-delay-15m",
-    "serving_alias": "staging",
+    "serving_alias": "production",
     "registry_version": "v0",
     "registry_digest": "865ddd18f6debd44f24a79fc71739f2a",
     "release_bundle_digest": "2677b7093d66637852705d33bca006c3b78d8119f4d7268801453aa18c22f572",
+    "internal_production_gate_passed": false,
+    "deployment_purpose": "academic_demo",
     "classification_threshold": 0.1840285229739868
   },
   "images": {

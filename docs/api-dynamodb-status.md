@@ -1,5 +1,9 @@
 # Brief 06 API and DynamoDB status
 
+> Historical Brief 06 report. Brief 09A later moved the unchanged Registry `v0` to the course-required
+> `production` serving alias. The current API exposes `internal_production_gate_passed=false`,
+> `deployment_purpose=academic_demo`, and the persistent academic-demonstration governance notice.
+
 ## Implementation summary
 
 Brief 06 starts from merged Brief 05 SHA `3bc9208c06f125f7d741699f7f89b441d1295dc3` on

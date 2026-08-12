@@ -19,7 +19,7 @@ def demo_events(
     count: int = 30,
     start_date: date | None = None,
     model_version: str = "v0",
-    model_alias: str = "staging",
+    model_alias: str = "production",
 ) -> list[dict[str, Any]]:
     """Generate schema-compatible demo events without invoking a model."""
 

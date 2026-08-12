@@ -44,7 +44,7 @@ class FakeArtifact:
 
 class FakeApi:
     def __init__(self, artifact: FakeArtifact) -> None:
-        self.expected_path = "wandb-registry-Model/us-flight-arrival-delay-15m:staging"
+        self.expected_path = "wandb-registry-Model/us-flight-arrival-delay-15m:production"
         self.value = artifact
 
     def artifact(self, path: str) -> FakeArtifact:
@@ -156,12 +156,17 @@ def release_fixture(tmp_path: Path) -> tuple[Path, Path, Path, FakeArtifact]:
     committed.write_bytes(lock_path.read_bytes())
     decision = {
         "registry_path": "wandb-registry-Model/us-flight-arrival-delay-15m",
-        "serving_alias": "staging",
+        "serving_alias": "production",
         "registry_version": "v0",
         "registry_digest": "registry-digest",
         "source_artifact_digest": "source-digest",
         "bundle_digest": lock["aggregate_bundle_digest"],
         "final_test_passed": False,
+        "internal_production_gate_passed": False,
+        "deployment_purpose": "academic_demo",
+        "course_production_alias": True,
+        "failed_gates": ["brier_skill_score"],
+        "final_test_failure_summary": "Historical final-test production gates failed.",
     }
     decision_path = tmp_path / "release_decision.json"
     decision_path.write_text(json.dumps(decision))
@@ -206,7 +211,10 @@ def test_verified_loader_uses_alias_and_loads_bundle(tmp_path: Path) -> None:
     )
     runtime = loader.load()
     assert runtime.predict_probability(request()) == pytest.approx(0.2)
-    assert runtime.identity["serving_alias"] == "staging"
+    assert runtime.identity["serving_alias"] == "production"
+    assert runtime.identity["internal_production_gate_passed"] is False
+    assert runtime.identity["deployment_purpose"] == "academic_demo"
+    assert "Academic demonstration" in runtime.identity["governance_notice"]
     assert len(runtime.route_reliability("DEN", "LAX", "UA")) == 2
 
 

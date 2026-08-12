@@ -46,7 +46,7 @@ class FakeApiClient:
     def model_info(self) -> ModelInfoResponse:
         return ModelInfoResponse(
             registry_path="registry",
-            serving_alias="staging",
+            serving_alias="production",
             registry_version="v0",
             registry_digest="digest",
             source_artifact_digest="source",
@@ -56,10 +56,17 @@ class FakeApiClient:
             classification_threshold=0.18,
             feature_schema=["Origin"],
             training_partitions={"base_fit": "2025"},
-            release_decision={"serving_alias": "staging"},
+            release_decision={
+                "serving_alias": "production",
+                "internal_production_gate_passed": False,
+                "deployment_purpose": "academic_demo",
+            },
             release_git_sha="abc",
             loaded_at=datetime(2026, 8, 10, tzinfo=UTC),
-            serving_stage_notice="staging",
+            internal_production_gate_passed=False,
+            deployment_purpose="academic_demo",
+            governance_notice="Academic demonstration — internal production gate failed.",
+            serving_stage_notice="Academic demonstration — internal production gate failed.",
         )
 
     def route_reliability(self, **kwargs: Any) -> list[RouteReliability]:
@@ -86,7 +93,7 @@ class FakeApiClient:
             risk_band="high",
             classification_threshold=0.18,
             route_reliability=self.route_reliability(),
-            model_alias="staging",
+            model_alias="production",
             model_version="v0",
             model_digest="digest",
             cache_hit=False,
@@ -115,10 +122,17 @@ class FakeMonitorRepository:
     def get_model_metadata(self, version: str | None = None) -> dict[str, Any]:
         return {
             "model_metadata": {
-                "serving_alias": "staging",
+                "serving_alias": "production",
                 "registry_version": "v0",
                 "registry_digest": "digest",
                 "bundle_digest": "bundle",
+                "internal_production_gate_passed": False,
+                "deployment_purpose": "academic_demo",
+                "governance_notice": "Academic demonstration — internal production gate failed.",
+                "release_decision": {
+                    "internal_production_gate_passed": False,
+                    "deployment_purpose": "academic_demo",
+                },
                 "training_baseline": {
                     "target_prevalence": 0.22,
                     "numeric": {},
@@ -135,13 +149,13 @@ class FakeMonitorRepository:
         return {"feedback_revision": self.revision, "feedback": feedback}
 
 
-def test_traveler_ready_staging_prediction_and_feedback() -> None:
+def test_traveler_ready_academic_production_prediction_and_feedback() -> None:
     fake = FakeApiClient()
     app = AppTest.from_file(str(ROOT / "services/user_ui/app.py"))
     app.session_state["_api_client"] = fake
     app.run(timeout=10)
     assert not app.exception
-    assert any("Staging model" in warning.value for warning in app.warning)
+    assert any("Academic demonstration" in warning.value for warning in app.warning)
     next(button for button in app.button if button.label == "Estimate delay risk").click().run()
     assert fake.predictions == 1
     assert any(metric.label == "Delay probability" for metric in app.metric)
@@ -191,7 +205,7 @@ def test_monitor_populated_metrics_demo_warning_and_inspector() -> None:
     app.session_state["_monitor_repository"] = FakeMonitorRepository(items)
     app.run(timeout=10)
     assert not app.exception
-    assert any("Staging model" in warning.value for warning in app.warning)
+    assert any("Academic demonstration" in warning.value for warning in app.warning)
     assert any("demo records" in warning.value for warning in app.warning)
     assert any(metric.label == "Requests" and metric.value == "6" for metric in app.metric)
     assert any(metric.label == "Predicted delayed" for metric in app.metric)

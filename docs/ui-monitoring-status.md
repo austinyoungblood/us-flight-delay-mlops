@@ -1,5 +1,9 @@
 # Brief 07 UI and monitoring status
 
+> Historical Brief 07 report. Brief 09A later changed the unchanged `v0` serving alias to
+> `production`. Both current UIs derive their persistent warning from governance metadata—not the
+> alias—so they continue to disclose the failed internal production-quality gate.
+
 ## Delivered boundary
 
 Brief 07 completes a local three-service workflow around the accepted staging backend. The traveler

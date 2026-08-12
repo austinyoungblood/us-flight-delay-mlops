@@ -162,6 +162,9 @@ class ModelInfoResponse(StrictContract):
     release_decision: dict[str, Any]
     release_git_sha: str
     loaded_at: datetime
+    internal_production_gate_passed: bool
+    deployment_purpose: Literal["academic_demo", "operational"]
+    governance_notice: str
     serving_stage_notice: str
 
 

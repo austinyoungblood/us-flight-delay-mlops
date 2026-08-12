@@ -1,20 +1,20 @@
 # Architecture
 
-## Brief 08 frozen deployment boundary
+## Final pre-AWS deployment boundary
 
 The production-shaped backend is implemented. FastAPI resolves the immutable W&B Registry alias
 declared by the committed release decision, verifies all locked bytes, loads the model and route asset
 once during lifespan, and requires DynamoDB persistence for every successful prediction. The traveler
 application calls FastAPI only. The monitoring application reads DynamoDB only and never imports or
 loads the model. DynamoDB Local is the sole persistence runtime used in this increment. No AWS Academy
-session activation, AWS service call, or EC2 deployment is part of Brief 08. Brief 08 adds only a
-validated, immutable deployment/evidence control plane around the accepted application.
+session activation, AWS service call, or EC2 deployment is part of this increment. The `production`
+alias is course deployment metadata, not internal production-quality certification.
 
 ```mermaid
 flowchart LR
     U["Traveler browser"] --> UI["Traveler Streamlit"]
     UI -->|"typed HTTP JSON"| API["FastAPI<br/>six endpoints"]
-    API -->|"release decision: staging"| MODEL["W&B Registry<br/>v0 verified at lifespan"]
+    API -->|"release decision: production"| MODEL["W&B Registry<br/>v0 verified at lifespan"]
     API -->|"conditional event writes"| DB["DynamoDB<br/>flight-delay-events"]
     O["Operations browser"] --> MON["Monitoring Streamlit"]
     MON -->|"bounded UTC GSI queries"| DB
@@ -30,7 +30,7 @@ flowchart LR
 flowchart LR
     B["Grader / traveler browser"] -->|"TCP 8501"| UEC2["flight-user-ui EC2<br/>Traveler container"]
     UEC2 -->|"private TCP 8000"| AEC2["flight-api EC2<br/>FastAPI container"]
-    AEC2 -->|"HTTPS 443"| W["W&B Registry<br/>staging v0"]
+    AEC2 -->|"HTTPS 443"| W["W&B Registry<br/>production v0"]
     AEC2 -->|"instance role / HTTPS"| D["DynamoDB<br/>flight-delay-events"]
     O["Grader / operator browser"] -->|"TCP 8501"| MEC2["flight-monitor EC2<br/>Monitor container"]
     MEC2 -->|"instance role / HTTPS"| D
@@ -44,7 +44,7 @@ credentials enter an image or host environment file.
 ## Runtime sequence
 
 1. Lifespan parses `release/release_decision.json`; no environment variable may override the alias.
-2. The W&B Public API resolves `wandb-registry-Model/us-flight-arrival-delay-15m:staging`.
+2. The W&B Public API resolves `wandb-registry-Model/us-flight-arrival-delay-15m:production`.
 3. Version, Registry/source digest, committed selection lock, every file hash, aggregate digest,
    leakage-safe feature schema, threshold, model load, route asset and deterministic canary are
    verified before readiness.

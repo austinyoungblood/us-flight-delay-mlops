@@ -1,6 +1,6 @@
 # Implementation status
 
-Status reflects completed Brief 01-08 local work, including the governed `staging` release; it is not
+Status reflects completed Brief 01-09B pre-AWS work. It is not cloud-deployment evidence or
 final-project completion.
 
 ## Completed in Brief 01
@@ -113,6 +113,35 @@ final-project completion.
   references anonymously pullable, materialized the strict deployment manifest, and passed the
   exact-digest local rehearsal with two persisted predictions, cache hit, feedback revision, direct
   DynamoDB Local verification, both UI health checks, and 30 demo events
+
+## Brief 09A course production-alias compliance
+
+- Revalidated and normally merged Brief 08 PR #1 at
+  `521bb39bad46fbde328e9b386b39aebb3eb7a622`, then created
+  `feat/production-promotion-automation` from that clean checkpoint
+- Added `production` to the existing immutable Registry `v0` without uploading model bytes; retained
+  `staging` and verified both aliases resolve digest `865ddd18f6debd44f24a79fc71739f2a`
+  and bundle digest `2677b7093d66637852705d33bca006c3b78d8119f4d7268801453aa18c22f572`
+- Changed the release control plane to serve `production` while preserving the historical failed
+  final-test gates and fixed threshold; added machine-readable `deployment_purpose=academic_demo`
+  and `internal_production_gate_passed=false`
+- Made API, traveler, monitor, manifest, smoke, and current deployment documentation expose the
+  academic-demo/internal-gate disclosure independently of the alias name
+
+## Brief 09B automated selection and promotion
+
+- Added versioned policy-as-code for exact Registry/project/dataset/schema/protocol scope, operational
+  gates, deterministic multi-metric ranking, incumbent behavior, and dry-run/apply semantics
+- Added a pure selector with strict candidate parsing, non-finite/missing metadata rejection,
+  validation-only input enforcement, explicit outcomes, deterministic tie-breaking, and no W&B
+  dependency
+- Added an adapter that enumerates exact Registry versions, verifies immutable artifacts, performs
+  idempotent preconditioned alias mutation through supported W&B Registry linking, and re-queries the
+  exact postcondition; tests use an in-memory implementation
+- Added sanitized JSON decision audits and a manual-only GitHub Actions workflow that validates the
+  policy/tests, selects, optionally applies, verifies, logs a W&B audit run, and uploads the decision
+- Proved a real W&B dry-run against `production:v0`: `retain_current`, no mutation, exact digest
+  verified; the selector used development-validation metadata only
 
 ## Partially complete
 

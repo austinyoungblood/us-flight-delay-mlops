@@ -121,6 +121,8 @@ def validate_deployment_manifest(
         "registry_version": "registry_version",
         "registry_digest": "registry_digest",
         "release_bundle_digest": "bundle_digest",
+        "internal_production_gate_passed": "internal_production_gate_passed",
+        "deployment_purpose": "deployment_purpose",
     }
     for manifest_key, release_key in identity_pairs.items():
         if model.get(manifest_key) != release_decision.get(release_key):
@@ -129,8 +131,12 @@ def validate_deployment_manifest(
         raise DeploymentManifestError("classification threshold disagrees with selection lock")
     if model.get("release_bundle_digest") != selection_lock.get("aggregate_bundle_digest"):
         raise DeploymentManifestError("bundle digest disagrees with selection lock")
-    if model.get("serving_alias") != "staging":
-        raise DeploymentManifestError("Brief 08 must preserve the staging alias")
+    if model.get("serving_alias") != "production":
+        raise DeploymentManifestError("final pre-AWS manifest must use the production alias")
+    if model.get("internal_production_gate_passed") is not False:
+        raise DeploymentManifestError("manifest must preserve the failed internal production gate")
+    if model.get("deployment_purpose") != "academic_demo":
+        raise DeploymentManifestError("manifest must preserve academic-demo deployment purpose")
 
     images = _required(manifest, "images", "manifest")
     if set(images) != {"api", "traveler", "monitor"}:
