@@ -35,6 +35,14 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      - name: Require W&B API key
+        shell: bash
+        run: |
+          if [[ -z "${WANDB_API_KEY:-}" ]]; then
+            echo "::error title=Missing W&B credential::WANDB_API_KEY must be configured" \
+              "as a GitHub Actions secret before model promotion can run."
+            exit 1
+          fi
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
@@ -46,6 +54,7 @@ jobs:
           PYTHONPATH=src python scripts/promote_model.py validate-policy
           pytest tests/unit/test_promotion.py tests/integration/test_promotion_workflow.py
       - name: Select candidate and emit audit
+        id: promotion
         shell: bash
         run: |
           MODE="apply"
@@ -54,9 +63,14 @@ jobs:
           if [[ -n "${{ inputs.candidate_version }}" ]]; then
             ARGS+=(--candidate-version "${{ inputs.candidate_version }}")
           fi
+          rm -f promotion_decision.json
           PYTHONPATH=src python scripts/promote_model.py "${ARGS[@]}"
+          test -f promotion_decision.json
+          echo "audit_produced=true" >> "$GITHUB_OUTPUT"
       - name: Upload sanitized decision
-        if: always()
+        if: >-
+          ${{ always() && steps.promotion.outputs.audit_produced == 'true' &&
+          hashFiles('promotion_decision.json') != '' }}
         uses: actions/upload-artifact@v4
         with:
           name: model-promotion-decision-${{ github.run_id }}
