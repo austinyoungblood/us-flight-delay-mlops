@@ -22,6 +22,11 @@ from flight_delay.features.engineering import derive_schedule_features
 from flight_delay.features.leakage import validate_model_features
 from flight_delay.modeling.release import ReleaseGuardError, verify_locked_files
 
+ACADEMIC_DEMO_NOTICE = (
+    "Academic demonstration — W&B production alias used for course deployment; "
+    "the model did not pass the project's stricter internal production-quality gate."
+)
+
 
 class RegistryRuntimeError(RuntimeError):
     """Raised when the selected release cannot be verified and served safely."""
@@ -37,6 +42,8 @@ class ReleaseDecision:
     registry_digest: str
     source_artifact_digest: str
     bundle_digest: str
+    internal_production_gate_passed: bool
+    deployment_purpose: str
     raw: dict[str, Any]
 
     @classmethod
@@ -55,15 +62,52 @@ class ReleaseDecision:
             "source_artifact_digest",
             "bundle_digest",
             "final_test_passed",
+            "internal_production_gate_passed",
+            "deployment_purpose",
+            "course_production_alias",
+            "failed_gates",
+            "final_test_failure_summary",
         }
         if not isinstance(raw, dict) or required - raw.keys():
             raise RegistryRuntimeError("release decision schema is incomplete")
-        string_fields = required - {"final_test_passed"}
+        string_fields = {
+            "registry_path",
+            "serving_alias",
+            "registry_version",
+            "registry_digest",
+            "source_artifact_digest",
+            "bundle_digest",
+            "deployment_purpose",
+            "final_test_failure_summary",
+        }
         if any(not isinstance(raw[key], str) or not raw[key] for key in string_fields):
             raise RegistryRuntimeError("release decision identity fields must be non-empty strings")
-        if not isinstance(raw["final_test_passed"], bool):
-            raise RegistryRuntimeError("release decision final_test_passed must be boolean")
-        expected_alias = "production" if raw["final_test_passed"] else "staging"
+        boolean_fields = (
+            "final_test_passed",
+            "internal_production_gate_passed",
+            "course_production_alias",
+        )
+        if any(not isinstance(raw[key], bool) for key in boolean_fields):
+            raise RegistryRuntimeError("release decision governance fields must be boolean")
+        if raw["internal_production_gate_passed"] != raw["final_test_passed"]:
+            raise RegistryRuntimeError("internal production gate conflicts with historical result")
+        if raw["deployment_purpose"] not in {"academic_demo", "operational"}:
+            raise RegistryRuntimeError("release decision deployment purpose is unsupported")
+        failed_gates = raw["failed_gates"]
+        if not isinstance(failed_gates, list) or any(
+            not isinstance(value, str) or not value for value in failed_gates
+        ):
+            raise RegistryRuntimeError("release decision failed_gates must be a string list")
+        academic_course_release = (
+            raw["deployment_purpose"] == "academic_demo"
+            and raw["course_production_alias"]
+            and not raw["internal_production_gate_passed"]
+        )
+        expected_alias = (
+            "production"
+            if raw["internal_production_gate_passed"] or academic_course_release
+            else "staging"
+        )
         if raw["serving_alias"] != expected_alias:
             raise RegistryRuntimeError("release decision serving alias conflicts with gate result")
         return cls(
@@ -73,6 +117,8 @@ class ReleaseDecision:
             registry_digest=raw["registry_digest"],
             source_artifact_digest=raw["source_artifact_digest"],
             bundle_digest=raw["bundle_digest"],
+            internal_production_gate_passed=raw["internal_production_gate_passed"],
+            deployment_purpose=raw["deployment_purpose"],
             raw=dict(raw),
         )
 
@@ -285,6 +331,8 @@ class VerifiedRegistryLoader:
             "registry_digest": decision.registry_digest,
             "source_artifact_digest": decision.source_artifact_digest,
             "bundle_digest": decision.bundle_digest,
+            "internal_production_gate_passed": decision.internal_production_gate_passed,
+            "deployment_purpose": decision.deployment_purpose,
             "selection_lock_sha256": committed_lock_hash,
             "route_asset_sha256": lock["file_hashes"]["route_stats.parquet"],
             "classification_threshold": threshold,
@@ -293,10 +341,15 @@ class VerifiedRegistryLoader:
             "release_decision": decision.raw,
             "release_git_sha": _git_sha(),
             "loaded_at": loaded_at,
+            "governance_notice": (
+                ACADEMIC_DEMO_NOTICE
+                if decision.deployment_purpose == "academic_demo"
+                else "Operational release certified by the internal production-quality gate."
+            ),
             "serving_stage_notice": (
-                "Registry staging release; not approved for production use."
-                if decision.serving_alias == "staging"
-                else "Registry production release."
+                ACADEMIC_DEMO_NOTICE
+                if decision.deployment_purpose == "academic_demo"
+                else "Operational release certified by the internal production-quality gate."
             ),
         }
         runtime = ServingRuntime(

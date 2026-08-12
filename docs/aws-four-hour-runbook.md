@@ -41,7 +41,8 @@ attach the role to API/monitor, and record private/public IPs.
 
 ## T+65–110 — immutable application deployment
 
-Bootstrap and deploy API first. Prove ready health and exact staging identity, then deploy
+Bootstrap and deploy API first. Prove ready health and exact `production:v0` identity plus the
+academic-demo/internal-gate disclosure, then deploy
 traveler with API private IP and monitor with the shared table.
 
 - Go: manifest SHA matches checkout; digest pulls succeed; three named containers are running;
@@ -67,7 +68,7 @@ JSON summary and verify representative prediction/feedback items.
 ## T+150–210 — evidence capture
 
 Follow `final-evidence-checklist.md` in numeric filename order. Capture AWS, application, GitHub,
-and W&B identities with staging warnings visible and without env values, tokens, SSH material,
+and W&B identities with academic-demo/internal-gate warnings visible and without env values, tokens, SSH material,
 account identifiers beyond what the rubric requires, or browser password-manager overlays.
 
 - Go: every manifest criterion is captured and its source URL/instance field is updated.

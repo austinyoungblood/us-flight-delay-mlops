@@ -15,12 +15,14 @@ flight status or a guarantee about an individual flight.
 
 ## Current implementation status
 
-Brief 08 freezes the zero-AWS deployment and evidence package on top of the accepted Brief 07 local
-three-service application. FastAPI reads the serving alias only from
+Brief 09A/09B completes the final pre-AWS course-compliance and model-lifecycle increment on top of
+the accepted Brief 08 deployment package. FastAPI reads the serving alias only from
 `release/release_decision.json`, verifies the exact W&B Registry version/digest and every locked
 artifact hash, loads the immutable model once during lifespan, and fails closed if Registry or
-DynamoDB is unavailable. This release remains `staging`: Registry `v0`, digest
-`865ddd18f6debd44f24a79fc71739f2a`, threshold `0.1840285229739868`.
+DynamoDB is unavailable. The course deployment alias is now `production` on the unchanged Registry
+`v0`, digest `865ddd18f6debd44f24a79fc71739f2a`, threshold `0.1840285229739868`.
+**Academic demonstration — W&B production alias used for course deployment; the model did not pass
+the project's stricter internal production-quality gate.**
 
 The traveler Streamlit application calls FastAPI only. The separate monitoring Streamlit application
 reads DynamoDB only through bounded UTC GSI queries and provides operational, distribution, drift,
@@ -28,20 +30,24 @@ model-version, and feedback views plus revisioned adjudication. DynamoDB Local, 
 demo data, and one-command Compose startup are implemented. The digest-only deployment manifest,
 idempotent host scripts, local/live smoke sequence, least-privilege topology, evidence mapping, and
 strict four-hour runbook are prepared under `deploy/`, `scripts/`, `docs/`, and `evidence/`.
-Brief 08 intentionally performs no AWS Academy action or AWS service call. See the
+This increment intentionally performs no AWS Academy action or AWS service call. It also adds a
+versioned promotion policy, pure deterministic selector, fail-closed W&B adapter, sanitized decision
+artifact, manual dry-run/apply workflow, and hermetic multi-candidate tests. See the
 [model-selection report](docs/model-selection-report.md) and
 [remediation report](docs/model-remediation-report.md), the
 [final-test report](docs/final-test-report.md), and the
 [API/DynamoDB status report](docs/api-dynamodb-status.md), the
 [Brief 07 UI/monitoring report](docs/ui-monitoring-status.md), and the
 [detailed status ledger](docs/implementation-status.md), and the
-[public-deliverable audit](docs/public-deliverables.md). The audited repository and Brief 08 draft
+[public-deliverable audit](docs/public-deliverables.md). The audited repository and Brief 09 draft
 pull request are public; the immutable image references and their source revision are frozen in
 [`deploy/deployment_manifest.json`](deploy/deployment_manifest.json).
+The controlled lifecycle design and operator commands are documented in
+[`docs/model-promotion.md`](docs/model-promotion.md).
 
 ## Architecture summary
 
-The system boundary has three independently deployable services. FastAPI consumes the exact `staging`
+The system boundary has three independently deployable services. FastAPI consumes the exact `production`
 release and owns validation, inference, route context, caching, and required event persistence. The
 traveler UI calls only FastAPI; the operations UI queries only the DynamoDB event plane. The
 [architecture document](docs/architecture.md) records those ownership boundaries.
@@ -64,15 +70,15 @@ ruff check .
 ruff format --check .
 pytest --cov=flight_delay --cov-branch --cov-report=term-missing --cov-fail-under=80
 
-docker build -f services/api/Dockerfile -t flight-delay-api:brief07 .
-docker build -f services/user_ui/Dockerfile -t flight-delay-user-ui:brief07 .
-docker build -f services/monitor_ui/Dockerfile -t flight-delay-monitor-ui:brief07 .
+docker build -f services/api/Dockerfile -t flight-delay-api:brief09 .
+docker build -f services/user_ui/Dockerfile -t flight-delay-user-ui:brief09 .
+docker build -f services/monitor_ui/Dockerfile -t flight-delay-monitor-ui:brief09 .
 ```
 
 ## Local application runtime
 
 Copy `.env.example` to ignored `.env` and supply `WANDB_API_KEY` and `WANDB_ENTITY`. Do not add AWS
-Academy credentials for Brief 07 and do not set a model alias: the committed release decision is the
+Academy credentials and do not set a model alias: the committed release decision is the
 sole serving control plane. Compose injects dummy credentials and an explicit DynamoDB Local endpoint.
 
 ```bash
@@ -160,6 +166,8 @@ The model artifacts are
 ```text
 .
 ├── .github/workflows/ci.yml
+├── .github/workflows/model-promotion.yml
+├── configs/promotion_policy.yaml
 ├── configs/base.yaml
 ├── data/README.md
 ├── deploy/
@@ -179,6 +187,7 @@ The model artifacts are
 │   ├── modeling/
 │   ├── monitoring/
 │   ├── persistence/
+│   ├── promotion/
 │   └── serving/
 ├── tests/unit/
 ├── tests/integration/

@@ -1,0 +1,65 @@
+name: Model promotion
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Query and select without moving the Registry alias
+        required: true
+        default: true
+        type: boolean
+      target_alias:
+        description: Policy-approved target alias
+        required: true
+        default: production
+        type: choice
+        options:
+          - production
+          - staging
+      candidate_version:
+        description: Optional exact Registry version filter, such as v0
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  promotion:
+    runs-on: ubuntu-latest
+    env:
+      WANDB_API_KEY: ${{ secrets.WANDB_API_KEY }}
+      WANDB_ENTITY: austin-youngblood-university-of-denver
+      WANDB_PROJECT: us-flight-delay-mlops
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install pinned dependencies
+        run: python -m pip install -c requirements.lock ".[dev]"
+      - name: Validate policy and promotion tests
+        run: |
+          PYTHONPATH=src python scripts/promote_model.py validate-policy
+          pytest tests/unit/test_promotion.py tests/integration/test_promotion_workflow.py
+      - name: Select candidate and emit audit
+        shell: bash
+        run: |
+          MODE="apply"
+          if [[ "${{ inputs.dry_run }}" == "true" ]]; then MODE="dry-run"; fi
+          ARGS=(run --mode "$MODE" --target-alias "${{ inputs.target_alias }}" --output promotion_decision.json --log-wandb-run)
+          if [[ -n "${{ inputs.candidate_version }}" ]]; then
+            ARGS+=(--candidate-version "${{ inputs.candidate_version }}")
+          fi
+          PYTHONPATH=src python scripts/promote_model.py "${ARGS[@]}"
+      - name: Upload sanitized decision
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: model-promotion-decision-${{ github.run_id }}
+          path: promotion_decision.json
+          if-no-files-found: error
+          retention-days: 30

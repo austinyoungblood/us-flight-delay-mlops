@@ -19,7 +19,7 @@ class FakeRuntime:
         self.training_baseline = {"row_count": 100}
         self.identity = {
             "registry_path": "wandb-registry-Model/us-flight-arrival-delay-15m",
-            "serving_alias": "staging",
+            "serving_alias": "production",
             "registry_version": "v0",
             "registry_digest": "digest",
             "source_artifact_digest": "source",
@@ -29,10 +29,18 @@ class FakeRuntime:
             "classification_threshold": 0.2,
             "feature_schema": ["Origin"],
             "training_partitions": {"base_fit": "2025-01-01/2025-10-31"},
-            "release_decision": {"serving_alias": "staging", "final_test_passed": False},
+            "release_decision": {
+                "serving_alias": "production",
+                "final_test_passed": False,
+                "internal_production_gate_passed": False,
+                "deployment_purpose": "academic_demo",
+            },
             "release_git_sha": "abc123",
             "loaded_at": datetime(2026, 8, 10, tzinfo=UTC),
-            "serving_stage_notice": "Registry staging release; not approved for production use.",
+            "internal_production_gate_passed": False,
+            "deployment_purpose": "academic_demo",
+            "governance_notice": "Academic demonstration — internal production gate failed.",
+            "serving_stage_notice": "Academic demonstration — internal production gate failed.",
         }
 
     def route_reliability(
@@ -167,8 +175,10 @@ def test_ready_health_and_model_info_are_exact() -> None:
     health, info = run(scenario())
     assert health.status_code == 200
     assert health.json()["status"] == "ready"
-    assert info.json()["serving_alias"] == "staging"
-    assert "not approved for production" in info.json()["serving_stage_notice"]
+    assert info.json()["serving_alias"] == "production"
+    assert info.json()["internal_production_gate_passed"] is False
+    assert info.json()["deployment_purpose"] == "academic_demo"
+    assert "Academic demonstration" in info.json()["governance_notice"]
 
 
 def test_degraded_health_and_predict_503() -> None:

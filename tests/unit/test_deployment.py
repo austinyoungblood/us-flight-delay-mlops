@@ -29,10 +29,12 @@ ROOT = Path(__file__).resolve().parents[2]
 def deployment_inputs() -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
     release = {
         "registry_path": "wandb-registry-Model/us-flight-arrival-delay-15m",
-        "serving_alias": "staging",
+        "serving_alias": "production",
         "registry_version": "v0",
         "registry_digest": "registry-digest",
         "bundle_digest": "bundle-digest",
+        "internal_production_gate_passed": False,
+        "deployment_purpose": "academic_demo",
     }
     lock = {"threshold": 0.184, "aggregate_bundle_digest": "bundle-digest"}
     sha = "a" * 40
@@ -48,10 +50,12 @@ def deployment_inputs() -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]
         "deployment_git_sha": sha,
         "model": {
             "registry_collection": release["registry_path"],
-            "serving_alias": "staging",
+            "serving_alias": "production",
             "registry_version": "v0",
             "registry_digest": "registry-digest",
             "release_bundle_digest": "bundle-digest",
+            "internal_production_gate_passed": False,
+            "deployment_purpose": "academic_demo",
             "classification_threshold": 0.184,
         },
         "images": {
@@ -115,7 +119,7 @@ def test_deployment_manifest_accepts_only_frozen_identifiers() -> None:
 
     for mutation, message in (
         (("images", "api", "reference", "ghcr.io/example/api:latest"), "immutable"),
-        (("model", "serving_alias", None, "production"), "release decision"),
+        (("model", "serving_alias", None, "staging"), "release decision"),
         (("deployment_git_sha", None, None, "short"), "full Git SHA"),
     ):
         invalid = copy.deepcopy(manifest)
@@ -185,10 +189,17 @@ def model_info(manifest: dict[str, Any]) -> dict[str, Any]:
         "classification_threshold": model["classification_threshold"],
         "feature_schema": ["Origin"],
         "training_partitions": {"base_fit": "2025-01-01/2025-10-31"},
-        "release_decision": {"serving_alias": "staging"},
+        "release_decision": {
+            "serving_alias": "production",
+            "internal_production_gate_passed": False,
+            "deployment_purpose": "academic_demo",
+        },
         "release_git_sha": "abc",
         "loaded_at": datetime(2026, 8, 10, tzinfo=UTC).isoformat(),
-        "serving_stage_notice": "Staging only.",
+        "internal_production_gate_passed": False,
+        "deployment_purpose": "academic_demo",
+        "governance_notice": "Academic demonstration — internal production gate failed.",
+        "serving_stage_notice": "Academic demonstration — internal production gate failed.",
     }
 
 
@@ -203,7 +214,7 @@ def prediction(
         "classification_threshold": 0.184,
         "route_reliability": [],
         "support_warning": None,
-        "model_alias": "staging",
+        "model_alias": "production",
         "model_version": "v0",
         "model_digest": "registry-digest",
         "cache_hit": cache_hit,

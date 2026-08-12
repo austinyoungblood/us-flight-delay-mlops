@@ -52,6 +52,8 @@ class SmokeRunner:
             "registry_digest": expected["registry_digest"],
             "bundle_digest": expected["release_bundle_digest"],
             "classification_threshold": expected["classification_threshold"],
+            "internal_production_gate_passed": expected["internal_production_gate_passed"],
+            "deployment_purpose": expected["deployment_purpose"],
         }
         for field, value in comparisons.items():
             if getattr(info, field) != value:
@@ -153,6 +155,9 @@ class SmokeRunner:
                 "registry_version": model_info.registry_version,
                 "registry_digest": model_info.registry_digest,
                 "release_bundle_digest": model_info.bundle_digest,
+                "internal_production_gate_passed": model_info.internal_production_gate_passed,
+                "deployment_purpose": model_info.deployment_purpose,
+                "governance_notice": model_info.governance_notice,
             },
             "predictions": {
                 "count": 2,

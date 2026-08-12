@@ -14,7 +14,8 @@ python scripts/validate_evidence_manifest.py --require-files
 - `03_wandb_project.png`: public project overview.
 - `04_wandb_experiments.png`: comparable candidate/final-test run evidence.
 - `05_wandb_dataset.png`: dataset artifact name, version, digest, and lineage.
-- `06_wandb_registry.png`: Registry collection with `v0`, digest, and explicit `staging` alias.
+- `06_wandb_registry.png`: Registry collection with `v0`, digest, and explicit `production` alias
+  (retain `staging` if shown).
 
 ## AWS Console (live session only)
 
@@ -30,12 +31,14 @@ python scripts/validate_evidence_manifest.py --require-files
 
 - `13_app_api_docs.png`: FastAPI `/docs` endpoints.
 - `14_app_health.png`: ready model/database dependency health.
-- `15_app_model_info.png`: exact staging version and immutable digests.
-- `16_app_traveler_prediction.png`: traveler result with staging notice.
+- `15_app_model_info.png`: exact `production:v0` identity, immutable digests,
+  `internal_production_gate_passed=false`, and `deployment_purpose=academic_demo`.
+- `16_app_traveler_prediction.png`: traveler result with academic-demo/internal-gate notice.
 - `17_app_traveler_feedback.png`: persisted feedback confirmation.
 - `18_app_monitor_operations.png`: non-zero volume, latency, cache rate, and status/distribution.
 - `19_app_monitor_drift.png`: target drift plus a calculable input drift metric and demo warning.
-- `20_app_monitor_feedback.png`: coverage, feedback metrics/inspector, and staging identity.
+- `20_app_monitor_feedback.png`: coverage, feedback metrics/inspector, `production:v0` identity, and
+  academic-demo/internal-gate notice.
 
 Also retain `21_live_smoke_summary.json` as machine-readable supplemental evidence. Screenshots
 must never display the W&B token, AWS credentials, `.env` content, SSH keys, or terminal history

@@ -65,8 +65,11 @@ model_info = None
 if ready:
     try:
         model_info = client.model_info()
-        if model_info.serving_alias != "production":
-            st.warning("Staging model — demonstration/academic use")
+        if (
+            model_info.deployment_purpose == "academic_demo"
+            or not model_info.internal_production_gate_passed
+        ):
+            st.warning(model_info.governance_notice)
         st.caption(
             f"Model {model_info.registry_version} · alias {model_info.serving_alias} · "
             f"digest {model_info.registry_digest[:12]}…"
@@ -130,6 +133,8 @@ if prediction is not None:
         st.warning(prediction.support_warning)
     _show_reliability(prediction.route_reliability or st.session_state.get("route_context", []))
     st.caption(f"Prediction ID: `{prediction.prediction_id}`")
+    if model_info is not None:
+        st.warning(model_info.governance_notice)
     with st.expander("Technical details"):
         st.write(f"Threshold: {prediction.classification_threshold:.6f}")
         st.write(f"Model: {prediction.model_alias} / {prediction.model_version}")

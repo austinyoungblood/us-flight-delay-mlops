@@ -1,0 +1,73 @@
+schema_version: brief09b-v1
+policy_version: 1.0.0
+purpose: academic_course_deployment
+scope:
+  registry_collection: wandb-registry-Model/us-flight-arrival-delay-15m
+  source_project: austin-youngblood-university-of-denver/us-flight-delay-mlops
+  artifact_type: model
+target_alias: production
+allowed_target_aliases:
+  - staging
+  - production
+dry_run_default: true
+required_metadata:
+  - candidate_id
+  - registry_path
+  - registry_version
+  - registry_digest
+  - source_artifact_name
+  - source_artifact_version
+  - source_artifact_digest
+  - git_sha
+  - dataset_artifact
+  - dataset_digest
+  - feature_schema_sha256
+  - evaluation_protocol
+  - development_metrics
+  - bundle_size_bytes
+  - release_eligible
+  - lineage_verified
+  - serialization_integrity
+  - inference_compatible
+lineage:
+  dataset_artifact: austin-youngblood-university-of-denver/us-flight-delay-mlops/flight-delay-bts-sampled:v0
+  allowed_dataset_digests:
+    - 2ecdb5a6a60b23ed1ee1d603fb976516
+  feature_schema_sha256: e319f9ff93823f8f1c3bb9043b1734e8995443779b1215661b0078dabe7a7a1e
+  allowed_evaluation_protocols:
+    - development-selection-v1:2025-11-16/2025-11-30
+mandatory_gates:
+  release_eligible: true
+  lineage_verified: true
+  serialization_integrity: true
+  inference_compatible: true
+  max_bundle_size_bytes: 10000000
+ranking:
+  - field: average_precision
+    direction: maximize
+  - field: f1
+    direction: maximize
+  - field: recall
+    direction: maximize
+  - field: roc_auc
+    direction: maximize
+  - field: brier_score
+    direction: minimize
+  - field: log_loss
+    direction: minimize
+  - field: bundle_size_bytes
+    direction: minimize
+tie_breaking:
+  prefer_incumbent_on_metric_tie: true
+  final_field: candidate_id
+  direction: ascending
+selection_inputs:
+  development_validation_only: true
+  forbidden_key_fragments:
+    - final_test
+    - sealed_test
+  forbidden_key_prefixes:
+    - test_
+incumbent:
+  retain_when_selected: true
+  require_exact_version_and_digest: true

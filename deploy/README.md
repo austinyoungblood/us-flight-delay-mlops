@@ -23,5 +23,6 @@ deploy/deploy_traveler.sh --env-file /opt/us-flight-delay-mlops/traveler.env
 deploy/deploy_monitor.sh --env-file /opt/us-flight-delay-mlops/monitor.env
 ```
 
-The live topology remains staging-only. AWS provisioning and these live commands must not be
-run until every pre-activation gate in the four-hour runbook is green.
+The frozen topology consumes exact Registry `production:v0` and must display the
+academic-demo/internal-gate disclosure. AWS provisioning and these live commands must not be run
+until every pre-activation gate in the four-hour runbook is green.
