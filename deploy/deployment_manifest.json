@@ -1,0 +1,77 @@
+{
+  "schema_version": 1,
+  "project": {
+    "name": "us-flight-delay-mlops",
+    "public_repository_url": "https://github.com/austinyoungblood/us-flight-delay-mlops",
+    "wandb_project_url": "https://wandb.ai/austin-youngblood-university-of-denver/us-flight-delay-mlops"
+  },
+  "deployment_git_sha": "8cfaf275e579bd9d6420450dec8e537014df5f2a",
+  "model": {
+    "registry_collection": "wandb-registry-Model/us-flight-arrival-delay-15m",
+    "serving_alias": "staging",
+    "registry_version": "v0",
+    "registry_digest": "865ddd18f6debd44f24a79fc71739f2a",
+    "release_bundle_digest": "2677b7093d66637852705d33bca006c3b78d8119f4d7268801453aa18c22f572",
+    "classification_threshold": 0.1840285229739868
+  },
+  "images": {
+    "api": {
+      "reference": "ghcr.io/austinyoungblood/us-flight-delay-mlops-api@sha256:2ef0ddc8cba713706834f62de617ae8fade3caec6dcf1def34bbef0e227c0c5e",
+      "source_git_sha": "8cfaf275e579bd9d6420450dec8e537014df5f2a"
+    },
+    "traveler": {
+      "reference": "ghcr.io/austinyoungblood/us-flight-delay-mlops-traveler@sha256:3e9c7962b3867001a3c7636eb714d9dec5d97a0d24e5c1097ceb0cac5f33e987",
+      "source_git_sha": "8cfaf275e579bd9d6420450dec8e537014df5f2a"
+    },
+    "monitor": {
+      "reference": "ghcr.io/austinyoungblood/us-flight-delay-mlops-monitor@sha256:2360169bd7398bc21dd8b9b5864567f64795caad46768aace32a8253dc0efb64",
+      "source_git_sha": "8cfaf275e579bd9d6420450dec8e537014df5f2a"
+    }
+  },
+  "runtime": {
+    "python": "3.11",
+    "ports": {
+      "api": 8000,
+      "traveler": 8501,
+      "monitor": 8501
+    },
+    "ec2_logical_names": {
+      "api": "flight-api",
+      "traveler": "flight-user-ui",
+      "monitor": "flight-monitor"
+    }
+  },
+  "dynamodb": {
+    "table_name": "flight-delay-events",
+    "gsi_name": "event-date-created-at-index",
+    "billing_mode": "PAY_PER_REQUEST"
+  },
+  "environment_variable_names": {
+    "api": [
+      "AWS_REGION",
+      "DYNAMODB_TABLE",
+      "MODEL_DOWNLOAD_DIR",
+      "PREDICTION_CACHE_MAXSIZE",
+      "PREDICTION_CACHE_TTL_SECONDS",
+      "WANDB_API_KEY",
+      "WANDB_ENTITY",
+      "WANDB_PROJECT"
+    ],
+    "traveler": [
+      "API_BASE_URL",
+      "API_CONNECT_TIMEOUT_SECONDS",
+      "API_READ_TIMEOUT_SECONDS"
+    ],
+    "monitor": [
+      "AWS_REGION",
+      "DYNAMODB_TABLE",
+      "MONITOR_DEFAULT_DAYS",
+      "MONITOR_MAX_DAYS",
+      "MONITOR_QUERY_CACHE_TTL_SECONDS"
+    ]
+  },
+  "smoke_test": {
+    "schema_version": 1,
+    "reviewed_date": "2026-08-11"
+  }
+}

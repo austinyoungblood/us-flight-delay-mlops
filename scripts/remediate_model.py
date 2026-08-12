@@ -17,11 +17,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import sklearn
+import wandb
 import yaml
 from sklearn.exceptions import ConvergenceWarning
 from sklearn.metrics import average_precision_score, brier_score_loss, log_loss, roc_auc_score
 
-import wandb
 from flight_delay.data.download import sha256_file
 from flight_delay.data.manifest import canonical_json_bytes, read_manifest
 from flight_delay.features.leakage import validate_model_features

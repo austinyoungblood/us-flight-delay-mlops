@@ -14,8 +14,8 @@ from typing import Any
 
 import joblib
 import pandas as pd
-
 import wandb
+
 from flight_delay.contracts import FlightPredictionRequest, RiskBand, RouteReliability
 from flight_delay.data.download import sha256_file
 from flight_delay.features.engineering import derive_schedule_features
