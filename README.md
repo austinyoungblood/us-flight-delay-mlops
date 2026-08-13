@@ -151,6 +151,9 @@ Default host ports are API `8000`, DynamoDB Local `8001`, Traveler `8501`, and M
 
 ## Data and experiment lineage
 
+Experiment runs, model and dataset artifacts, and release lineage are available in the public
+[Weights & Biases project](https://wandb.ai/austin-youngblood-university-of-denver/us-flight-delay-mlops/overview).
+
 The workflow uses the BTS
 [`On_Time_Reporting_Carrier_On_Time_Performance` archives](https://transtats.bts.gov/PREZIP/),
 applies a deterministic class-stratified monthly cap of 75,000 eligible rows with seed 42, and uses
