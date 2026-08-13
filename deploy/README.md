@@ -13,14 +13,17 @@ bash -n deploy/*.sh deploy/lib/*.sh
 DEPLOY_DRY_RUN=1 deploy/bootstrap_host.sh
 ```
 
+For the complete timed Console/CLI procedure, gates, evidence sequence, recovery rules, and final
+report contract, follow [`docs/brief09-step-by-step.md`](../docs/brief09-step-by-step.md).
+
 On each eventual host, copy the relevant template to a mode-0600 file outside Git and run
 only its matching script. The scripts pull by digest, replace only their named project
 container, set `unless-stopped`, and fail closed on health errors.
 
 ```bash
-deploy/deploy_api.sh --env-file /opt/us-flight-delay-mlops/api.env
-deploy/deploy_traveler.sh --env-file /opt/us-flight-delay-mlops/traveler.env
-deploy/deploy_monitor.sh --env-file /opt/us-flight-delay-mlops/monitor.env
+sudo deploy/deploy_api.sh --env-file /opt/us-flight-delay-mlops/api.env
+sudo deploy/deploy_traveler.sh --env-file /opt/us-flight-delay-mlops/traveler.env
+sudo deploy/deploy_monitor.sh --env-file /opt/us-flight-delay-mlops/monitor.env
 ```
 
 The frozen topology consumes exact Registry `production:v0` and must display the

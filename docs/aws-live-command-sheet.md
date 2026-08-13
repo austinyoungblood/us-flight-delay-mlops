@@ -1,8 +1,9 @@
 # AWS live-session command sheet
 
-Do not execute this sheet during Brief 08. Replace every `<...>` value only after the one
-approved Learner Lab session is active. Do not paste credentials into a command, file,
-screenshot, or shell history.
+Execute this sheet only during the one Brief 09 Learner Lab session, after every gate in
+`brief09-step-by-step.md` is green. Replace every `<...>` value only after the approved session is
+active. Do not paste credentials into a command, screenshot, shell history, repository file, or
+evidence record.
 
 ## Session facts and DynamoDB
 
@@ -41,8 +42,12 @@ aws ec2 describe-instances --region "$AWS_REGION" \
 
 ## Per-host bootstrap and deploy
 
-Copy the reviewed repository archive or clone the exact deployment SHA from the public URL.
-Verify `git rev-parse HEAD` equals `deploy/deployment_manifest.json`; do not deploy a branch.
+Clone reviewed `main` after the Brief 09 walkthrough/deployment-safety correction is merged. Brief 09
+merge commit `1cafcab2b1ccec4dd2662a9ad9166fac9aa37ad4` and manifest source SHA
+`355d99226883ebae1705d9f5a12eaffbe7bc6c8a` must both be ancestors of `HEAD`. The source SHA
+identifies the bytes used to build the immutable images; it is not expected to equal repository
+`HEAD`. Run the strict manifest validator before activation and the standard-library manifest reader
+on each host; do not deploy a feature branch.
 
 ```bash
 sudo DEPLOY_DRY_RUN=0 deploy/bootstrap_host.sh
@@ -55,9 +60,9 @@ Replace the API private-IP placeholder only in traveler env. Put the operator-su
 token only in API env. Then execute API first, traveler second, monitor third:
 
 ```bash
-deploy/deploy_api.sh --env-file /opt/us-flight-delay-mlops/api.env
-deploy/deploy_traveler.sh --env-file /opt/us-flight-delay-mlops/traveler.env
-deploy/deploy_monitor.sh --env-file /opt/us-flight-delay-mlops/monitor.env
+sudo deploy/deploy_api.sh --env-file /opt/us-flight-delay-mlops/api.env
+sudo deploy/deploy_traveler.sh --env-file /opt/us-flight-delay-mlops/traveler.env
+sudo deploy/deploy_monitor.sh --env-file /opt/us-flight-delay-mlops/monitor.env
 ```
 
 Inspect without printing environment values:

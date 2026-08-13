@@ -12,7 +12,7 @@ manifest_value() {
   local command="$1"
   local component="$2"
   local manifest="$3"
-  PYTHONPATH="${DEPLOY_ROOT}/src" python3 "${DEPLOY_ROOT}/deploy/read_manifest.py" \
+  python3 "${DEPLOY_ROOT}/deploy/read_manifest.py" \
     "${command}" "${component}" --manifest "${manifest}"
 }
 

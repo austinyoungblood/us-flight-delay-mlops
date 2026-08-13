@@ -1,25 +1,210 @@
 {
   "schema_version": 1,
+  "artifact_directories": [
+    "aws/screenshots"
+  ],
   "captures": [
-    {"criterion":"github.repository","filename":"01_github_repository.png","source":"github","status":"pending-live-session","source_url":"https://github.com/austinyoungblood/us-flight-delay-mlops","instance":"public-web","capture_instruction":"Capture the public repository home and rendered README in a private browser."},
-    {"criterion":"github.pr_ci","filename":"02_github_pr_ci.png","source":"github","status":"pending-live-session","source_url":"https://github.com/austinyoungblood/us-flight-delay-mlops/pull/1","instance":"pull-request","capture_instruction":"Capture the pull request to main with Ruff, format, coverage tests, and all image builds green."},
-    {"criterion":"wandb.project","filename":"03_wandb_project.png","source":"wandb","status":"pending-live-session","source_url":"https://wandb.ai/austin-youngblood-university-of-denver/us-flight-delay-mlops","instance":"public-web","capture_instruction":"Capture the public project overview in an unauthenticated browser."},
-    {"criterion":"wandb.experiments","filename":"04_wandb_experiments.png","source":"wandb","status":"pending-live-session","source_url":"https://wandb.ai/austin-youngblood-university-of-denver/us-flight-delay-mlops/runs/w4te9tla","instance":"public-web","capture_instruction":"Capture comparable experiment and final-test run evidence."},
-    {"criterion":"wandb.dataset","filename":"05_wandb_dataset.png","source":"wandb","status":"pending-live-session","source_url":"https://wandb.ai/austin-youngblood-university-of-denver/us-flight-delay-mlops/artifacts/dataset/flight-delay-bts-sampled/v0","instance":"public-web","capture_instruction":"Capture dataset artifact version, digest, and lineage."},
-    {"criterion":"wandb.registry","filename":"06_wandb_registry.png","source":"wandb","status":"pending-live-session","source_url":"https://wandb.ai/austin-youngblood-university-of-denver/registry/model?selectionPath=austin-youngblood-university-of-denver/wandb-registry-Model/us-flight-arrival-delay-15m","instance":"public-web","capture_instruction":"Capture Registry v0, immutable digest, and staging alias."},
-    {"criterion":"aws.ec2_instances","filename":"07_aws_ec2_instances.png","source":"aws-console","status":"pending-live-session","source_url":"","instance":"three-host-list","capture_instruction":"Capture three separate named running EC2 instances and status checks."},
-    {"criterion":"aws.security_groups","filename":"08_aws_security_groups.png","source":"aws-console","status":"pending-live-session","source_url":"","instance":"security-groups","capture_instruction":"Capture the intended least-privilege inbound group relationships."},
-    {"criterion":"aws.instance_profile","filename":"09_aws_instance_profile.png","source":"aws-console","status":"pending-live-session","source_url":"","instance":"api-monitor","capture_instruction":"Capture the role or instance profile attached to API and monitor."},
-    {"criterion":"aws.dynamodb_schema","filename":"10_aws_dynamodb_schema.png","source":"aws-console","status":"pending-live-session","source_url":"","instance":"flight-delay-events","capture_instruction":"Capture table key, GSI, ACTIVE state, and on-demand billing."},
-    {"criterion":"aws.dynamodb_prediction","filename":"11_aws_dynamodb_prediction.png","source":"aws-console","status":"pending-live-session","source_url":"","instance":"flight-delay-events","capture_instruction":"Capture a representative prediction item and its feedback fields."},
-    {"criterion":"aws.cloudwatch_or_status","filename":"12_aws_status_metrics.png","source":"aws-console","status":"pending-live-session","source_url":"","instance":"ec2-status","capture_instruction":"Capture EC2 basic metrics, status checks, or CloudWatch status evidence."},
-    {"criterion":"app.api_docs","filename":"13_app_api_docs.png","source":"application","status":"pending-live-session","source_url":"","instance":"flight-api","capture_instruction":"Capture the FastAPI docs with the required endpoints visible."},
-    {"criterion":"app.health","filename":"14_app_health.png","source":"application","status":"pending-live-session","source_url":"","instance":"flight-api","capture_instruction":"Capture ready health for model and database dependencies."},
-    {"criterion":"app.model_info","filename":"15_app_model_info.png","source":"application","status":"pending-live-session","source_url":"","instance":"flight-api","capture_instruction":"Capture exact staging identity and immutable model digests."},
-    {"criterion":"app.traveler_prediction","filename":"16_app_traveler_prediction.png","source":"application","status":"pending-live-session","source_url":"","instance":"flight-user-ui","capture_instruction":"Capture a traveler prediction with staging status visible."},
-    {"criterion":"app.traveler_feedback","filename":"17_app_traveler_feedback.png","source":"application","status":"pending-live-session","source_url":"","instance":"flight-user-ui","capture_instruction":"Capture the persisted traveler feedback confirmation."},
-    {"criterion":"app.monitor_operations","filename":"18_app_monitor_operations.png","source":"application","status":"pending-live-session","source_url":"","instance":"flight-monitor","capture_instruction":"Capture non-zero volume, latency, cache, status, and prediction distributions."},
-    {"criterion":"app.monitor_drift","filename":"19_app_monitor_drift.png","source":"application","status":"pending-live-session","source_url":"","instance":"flight-monitor","capture_instruction":"Capture target and calculable input drift with the demo warning."},
-    {"criterion":"app.monitor_feedback","filename":"20_app_monitor_feedback.png","source":"application","status":"pending-live-session","source_url":"","instance":"flight-monitor","capture_instruction":"Capture feedback coverage and metrics with staging identity."}
+    {
+      "criterion": "github.repository",
+      "filename": "01_github_repository.png",
+      "source": "github",
+      "status": "missing",
+      "source_url": "https://github.com/austinyoungblood/us-flight-delay-mlops",
+      "instance": "public-web",
+      "capture_instruction": "No matching file was supplied. Capture the public repository home and rendered final README in a private browser."
+    },
+    {
+      "criterion": "github.pr_ci",
+      "filename": "02_github_pr_ci.png",
+      "source": "github",
+      "status": "missing",
+      "source_url": "https://github.com/austinyoungblood/us-flight-delay-mlops/pull/2",
+      "instance": "pull-request",
+      "capture_instruction": "No matching file was supplied. Capture merged PR #2 with its required validation check green."
+    },
+    {
+      "criterion": "wandb.project",
+      "filename": "03_wandb_project.png",
+      "source": "wandb",
+      "status": "missing",
+      "source_url": "https://wandb.ai/austin-youngblood-university-of-denver/us-flight-delay-mlops",
+      "instance": "public-web",
+      "capture_instruction": "No matching file was supplied. Capture the W&B project overview without exposing credentials."
+    },
+    {
+      "criterion": "wandb.experiments",
+      "filename": "04_wandb_experiments.png",
+      "source": "wandb",
+      "status": "missing",
+      "source_url": "https://wandb.ai/austin-youngblood-university-of-denver/us-flight-delay-mlops/runs/w4te9tla",
+      "instance": "public-web",
+      "capture_instruction": "No matching file was supplied. Capture immutable historical experiment and final-test run evidence without rerunning the final test."
+    },
+    {
+      "criterion": "wandb.dataset",
+      "filename": "05_wandb_dataset.png",
+      "source": "wandb",
+      "status": "missing",
+      "source_url": "https://wandb.ai/austin-youngblood-university-of-denver/us-flight-delay-mlops/artifacts/dataset/flight-delay-bts-sampled/v0",
+      "instance": "public-web",
+      "capture_instruction": "No matching file was supplied. Capture dataset v0, its digest, and lineage without modifying the artifact."
+    },
+    {
+      "criterion": "wandb.registry",
+      "filename": "06_wandb_registry.png",
+      "source": "wandb",
+      "status": "missing",
+      "source_url": "https://wandb.ai/austin-youngblood-university-of-denver/registry/model?selectionPath=austin-youngblood-university-of-denver/wandb-registry-Model/us-flight-arrival-delay-15m",
+      "instance": "authenticated-workspace",
+      "capture_instruction": "No matching file was supplied. Capture exact production:v0 identity, immutable digest, and the academic-demo/internal-gate disclosure without moving an alias."
+    },
+    {
+      "criterion": "aws.ec2_instances",
+      "filename": "07_aws_ec2_instances.png",
+      "source": "aws-console",
+      "status": "captured",
+      "source_url": "https://console.aws.amazon.com/ec2/home?region=us-east-1",
+      "instance": "three-host-list",
+      "publication_status": "redaction-required",
+      "redaction_notes": "Redact public IPv4 address and public DNS values before a public commit; preserve instance names, t3.small types, running state, and passed status checks.",
+      "capture_instruction": "Shows the three named project instances running as t3.small with all status checks passed."
+    },
+    {
+      "criterion": "aws.security_groups",
+      "filenames": [
+        "08a_aws_security_group_api.png",
+        "08b_aws_security_group_traveler.png",
+        "08c_aws_security_group_monitor.png"
+      ],
+      "source": "aws-console",
+      "status": "captured",
+      "source_url": "https://console.aws.amazon.com/ec2/home?region=us-east-1#SecurityGroups:",
+      "instance": "three-security-groups",
+      "publication_status": "redaction-required",
+      "redaction_notes": "Redact the AWS account owner ID and operator /32 source IP before a public commit; preserve ports, group names, and the Traveler-group-to-API rule.",
+      "capture_instruction": "Together the three files prove separate API, Traveler, and Monitor inbound rules and the SG-to-SG Traveler-to-API path."
+    },
+    {
+      "criterion": "aws.instance_profile",
+      "filenames": [
+        "09a_aws_iam_api.png",
+        "09b_aws_iam_traveler.png",
+        "09c_aws_iam_monitor.png"
+      ],
+      "source": "aws-console",
+      "status": "captured",
+      "source_url": "https://console.aws.amazon.com/ec2/home?region=us-east-1",
+      "instance": "api-traveler-monitor",
+      "publication_status": "redaction-required",
+      "redaction_notes": "Redact the AWS account ID embedded in instance ARNs and the public/private IP and DNS values before a public commit; preserve instance names and IAM role fields.",
+      "capture_instruction": "Together the files show LabRole on API and Monitor, no IAM role on Traveler, and IMDSv2 required."
+    },
+    {
+      "criterion": "aws.dynamodb_schema",
+      "filenames": [
+        "10a_aws_dynamodb_table.png",
+        "10b_aws_dynamodb_gsi.png"
+      ],
+      "source": "aws-console",
+      "status": "captured",
+      "source_url": "https://console.aws.amazon.com/dynamodbv2/home?region=us-east-1",
+      "instance": "flight-delay-events",
+      "capture_instruction": "Together the files show the ACTIVE flight-delay-events table, String pk, on-demand billing, and ACTIVE event-date-created-at-index with event_date/created_at keys and ALL projection."
+    },
+    {
+      "criterion": "aws.dynamodb_prediction",
+      "filenames": [
+        "11a_aws_dynamodb_prediction.png",
+        "11b_aws_dynamodb_feedback.png"
+      ],
+      "source": "aws-console",
+      "status": "captured",
+      "source_url": "https://console.aws.amazon.com/dynamodbv2/home?region=us-east-1#item-explorer",
+      "instance": "flight-delay-events",
+      "capture_instruction": "Together the files show the representative persisted prediction identity, probability, governed model fields, status, feedback outcome, source, and revision 1."
+    },
+    {
+      "criterion": "aws.cloudwatch_or_status",
+      "filename": "12_aws_ec2_status_checks.png",
+      "source": "aws-console",
+      "status": "captured",
+      "source_url": "https://console.aws.amazon.com/ec2/home?region=us-east-1",
+      "instance": "flight-api",
+      "capture_instruction": "Shows API system, instance, and EBS status checks passed."
+    },
+    {
+      "criterion": "app.api_docs",
+      "filename": "13_app_api_docs.png",
+      "source": "application",
+      "status": "captured",
+      "source_url": "live-session://flight-api/docs",
+      "instance": "flight-api",
+      "publication_status": "redaction-required",
+      "redaction_notes": "Redact the API public IPv4 address from the browser address bar before a public commit; preserve the six endpoint rows.",
+      "capture_instruction": "Shows the live FastAPI Swagger UI and all six required endpoints."
+    },
+    {
+      "criterion": "app.health",
+      "filename": "14_app_health.png",
+      "source": "application",
+      "status": "missing",
+      "source_url": "live-session://flight-api/health",
+      "instance": "flight-api",
+      "capture_instruction": "No dedicated health-response screenshot exists in the supplied directory. Do not substitute Swagger or Monitor evidence."
+    },
+    {
+      "criterion": "app.model_info",
+      "filename": "15_app_model_info.png",
+      "source": "application",
+      "status": "missing",
+      "source_url": "live-session://flight-api/model-info",
+      "instance": "flight-api",
+      "capture_instruction": "No dedicated model-info response screenshot exists in the supplied directory. Required proof would show exact production:v0 identity, immutable digests, deployment_purpose=academic_demo, and internal_production_gate_passed=false."
+    },
+    {
+      "criterion": "app.traveler_prediction",
+      "filename": "16_app_traveler_prediction.png",
+      "source": "application",
+      "status": "captured",
+      "source_url": "live-session://flight-user-ui/prediction",
+      "instance": "flight-user-ui",
+      "capture_instruction": "Shows the UA DEN-to-LAX academic estimate, prediction ID, delayed classification, medium risk band, and governance disclosure."
+    },
+    {
+      "criterion": "app.traveler_feedback",
+      "filename": "17_app_traveler_feedback.png",
+      "source": "application",
+      "status": "captured",
+      "source_url": "live-session://flight-user-ui/feedback",
+      "instance": "flight-user-ui",
+      "capture_instruction": "Shows feedback saved successfully at revision 1 for the live prediction."
+    },
+    {
+      "criterion": "app.monitor_operations",
+      "filename": "18_app_monitor_operations.png",
+      "source": "application",
+      "status": "captured",
+      "source_url": "live-session://flight-monitor/operations",
+      "instance": "flight-monitor",
+      "capture_instruction": "Shows direct DynamoDB monitoring, exact production:v0 identity, governance disclosure, one successful request, and latency metrics."
+    },
+    {
+      "criterion": "app.monitor_drift",
+      "filename": "19_app_monitor_drift.png",
+      "source": "application",
+      "status": "captured",
+      "source_url": "live-session://flight-monitor/drift",
+      "instance": "flight-monitor",
+      "capture_instruction": "Shows target/prediction distribution and PSI/Jensen-Shannon input-drift calculations; values are operational proof only because n=1."
+    },
+    {
+      "criterion": "app.monitor_feedback",
+      "filename": "20_app_monitor_feedback.png",
+      "source": "application",
+      "status": "captured",
+      "source_url": "live-session://flight-monitor/feedback",
+      "instance": "flight-monitor",
+      "capture_instruction": "Shows feedback coverage and metrics plus prediction inspection and persisted revision 1; metric values are not statistically meaningful because n=1."
+    }
   ]
 }

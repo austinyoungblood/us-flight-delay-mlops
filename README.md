@@ -1,85 +1,145 @@
 # U.S. Flight Delay MLOps
 
-A production-oriented course project for predicting whether a scheduled U.S. domestic flight will
-arrive at least 15 minutes late. BTS treats arrivals less than 15 minutes after schedule as on time.
+A graduate-level MLOps system that estimates, before departure, whether a scheduled U.S. domestic
+flight will arrive at least 15 minutes late. The completed project combines leakage-safe feature
+engineering, experiment tracking, immutable model release controls, registry-backed inference,
+DynamoDB persistence, two role-separated Streamlit applications, CI, and a validated three-host AWS
+deployment.
 
-## Prediction framing
+> **Academic demonstration:** `deployment_purpose = academic_demo` and
+> `internal_production_gate_passed = false`. The W&B `production` alias is the course deployment
+> alias; it does not mean that the model passed this project's stricter internal production-quality
+> gate. Predictions are historical risk estimates, not live flight status or guarantees.
 
-The prediction is made **before departure** and may use only scheduled flight information: carrier,
-route, calendar, scheduled departure/arrival, scheduled elapsed time, and distance. Actual departure,
-taxi, airborne, arrival, cancellation/diversion outcome, and delay-cause fields are forbidden. The
-central leakage guard rejects both explicitly forbidden and merely unapproved model fields.
+## System architecture
 
-This project will estimate risk from historical scheduled-flight data. It will not provide live
-flight status or a guarantee about an individual flight.
+```mermaid
+flowchart LR
+    T["Traveler Streamlit<br>EC2: flight-user-ui<br>No IAM role"]
+    A["FastAPI<br>EC2: flight-api<br>LabRole"]
+    W["W&B Registry<br>production:v0"]
+    D["DynamoDB<br>flight-delay-events"]
+    M["Monitor Streamlit<br>EC2: flight-monitor<br>LabRole"]
 
-## Current implementation status
+    T -->|"Private EC2 address<br>SG-to-SG TCP 8000"| A
+    A -->|"Verified model bundle"| W
+    A -->|"Predictions, retrieval, feedback"| D
+    M -->|"Direct GSI queries"| D
+```
 
-Brief 09A/09B completes the final pre-AWS course-compliance and model-lifecycle increment on top of
-the accepted Brief 08 deployment package. FastAPI reads the serving alias only from
-`release/release_decision.json`, verifies the exact W&B Registry version/digest and every locked
-artifact hash, loads the immutable model once during lifespan, and fails closed if Registry or
-DynamoDB is unavailable. The course deployment alias is now `production` on the unchanged Registry
-`v0`, digest `865ddd18f6debd44f24a79fc71739f2a`, threshold `0.1840285229739868`.
-**Academic demonstration — W&B production alias used for course deployment; the model did not pass
-the project's stricter internal production-quality gate.**
+The Traveler has neither an AWS role nor a W&B key and calls only FastAPI. FastAPI owns validation,
+route context, inference, caching, and event persistence. The Monitor never calls FastAPI; it reads
+DynamoDB directly through its EC2 instance profile.
 
-The traveler Streamlit application calls FastAPI only. The separate monitoring Streamlit application
-reads DynamoDB only through bounded UTC GSI queries and provides operational, distribution, drift,
-model-version, and feedback views plus revisioned adjudication. DynamoDB Local, deterministic labeled
-demo data, and one-command Compose startup are implemented. The digest-only deployment manifest,
-idempotent host scripts, local/live smoke sequence, least-privilege topology, evidence mapping, and
-strict four-hour runbook are prepared under `deploy/`, `scripts/`, `docs/`, and `evidence/`.
-This increment intentionally performs no AWS Academy action or AWS service call. It also adds a
-versioned promotion policy, pure deterministic selector, fail-closed W&B adapter, sanitized decision
-artifact, manual dry-run/apply workflow, and hermetic multi-candidate tests. See the
-[model-selection report](docs/model-selection-report.md) and
-[remediation report](docs/model-remediation-report.md), the
-[final-test report](docs/final-test-report.md), and the
-[API/DynamoDB status report](docs/api-dynamodb-status.md), the
-[Brief 07 UI/monitoring report](docs/ui-monitoring-status.md), and the
-[detailed status ledger](docs/implementation-status.md), and the
-[public-deliverable audit](docs/public-deliverables.md). The audited repository and Brief 09 draft
-pull request are public; the immutable image references and their source revision are frozen in
-[`deploy/deployment_manifest.json`](deploy/deployment_manifest.json).
-The controlled lifecycle design and operator commands are documented in
-[`docs/model-promotion.md`](docs/model-promotion.md).
+## Validated AWS deployment
 
-## Architecture summary
+The live course deployment ran in `us-east-1` on three separate `t3.small` EC2 hosts:
 
-The system boundary has three independently deployable services. FastAPI consumes the exact `production`
-release and owns validation, inference, route context, caching, and required event persistence. The
-traveler UI calls only FastAPI; the operations UI queries only the DynamoDB event plane. The
-[architecture document](docs/architecture.md) records those ownership boundaries.
+| Host | Component | Authority |
+| --- | --- | --- |
+| `flight-user-ui` | Traveler Streamlit on port 8501 | No IAM role; private access to API through the Traveler security group |
+| `flight-api` | FastAPI on port 8000 | `LabRole` for DynamoDB; W&B key supplied only at runtime |
+| `flight-monitor` | Monitor Streamlit on port 8501 | `LabRole` for direct DynamoDB queries; no W&B key |
 
-The frozen live topology is three same-VPC EC2 hosts: traveler Streamlit on 8501 calls the API's
-private port 8000; FastAPI calls W&B over HTTPS and shares DynamoDB with the separate monitor on
-8501. API and monitor use an EC2 instance profile; traveler receives no AWS or W&B credentials.
+The data plane used DynamoDB table `flight-delay-events` with String partition key `pk`, on-demand
+`PAY_PER_REQUEST` billing, and the `event-date-created-at-index` GSI: String hash key `event_date`,
+String range key `created_at`, and `ALL` projection.
 
-## Python setup and validation
+The live path demonstrated:
 
-Python 3.11 is required.
+- `GET /health` returning HTTP 200 with both the model and DynamoDB ready;
+- `GET /model-info` returning the exact governed `production:v0` identity;
+- public Swagger UI exposing all six required endpoints;
+- a real Traveler inference request and DynamoDB prediction persistence;
+- revisioned feedback write-back and retrieval;
+- direct Monitor-to-DynamoDB access through the Monitor instance profile;
+- operational volume, success, latency, and cache metrics;
+- prediction/target-drift indicators and PSI/Jensen-Shannon input-drift calculations; and
+- feedback metrics plus individual prediction inspection.
+
+Representative academic smoke-test record:
+
+| Field | Value |
+| --- | --- |
+| Prediction ID | `e8d9c837-abe5-4c8c-9d88-4ebdd5c6cf04` |
+| Route | `UA DEN → LAX` |
+| Delay probability | `0.20431692609038393` |
+| Classification | `Delayed` |
+| Risk band | `Medium` |
+| Feedback revision | `1` |
+
+This record proves the deployed workflow, not real-world flight performance. The captured live AWS
+evidence contains one prediction (`n=1`), so PSI, Jensen-Shannon divergence, prevalence delta,
+feedback accuracy, and similar values show that the monitoring pipeline operates end to end; they
+are not statistically meaningful production-monitoring estimates.
+
+## Governed release identity
+
+FastAPI reads the serving identity only from `release/release_decision.json`, validates it against
+the selection lock, downloads the exact Registry version, verifies all bundle members, and fails
+closed if W&B Registry or DynamoDB is unavailable.
+
+| Contract | Frozen value |
+| --- | --- |
+| Registry collection | `wandb-registry-Model/us-flight-arrival-delay-15m` |
+| Course serving alias | `production` |
+| Registry version | `v0` |
+| Registry digest | `865ddd18f6debd44f24a79fc71739f2a` |
+| Bundle SHA256 | `2677b7093d66637852705d33bca006c3b78d8119f4d7268801453aa18c22f572` |
+| Classification threshold | `0.1840285229739868` |
+| Application/image source SHA | `355d99226883ebae1705d9f5a12eaffbe7bc6c8a` |
+| Frozen deployment-package commit | `b59672180d5651aa086400ba755e0b724c40ba44` |
+
+Immutable public images:
+
+- API: `ghcr.io/austinyoungblood/us-flight-delay-mlops-api@sha256:7175844d53a46ed96c5cd3198e8fb6defbdf67bd0c640999914272b26e9433d4`
+- Traveler: `ghcr.io/austinyoungblood/us-flight-delay-mlops-traveler@sha256:9afd05f6697609fbda7b130ff6e61afa29cab936981ae6f990fe5914fb71fb47`
+- Monitor: `ghcr.io/austinyoungblood/us-flight-delay-mlops-monitor@sha256:7b038768c7474d7702909a747014e2725b77654d83aeb0fac1f1dac4db41ef62`
+
+The non-root API container used `MODEL_DOWNLOAD_DIR=/tmp/flight-delay-model` and `HOME=/tmp` for W&B
+runtime compatibility. These accommodations did not change model identity or bypass Registry,
+digest, or file-hash verification; W&B downloaded and verified all ten release files successfully.
+See the [deployment manifest](deploy/deployment_manifest.json),
+[model lifecycle design](docs/model-promotion.md), and
+[final-test report](docs/final-test-report.md) for the auditable contracts.
+
+## Prediction and persistence contracts
+
+The prediction is made before departure from scheduled carrier, route, calendar, departure/arrival,
+elapsed-time, and distance fields. Actual operations or outcomes—including actual departure, taxi,
+airborne, arrival, cancellation/diversion, and delay-cause fields—are forbidden. The central leakage
+guard rejects both explicitly forbidden and merely unapproved model fields.
+
+FastAPI exposes:
+
+- `GET /health`
+- `GET /model-info`
+- `POST /predict`
+- `GET /route-reliability`
+- `GET /predictions/{prediction_id}`
+- `POST /feedback/{prediction_id}`
+
+Interactive OpenAPI documentation is available at `/docs`. A successful prediction response is
+returned only after its unique event has been persisted. Feedback is revisioned on the same record,
+and monitoring queries use bounded UTC windows through the GSI.
+
+## Local development
+
+Python 3.11 is required. Tests use fake or disabled integrations and require no network credentials.
 
 ```bash
 python3.11 -m venv .venv
 source .venv/bin/activate
 python -m pip install -c requirements.lock ".[dev]"
 
-python --version
 ruff check .
 ruff format --check .
 pytest --cov=flight_delay --cov-branch --cov-report=term-missing --cov-fail-under=80
-
-docker build -f services/api/Dockerfile -t flight-delay-api:brief09 .
-docker build -f services/user_ui/Dockerfile -t flight-delay-user-ui:brief09 .
-docker build -f services/monitor_ui/Dockerfile -t flight-delay-monitor-ui:brief09 .
 ```
 
-## Local application runtime
-
-Copy `.env.example` to ignored `.env` and supply `WANDB_API_KEY` and `WANDB_ENTITY`. Do not add AWS
-Academy credentials and do not set a model alias: the committed release decision is the
-sole serving control plane. Compose injects dummy credentials and an explicit DynamoDB Local endpoint.
+For a local application rehearsal, copy `.env.example` to ignored `.env` and supply only the W&B
+values required by the API. Docker Compose uses explicit dummy AWS credentials and DynamoDB Local;
+never place AWS Academy credentials in `.env`.
 
 ```bash
 docker compose up -d --build
@@ -88,121 +148,55 @@ curl http://127.0.0.1:8501/_stcore/health
 curl http://127.0.0.1:8502/_stcore/health
 ```
 
-Default host ports are API `8000`, DynamoDB Local `8001`, traveler UI `8501`, and monitor UI `8502`.
-Use `API_HOST_PORT`, `DYNAMODB_LOCAL_PORT`, `USER_UI_HOST_PORT`, and `MONITOR_UI_HOST_PORT` to avoid a
-local conflict. Service-to-service addresses remain unchanged.
+Default host ports are API `8000`, DynamoDB Local `8001`, Traveler `8501`, and Monitor `8502`.
 
-The required table is `flight-delay-events`, PAY_PER_REQUEST, with String partition key `pk` and ALL
-projection GSI `event-date-created-at-index` (`event_date`, `created_at`). `/health` returns 200 only
-when both the verified Registry runtime and DynamoDB are ready; otherwise it returns structured 503
-without a local-model fallback. Successful prediction responses are returned only after their unique
-event is persisted.
+## Data and experiment lineage
 
-Implemented endpoints are `GET /health`, `GET /model-info`, `POST /predict`,
-`GET /route-reliability`, `GET /predictions/{id}`, and `POST /feedback/{id}`. Interactive docs are at
-`/docs`. The traveler and monitoring applications run on ports 8501 and 8502 under Compose.
-
-Demo generation is dry-run by default and refuses mutation unless an explicit local endpoint exists:
-
-```bash
-PYTHONPATH=src python scripts/seed_demo_events.py --batch-id review-01 --count 30
-DYNAMODB_ENDPOINT_URL=http://127.0.0.1:8001 \
-  AWS_ACCESS_KEY_ID=local AWS_SECRET_ACCESS_KEY=local \
-  PYTHONPATH=src python scripts/seed_demo_events.py --batch-id review-01 --count 30 --execute
-# The same explicit local environment plus --cleanup removes only review-01.
-```
-
-## Data and experiment workflow
-
-The official archive family is
-`On_Time_Reporting_Carrier_On_Time_Performance_1987_present_{YEAR}_{MONTH}.zip` from the
-[BTS PREZIP directory](https://transtats.bts.gov/PREZIP/). The workflow downloads January 2025
-through May 2026, applies a deterministic class-stratified cap of 75,000 eligible rows/month with
-seed 42, and writes these half-open windows:
+The workflow uses the BTS
+[`On_Time_Reporting_Carrier_On_Time_Performance` archives](https://transtats.bts.gov/PREZIP/),
+applies a deterministic class-stratified monthly cap of 75,000 eligible rows with seed 42, and uses
+half-open temporal splits:
 
 - train: `[2025-01-01, 2025-11-01)` — 750,000 rows;
-- validation: `[2025-11-01, 2026-01-01)` — 150,000 rows;
+- validation: `[2025-11-01, 2026-01-01)` — 150,000 rows; and
 - sealed test: `[2026-01-01, 2026-06-01)` — 375,000 rows.
 
-From the repository root:
-
-```bash
-make download-data
-make prepare-data
-
-cp .env.example .env
-chmod 600 .env
-# Edit .env: set WANDB_API_KEY and WANDB_ENTITY; keep WANDB_PROJECT=us-flight-delay-mlops.
-set -a
-source .env
-set +a
-
-make log-dataset
-make train-dummy
-make train-candidate-a
-make validate
-```
-
-`WANDB_API_KEY` is secret and must exist only in the shell environment or ignored `.env`; never put
-it in configuration, source, manifests, logs, or reports. `WANDB_ENTITY`, `WANDB_PROJECT`, and
-`WANDB_MODE` are non-secret configuration. Tests use a fake adapter/disabled mode and need no
-network or credentials.
-
-Validation-only results at threshold 0.5:
+Historical validation-only experiment results at threshold 0.5:
 
 | Run | Accuracy | Precision | Recall | F1 | Average precision | ROC-AUC | Brier | Log loss |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | Dummy prior | 0.76334 | 0 | 0 | 0 | 0.23666 | 0.5 | 0.180962 | 0.548087 |
 | Candidate A | 0.569967 | 0.302541 | 0.625961 | 0.407923 | 0.320719 | 0.622293 | 0.245282 | 0.684221 |
 
-The model artifacts are
+These historical project artifacts are separate from the governed Registry release:
 [`flight-delay-model:v0`](https://wandb.ai/austin-youngblood-university-of-denver/us-flight-delay-mlops/artifacts/model/flight-delay-model/v0)
-(Dummy) and
-[`flight-delay-model:v1`](https://wandb.ai/austin-youngblood-university-of-denver/us-flight-delay-mlops/artifacts/model/flight-delay-model/v1)
-(Candidate A). Neither is linked to W&B Registry.
+and
+[`flight-delay-model:v1`](https://wandb.ai/austin-youngblood-university-of-denver/us-flight-delay-mlops/artifacts/model/flight-delay-model/v1).
 
-## Repository structure
+## Repository map and evidence
 
 ```text
 .
-├── .github/workflows/ci.yml
-├── .github/workflows/model-promotion.yml
-├── configs/promotion_policy.yaml
-├── configs/base.yaml
-├── data/README.md
-├── deploy/
-├── docs/
-├── evidence/
-├── infra/
-├── scripts/
-├── services/
-│   ├── api/
-│   ├── user_ui/
-│   └── monitor_ui/
-├── src/flight_delay/
-│   ├── contracts/
-│   ├── data/
-│   ├── deployment/
-│   ├── features/
-│   ├── modeling/
-│   ├── monitoring/
-│   ├── persistence/
-│   ├── promotion/
-│   └── serving/
-├── tests/unit/
-├── tests/integration/
-├── docker-compose.yml
-├── Makefile
-└── pyproject.toml
+├── .github/workflows/       # CI and controlled promotion workflow
+├── configs/                 # Training and promotion policy
+├── deploy/                  # Frozen manifest and idempotent host scripts
+├── docs/                    # Architecture, lifecycle, reports, and runbooks
+├── evidence/                # Rubric-to-evidence manifest
+├── aws/screenshots/         # Curated live AWS/application evidence
+├── infra/                   # DynamoDB provisioning contract
+├── scripts/                 # Validation, smoke, and controlled utility commands
+├── services/                # API, Traveler UI, and Monitor UI images
+├── src/flight_delay/        # Reusable application and MLOps packages
+└── tests/                   # Unit and integration coverage
 ```
 
-## Data and secret policy
+The [evidence manifest](evidence/evidence_manifest.json) maps each rubric criterion to captured or
+missing evidence without substituting local output for AWS proof. Detailed implementation history
+remains available in [docs/implementation-status.md](docs/implementation-status.md).
 
-Raw/processed BTS data, trained models, W&B files, AWS credentials, `.env`, caches, and large
-artifacts must never be committed. Tests use only small in-memory fixtures. `.env.example` contains
-names and non-secret defaults only.
+## Secret and artifact policy
 
-## Next reviewed action
-
-After every pre-activation gate is green, the exact next action is: **activate one AWS Academy
-session and execute the frozen four-hour runbook; no feature development during that session.**
+Raw/processed BTS data, trained models, W&B files, AWS credentials, `.env`, caches, SSH material, and
+large generated artifacts are excluded from Git. `.env.example` contains names and non-secret
+defaults only. Secrets belong only in runtime secret stores or the ignored local environment file;
+they must never appear in source, manifests, logs, reports, or screenshots.
