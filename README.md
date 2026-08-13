@@ -1,15 +1,14 @@
 # U.S. Flight Delay MLOps
 
-A graduate-level MLOps system that estimates, before departure, whether a scheduled U.S. domestic
-flight will arrive at least 15 minutes late. The completed project combines leakage-safe feature
-engineering, experiment tracking, immutable model release controls, registry-backed inference,
-DynamoDB persistence, two role-separated Streamlit applications, CI, and a validated three-host AWS
-deployment.
+A complete MLOps system that estimates, before departure, whether a scheduled U.S. domestic flight
+will arrive at least 15 minutes late. It combines leakage-safe feature engineering, experiment
+tracking, immutable model release controls, registry-backed inference, DynamoDB persistence,
+role-separated user and monitoring applications, CI, and a validated three-host AWS deployment.
 
-> **Academic demonstration:** `deployment_purpose = academic_demo` and
-> `internal_production_gate_passed = false`. The W&B `production` alias is the course deployment
-> alias; it does not mean that the model passed this project's stricter internal production-quality
-> gate. Predictions are historical risk estimates, not live flight status or guarantees.
+> **Deployment scope:** The runtime reports `deployment_purpose = academic_demo` and
+> `internal_production_gate_passed = false`. The W&B `production` alias selects the actively served
+> release; it is not a broader claim of production readiness. Predictions are historical risk
+> estimates, not live flight status or guarantees.
 
 ## System architecture
 
@@ -33,7 +32,7 @@ DynamoDB directly through its EC2 instance profile.
 
 ## Validated AWS deployment
 
-The live course deployment ran in `us-east-1` on three separate `t3.small` EC2 hosts:
+The validated reference deployment ran in `us-east-1` on three separate `t3.small` EC2 hosts:
 
 | Host | Component | Authority |
 | --- | --- | --- |
@@ -57,7 +56,7 @@ The live path demonstrated:
 - prediction/target-drift indicators and PSI/Jensen-Shannon input-drift calculations; and
 - feedback metrics plus individual prediction inspection.
 
-Representative academic smoke-test record:
+Representative end-to-end smoke-test record:
 
 | Field | Value |
 | --- | --- |
@@ -82,7 +81,7 @@ closed if W&B Registry or DynamoDB is unavailable.
 | Contract | Frozen value |
 | --- | --- |
 | Registry collection | `wandb-registry-Model/us-flight-arrival-delay-15m` |
-| Course serving alias | `production` |
+| Serving alias | `production` |
 | Registry version | `v0` |
 | Registry digest | `865ddd18f6debd44f24a79fc71739f2a` |
 | Bundle SHA256 | `2677b7093d66637852705d33bca006c3b78d8119f4d7268801453aa18c22f572` |
@@ -139,7 +138,7 @@ pytest --cov=flight_delay --cov-branch --cov-report=term-missing --cov-fail-unde
 
 For a local application rehearsal, copy `.env.example` to ignored `.env` and supply only the W&B
 values required by the API. Docker Compose uses explicit dummy AWS credentials and DynamoDB Local;
-never place AWS Academy credentials in `.env`.
+never place live cloud credentials in `.env`.
 
 ```bash
 docker compose up -d --build
@@ -168,7 +167,7 @@ Historical validation-only experiment results at threshold 0.5:
 | Dummy prior | 0.76334 | 0 | 0 | 0 | 0.23666 | 0.5 | 0.180962 | 0.548087 |
 | Candidate A | 0.569967 | 0.302541 | 0.625961 | 0.407923 | 0.320719 | 0.622293 | 0.245282 | 0.684221 |
 
-These historical project artifacts are separate from the governed Registry release:
+These historical experiment artifacts are separate from the governed Registry release:
 [`flight-delay-model:v0`](https://wandb.ai/austin-youngblood-university-of-denver/us-flight-delay-mlops/artifacts/model/flight-delay-model/v0)
 and
 [`flight-delay-model:v1`](https://wandb.ai/austin-youngblood-university-of-denver/us-flight-delay-mlops/artifacts/model/flight-delay-model/v1).
@@ -181,7 +180,7 @@ and
 ├── configs/                 # Training and promotion policy
 ├── deploy/                  # Frozen manifest and idempotent host scripts
 ├── docs/                    # Architecture, lifecycle, reports, and runbooks
-├── evidence/                # Rubric-to-evidence manifest
+├── evidence/                # Deployment evidence manifest
 ├── aws/screenshots/         # Curated live AWS/application evidence
 ├── infra/                   # DynamoDB provisioning contract
 ├── scripts/                 # Validation, smoke, and controlled utility commands
@@ -190,9 +189,10 @@ and
 └── tests/                   # Unit and integration coverage
 ```
 
-The [evidence manifest](evidence/evidence_manifest.json) maps each rubric criterion to captured or
-missing evidence without substituting local output for AWS proof. Detailed implementation history
-remains available in [docs/implementation-status.md](docs/implementation-status.md).
+The [evidence manifest](evidence/evidence_manifest.json) maps deployment and application validation
+claims to captured or missing evidence without substituting local output for AWS proof. Detailed
+implementation history remains available in
+[docs/implementation-status.md](docs/implementation-status.md).
 
 ## Secret and artifact policy
 
