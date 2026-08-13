@@ -1,6 +1,6 @@
 # Data provenance and policy
 
-Brief 02 uses the official BTS Reporting Carrier On-Time Performance archives at
+The data pipeline uses the official BTS Reporting Carrier On-Time Performance archives at
 `https://transtats.bts.gov/PREZIP/On_Time_Reporting_Carrier_On_Time_Performance_1987_present_{YEAR}_{MONTH}.zip`
 for January 2025 through May 2026. The 17 verified ZIPs total 501,916,656 bytes. Their stable
 `source_manifest.json` digest is
@@ -25,13 +25,14 @@ digest `2ecdb5a6a60b23ed1ee1d603fb976516`.
 
 Run `make download-data` and `make prepare-data` from the repository root. Raw ZIPs, processed
 Parquet files, models, W&B cache, `.env`, and credentials are ignored and must never be committed.
-Only the small canonical JSON manifests are versioned. Brief 03 subdivides the development data into
+Only the small canonical JSON manifests are versioned. Model selection subdivides the development data into
 January–August base fit (600,000 rows), September tuning (75,000), January–September refit
 (675,000), October calibration (75,000), and November–December validation (150,000). Both calibrated
 candidates failed at least one mandatory validation gate, so the January–May 2026 test split remains
 unread, unscored, and sealed.
 
-Brief 04 reused the same immutable artifact and source hashes. It used January–October only for four
+The remediation evaluation reused the same immutable artifact and source hashes. It used
+January–October only for four
 rolling-origin base folds and final refit, November 1–15 for calibration, and November 16–30 for
 selection. No finalist passed the November gate, so December and the final test were not read by the
-Brief 04 evaluators.
+remediation evaluators.

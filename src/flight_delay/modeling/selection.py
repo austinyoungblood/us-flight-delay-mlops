@@ -60,7 +60,7 @@ def select_threshold(
 def select_threshold_remediation(
     target: Any, probabilities: Any, *, minimum_recall: float = 0.60
 ) -> ThresholdSelection:
-    """Apply Brief 04's vectorized threshold objective and revised tie-break ordering."""
+    """Apply the remediation threshold objective and revised tie-break ordering."""
 
     precision, recall, thresholds = precision_recall_curve(target, probabilities)
     denominator = precision[:-1] + recall[:-1]
@@ -108,7 +108,7 @@ def november_gates(
     latency_p95_ms: float,
     bundle_bytes: int,
 ) -> dict[str, bool]:
-    """Evaluate every mandatory Brief 04 November selection gate."""
+    """Evaluate every mandatory November remediation gate."""
 
     return {
         "average_precision": float(metrics["average_precision"]) >= 0.320719,

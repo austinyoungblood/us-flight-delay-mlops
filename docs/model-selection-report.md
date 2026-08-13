@@ -1,4 +1,4 @@
-# Brief 03 model-selection stop report
+# Model-selection stop report
 
 ## Outcome
 
@@ -81,6 +81,6 @@ date sort, covered by a regression test, and committed before the successful bou
 - Branch coverage: 82.96% (80% minimum)
 - W&B audit: all nine pre-test runs finished, all used exact dataset `v0` and digest, and none logged
   a `test/` or `final_test/` metric
-- `flight-delay-api:brief03`: built, image `ef6327cbd2cb...`
-- `flight-delay-user-ui:brief03`: built, image `9434034b9a20...`
-- `flight-delay-monitor-ui:brief03`: built, image `b95bf5db1864...`
+- API image: built, image `ef6327cbd2cb...`
+- Traveler UI image: built, image `9434034b9a20...`
+- Monitoring UI image: built, image `b95bf5db1864...`

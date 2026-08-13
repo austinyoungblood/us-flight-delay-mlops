@@ -6,8 +6,8 @@ The production-shaped backend is implemented. FastAPI resolves the immutable W&B
 declared by the committed release decision, verifies all locked bytes, loads the model and route asset
 once during lifespan, and requires DynamoDB persistence for every successful prediction. The traveler
 application calls FastAPI only. The monitoring application reads DynamoDB only and never imports or
-loads the model. DynamoDB Local is the sole persistence runtime used in this increment. No AWS Academy
-session activation, AWS service call, or EC2 deployment is part of this increment. The `production`
+loads the model. DynamoDB Local was the sole persistence runtime used for local validation. That
+validation did not activate an AWS Academy session, call an AWS service, or deploy EC2. The `production`
 alias is course deployment metadata, not internal production-quality certification.
 
 ```mermaid

@@ -24,7 +24,7 @@ class DevelopmentPartitions:
 
 @dataclass(frozen=True)
 class CalibrationAudit:
-    """Independent calibration metrics required by the Brief 04 release gate."""
+    """Independent calibration metrics required by the remediation release gate."""
 
     mean_probability_gap: float
     equal_width_ece_10: float
@@ -37,7 +37,7 @@ class CalibrationAudit:
 def partition_development_data(
     train: pd.DataFrame, validation: pd.DataFrame, *, date_column: str = "flight_date"
 ) -> DevelopmentPartitions:
-    """Create the five disjoint Brief 03 development partitions without a test input."""
+    """Create the five disjoint development partitions without a test input."""
 
     for name, frame in (("train", train), ("validation", validation)):
         if date_column not in frame:
@@ -180,7 +180,7 @@ def calibration_table(
 
 
 def calibration_audit(target: Any, probabilities: Any) -> CalibrationAudit:
-    """Calculate all independently specified Brief 04 calibration metrics."""
+    """Calculate all independently specified remediation calibration metrics."""
 
     width_table, width_ece, _ = calibration_table(
         target, probabilities, bins=10, strategy="equal_width"
@@ -201,7 +201,7 @@ def calibration_audit(target: Any, probabilities: Any) -> CalibrationAudit:
 def reliability_table(
     target: Any, probabilities: Any, *, bins: int = 10
 ) -> tuple[list[dict[str, float | int | None]], float]:
-    """Compatibility wrapper for Brief 03's equal-frequency reliability evidence."""
+    """Compatibility wrapper for the model-selection reliability evidence."""
 
     table, ece, _ = calibration_table(target, probabilities, bins=bins, strategy="equal_frequency")
     return table, ece

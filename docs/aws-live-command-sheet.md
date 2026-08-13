@@ -1,7 +1,7 @@
 # AWS live-session command sheet
 
-Execute this sheet only during the one Brief 09 Learner Lab session, after every gate in
-`brief09-step-by-step.md` is green. Replace every `<...>` value only after the approved session is
+Execute this sheet only during the one approved Learner Lab session, after every gate in
+`aws-deployment-walkthrough.md` is green. Replace every `<...>` value only after the session is
 active. Do not paste credentials into a command, screenshot, shell history, repository file, or
 evidence record.
 
@@ -42,8 +42,8 @@ aws ec2 describe-instances --region "$AWS_REGION" \
 
 ## Per-host bootstrap and deploy
 
-Clone reviewed `main` after the Brief 09 walkthrough/deployment-safety correction is merged. Brief 09
-merge commit `1cafcab2b1ccec4dd2662a9ad9166fac9aa37ad4` and manifest source SHA
+Clone reviewed `main` after the walkthrough/deployment-safety correction is merged. Merge commit
+`1cafcab2b1ccec4dd2662a9ad9166fac9aa37ad4` and manifest source SHA
 `355d99226883ebae1705d9f5a12eaffbe7bc6c8a` must both be ancestors of `HEAD`. The source SHA
 identifies the bytes used to build the immutable images; it is not expected to equal repository
 `HEAD`. Run the strict manifest validator before activation and the standard-library manifest reader
@@ -83,6 +83,6 @@ python scripts/aws_end_to_end_smoke.py --mode live \
   --traveler-url http://<TRAVELER_PUBLIC_IP>:8501 \
   --monitor-url http://<MONITOR_PUBLIC_IP>:8501 \
   --verify-dynamodb --region "$AWS_REGION" \
-  --seed-demo-batch brief08-<YYYYMMDDTHHMMSSZ>-evidence \
+  --seed-demo-batch deployment-<YYYYMMDDTHHMMSSZ>-evidence \
   --output evidence/21_live_smoke_summary.json
 ```

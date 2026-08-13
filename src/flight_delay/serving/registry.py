@@ -34,7 +34,7 @@ class RegistryRuntimeError(RuntimeError):
 
 @dataclass(frozen=True)
 class ReleaseDecision:
-    """Immutable serving control-plane values committed by Brief 05."""
+    """Immutable serving control-plane values committed by the governed release."""
 
     registry_path: str
     serving_alias: str
@@ -249,7 +249,7 @@ class ServingRuntime:
 
 
 class VerifiedRegistryLoader:
-    """Resolve, download, and verify exactly the artifact selected by Brief 05."""
+    """Resolve, download, and verify exactly the artifact selected for release."""
 
     def __init__(
         self,

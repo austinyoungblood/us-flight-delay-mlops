@@ -22,5 +22,5 @@ arguments. The required default is:
   key, and ALL projection.
 
 `DYNAMODB_ENDPOINT_URL`/`--endpoint-url` is development-only. When absent, boto3 retains its standard
-production endpoint behavior; Brief 07 did not exercise that path. Starting the AWS Academy Learner
-Lab or calling any AWS service is explicitly deferred to a separately reviewed increment.
+production endpoint behavior; local development did not exercise that path. Starting the AWS Academy
+Learner Lab or calling any AWS service was deferred to a separately reviewed deployment session.

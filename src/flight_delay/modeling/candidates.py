@@ -1,4 +1,4 @@
-"""Brief 03 calibrated control and Candidate B model definitions."""
+"""Calibrated control and Candidate B model definitions."""
 
 from __future__ import annotations
 
@@ -69,7 +69,7 @@ def build_candidate(
         validate_model_features(CANDIDATE_A_FEATURES)
         return candidate_a_pipeline(parameters), CANDIDATE_A_FEATURES
     if candidate_id != "candidate_b":
-        raise ValueError(f"unsupported Brief 03 candidate: {candidate_id}")
+        raise ValueError(f"unsupported model-selection candidate: {candidate_id}")
     validate_model_features(CANDIDATE_B_INPUT_FEATURES)
     validate_model_features(CANDIDATE_B_MODEL_FEATURES)
     categorical = Pipeline(

@@ -1,9 +1,9 @@
-# R3 sigmoid model card — Brief 05 release decision
+# R3 sigmoid model card — governed release decision
 
 ## Intended use
 
 Estimate, before departure, whether a scheduled U.S. domestic flight will arrive at least 15
-minutes late. The candidate is suitable for the course project's next controlled serving increment
+minutes late. The candidate is suitable for a controlled serving environment
 under the W&B Registry `staging` alias. It is not approved as a real-world production model.
 
 ## Model and data

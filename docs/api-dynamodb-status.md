@@ -1,13 +1,15 @@
-# Brief 06 API and DynamoDB status
+# API and DynamoDB implementation status
 
-> Historical Brief 06 report. Brief 09A later moved the unchanged Registry `v0` to the course-required
-> `production` serving alias. The current API exposes `internal_production_gate_passed=false`,
+> Historical implementation report. The unchanged Registry `v0` was later moved to the
+> course-required `production` serving alias. The current API exposes
+> `internal_production_gate_passed=false`,
 > `deployment_purpose=academic_demo`, and the persistent academic-demonstration governance notice.
 
 ## Implementation summary
 
-Brief 06 starts from merged Brief 05 SHA `3bc9208c06f125f7d741699f7f89b441d1295dc3` on
-`feat/api-dynamodb`. It implements the release-decision-backed serving runtime, complete FastAPI
+This implementation starts from the governed-release SHA
+`3bc9208c06f125f7d741699f7f89b441d1295dc3` on `feat/api-dynamodb`. It implements the
+release-decision-backed serving runtime, complete FastAPI
 backend, required event persistence adapter, active-model metadata and idempotent DynamoDB
 provisioner. It does not implement either Streamlit UI, monitoring calculations, demo seeding, EC2,
 CloudWatch or deployment automation.
@@ -53,6 +55,6 @@ real table and end-to-end persistence/cache/feedback smoke remain blocked; no AW
   in-memory dependencies.
 - API, user UI and monitoring UI non-root Python 3.11 images built successfully.
 
-## Next exact increment
+## Subsequent work
 
 **user Streamlit + separate DynamoDB-backed monitoring dashboard consuming this API/data plane**

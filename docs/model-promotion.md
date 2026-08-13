@@ -1,6 +1,6 @@
 # Model selection and Registry promotion
 
-This is the controlled Brief 09B lifecycle path for the single Registry collection
+This is the controlled model-selection and promotion lifecycle for the single Registry collection
 `wandb-registry-Model/us-flight-arrival-delay-15m`. It selects only from compatible development and
 validation evidence. January–May 2026 final-test evidence is historical release context and is
 deliberately unavailable to the selector.

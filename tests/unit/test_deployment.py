@@ -313,8 +313,8 @@ def test_smoke_runner_proves_full_application_path_without_post_retries() -> Non
     feedback = {
         "actual_delayed": False,
         "arrival_delay_minutes": 4,
-        "notes": "Brief 08 smoke test",
-        "source": "brief-08-smoke",
+        "notes": "Deployment smoke test",
+        "source": "deployment-smoke",
         "feedback_correct": False,
         "feedback_at": "2026-08-10T13:00:00Z",
         "feedback_revision": 1,

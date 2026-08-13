@@ -1,8 +1,8 @@
-# Brief 04 model-remediation stop report
+# Model-remediation stop report
 
 ## Outcome
 
-No calibrated finalist passed every mandatory November gate. Brief 04 stopped before qualification
+No calibrated finalist passed every mandatory November gate. The workflow stopped before qualification
 lock creation or December access. Route statistics, the release bundle, W&B model artifact, Registry
 aliases, and final-test evidence were not created.
 
@@ -14,7 +14,8 @@ digest `2ecdb5a6a60b23ed1ee1d603fb976516`.
 
 Independent fixtures cover perfect calibration, deliberate miscalibration, ECE differing from the
 global mean gap, empty bins, repeated probabilities, and deterministic quantile boundaries.
-Recalculation of Brief 03 showed that its equality was legitimate because every bin error had the
+Recalculation of the preceding model-selection results showed that their equality was legitimate
+because every bin error had the
 same sign:
 
 | Historical model | Mean gap | ECE10 equal-width | ECE15 equal-frequency | MCE15 |

@@ -45,7 +45,7 @@ def main() -> int:
         return 0
     if not args.endpoint_url:
         print(
-            "Demo mutation refused: DYNAMODB_ENDPOINT_URL is required in Brief 07; "
+            "Demo mutation refused: DYNAMODB_ENDPOINT_URL is required for local seeding; "
             "real AWS is out of scope.",
             file=sys.stderr,
         )

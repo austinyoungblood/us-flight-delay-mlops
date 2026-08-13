@@ -1,13 +1,14 @@
 # Frozen four-hour AWS session runbook
 
-This is the operational timebox for the one authorized Brief 09 AWS Academy session. Follow the
-detailed `brief09-step-by-step.md` operator checklist. Before activation, every preflight gate below
+This is the operational timebox for the one authorized AWS Academy session. Follow the detailed
+`aws-deployment-walkthrough.md` operator checklist. Before activation, every preflight gate below
 must be green; otherwise do not start the lab.
 
 ## Pre-activation go/no-go
 
-- Brief 09A/09B PR #2 is normally merged, its manual promotion dry run is green, `main` is clean,
-  the Brief 09 walkthrough/deployment-safety correction is merged, and the deployment SHA is published.
+- The serving-alias and automated-promotion work is merged, its manual promotion dry run is green,
+  `main` is clean, the walkthrough/deployment-safety correction is merged, and the deployment SHA
+  is published.
 - Public GitHub and README work in a private browser; PR Ruff, format, tests/coverage, and all
   three builds are green.
 - Required W&B URLs work unauthenticated, or the precise visibility limitation is recorded.

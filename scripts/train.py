@@ -26,7 +26,7 @@ def _mapping(path: Path) -> dict[str, Any]:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Train a validation-only Brief 02 experiment.")
+    parser = argparse.ArgumentParser(description="Train a validation-only baseline experiment.")
     parser.add_argument("--experiment", type=Path, required=True)
     parser.add_argument("--config", type=Path, default=Path("configs/base.yaml"))
     parser.add_argument("--wandb-mode", choices=("online", "offline", "disabled"))

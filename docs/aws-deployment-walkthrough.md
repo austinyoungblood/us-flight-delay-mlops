@@ -1,8 +1,8 @@
-# Brief 09 step-by-step AWS Academy walkthrough
+# AWS Academy deployment walkthrough
 
 This is the operator checklist for the single authorized AWS Academy Learner Lab deployment session.
-It translates the Brief 09 Notion specification into an exact execution order. Use it together with
-`deploy/deployment_manifest.json`, `docs/aws-live-command-sheet.md`,
+It translates the reviewed deployment specification into an exact execution order. Use it together
+with `deploy/deployment_manifest.json`, `docs/aws-live-command-sheet.md`,
 `docs/aws-security-groups.md`, and `docs/final-evidence-checklist.md`.
 
 Do not start the lab until Section 1 is entirely green. Once the lab starts, do not edit application
@@ -44,7 +44,7 @@ git status --short
 git log -1 --oneline
 git merge-base --is-ancestor 1cafcab2b1ccec4dd2662a9ad9166fac9aa37ad4 HEAD
 git merge-base --is-ancestor 355d99226883ebae1705d9f5a12eaffbe7bc6c8a HEAD
-test -f docs/brief09-step-by-step.md
+test -f docs/aws-deployment-walkthrough.md
 python3 -S deploy/read_manifest.py image api
 grep -Fx 'MODEL_DOWNLOAD_DIR=/tmp/flight-delay-model' deploy/env/api.env.template
 PYTHONPATH=src .venv/bin/python scripts/validate_deployment_manifest.py
@@ -106,7 +106,7 @@ Open these files in separate tabs:
 - `docs/aws-security-groups.md`;
 - `docs/final-evidence-checklist.md`;
 - `evidence/evidence_manifest.json`;
-- the Notion **Brief 09 Live Session Notes** page.
+- a private live-session notes page.
 
 Prepare a sanitized notes template with fields for start/end UTC, region, VPC/subnet, instance
 identities, security groups, instance profile, metadata options, DynamoDB identity, public/private
@@ -122,7 +122,7 @@ is available.
 
 1. Open AWS Academy Learner Lab.
 2. Select **Start Lab** once.
-3. Immediately record the UTC start time in Notion:
+3. Immediately record the UTC start time in the private session notes:
 
 ```bash
 date -u +%Y-%m-%dT%H:%M:%SZ
@@ -264,7 +264,7 @@ git pull --ff-only
 git status --short
 git merge-base --is-ancestor 1cafcab2b1ccec4dd2662a9ad9166fac9aa37ad4 HEAD
 git merge-base --is-ancestor 355d99226883ebae1705d9f5a12eaffbe7bc6c8a HEAD
-test -f docs/brief09-step-by-step.md
+test -f docs/aws-deployment-walkthrough.md
 python3 -S deploy/read_manifest.py image api
 sudo DEPLOY_DRY_RUN=0 deploy/bootstrap_host.sh
 ```
@@ -394,7 +394,7 @@ DynamoDB. Do not add `DYNAMODB_ENDPOINT_URL`; live mode rejects it.
 export API_URL=http://<API_REACHABLE_IP>:8000
 export TRAVELER_URL=http://<TRAVELER_PUBLIC_IP>:8501
 export MONITOR_URL=http://<MONITOR_PUBLIC_IP>:8501
-export DEMO_BATCH="brief08-$(date -u +%Y%m%dT%H%M%SZ)-evidence"
+export DEMO_BATCH="deployment-$(date -u +%Y%m%dT%H%M%SZ)-evidence"
 
 PYTHONPATH=src .venv/bin/python scripts/aws_end_to_end_smoke.py \
   --mode live \
@@ -407,9 +407,8 @@ PYTHONPATH=src .venv/bin/python scripts/aws_end_to_end_smoke.py \
   --output evidence/21_live_smoke_summary.json
 ```
 
-The `brief08-` batch prefix is intentional: it is the frozen validation format enforced by the
-reviewed smoke script, even though the live execution increment is Brief 09. Do not change the
-script or prefix during the session.
+The `deployment-` batch prefix is the validation format enforced by the reviewed smoke script. Do
+not change the script or prefix during the session.
 
 The JSON must prove:
 
@@ -479,7 +478,7 @@ Before ending the session:
    reached. Record whether ending the lab makes the applications unreachable.
 
 If a source-code change would be required, stop. Preserve the sanitized error and open a separately
-reviewed corrective increment after the live session.
+reviewed corrective change after the live session.
 
 ## 8. Final report checklist
 

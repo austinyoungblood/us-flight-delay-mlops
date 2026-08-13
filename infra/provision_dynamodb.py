@@ -1,4 +1,4 @@
-"""Idempotently create or validate the Brief 06 DynamoDB table contract."""
+"""Idempotently create or validate the DynamoDB table contract."""
 
 from __future__ import annotations
 

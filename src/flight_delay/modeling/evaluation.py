@@ -36,7 +36,7 @@ class EvaluationResult:
 
 
 def evaluate_binary(y_true: Any, probabilities: Any, *, threshold: float = 0.5) -> EvaluationResult:
-    """Calculate the complete Brief 02 contract for a binary validation split."""
+    """Calculate the complete baseline contract for a binary validation split."""
 
     labels = np.asarray(y_true, dtype=int)
     scores = np.asarray(probabilities, dtype=float)

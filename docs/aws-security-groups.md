@@ -1,7 +1,7 @@
 # Frozen security-group matrix
 
-These are Console field values for the eventual single Learner Lab session. They are not
-commands to run during Brief 08.
+These are Console field values for the single reviewed Learner Lab session. They are not shell
+commands.
 
 | Group | Attached host | Inbound | Source | Outbound |
 |---|---|---|---|---|

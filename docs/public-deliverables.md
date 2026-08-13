@@ -19,8 +19,9 @@ recorded as the precise visibility limitation rather than represented as public 
 
 The full audited reachable Git history is published at the public
 [GitHub repository](https://github.com/austinyoungblood/us-flight-delay-mlops). `main` contains the
-accepted Brief 08 merge (`521bb39bad46fbde328e9b386b39aebb3eb7a622`), and Brief 09A/09B is
-reviewable in [draft PR #2](https://github.com/austinyoungblood/us-flight-delay-mlops/pull/2). Its
+accepted deployment-preflight merge (`521bb39bad46fbde328e9b386b39aebb3eb7a622`), and the
+serving-alias/promotion work is documented in
+[PR #2](https://github.com/austinyoungblood/us-flight-delay-mlops/pull/2). Its
 GitHub Actions `validate` job proves Ruff, format, 179 tests with 80.21% branch coverage, both strict
 manifest validators, shell syntax, and all three container builds. Branch protection requires that
 context, one approval, and resolved conversations before merge.

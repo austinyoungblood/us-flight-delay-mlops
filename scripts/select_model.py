@@ -1,4 +1,4 @@
-"""Run bounded Brief 03 tuning, calibration, validation gates, and winner selection."""
+"""Run bounded tuning, calibration, validation gates, and winner selection."""
 
 from __future__ import annotations
 
@@ -403,7 +403,7 @@ def run_final_candidate(
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Run Brief 03 validation-only model selection.")
+    parser = argparse.ArgumentParser(description="Run validation-only model selection.")
     parser.add_argument(
         "--candidate-a", type=Path, default=Path("configs/experiments/candidate_a_calibrated.yaml")
     )

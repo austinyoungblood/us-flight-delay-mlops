@@ -14,7 +14,8 @@ DEPLOY_DRY_RUN=1 deploy/bootstrap_host.sh
 ```
 
 For the complete timed Console/CLI procedure, gates, evidence sequence, recovery rules, and final
-report contract, follow [`docs/brief09-step-by-step.md`](../docs/brief09-step-by-step.md).
+report contract, follow
+[`docs/aws-deployment-walkthrough.md`](../docs/aws-deployment-walkthrough.md).
 
 On each eventual host, copy the relevant template to a mode-0600 file outside Git and run
 only its matching script. The scripts pull by digest, replace only their named project

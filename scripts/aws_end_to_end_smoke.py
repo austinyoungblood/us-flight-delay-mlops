@@ -84,7 +84,7 @@ def _verify_dynamodb(table: Any, result: dict[str, Any]) -> dict[str, Any]:
 
 
 def _seed_demo(table: Any, batch_id: str, count: int) -> dict[str, Any]:
-    if not re.fullmatch(r"brief08-[0-9]{8}T[0-9]{6}Z-[a-z0-9-]{1,24}", batch_id):
+    if not re.fullmatch(r"deployment-[0-9]{8}T[0-9]{6}Z-[a-z0-9-]{1,24}", batch_id):
         raise SmokeError("demo batch ID must be unique and follow the documented format")
     from flight_delay.monitoring.demo import demo_events, seed_events
 

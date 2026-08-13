@@ -126,8 +126,8 @@ class SmokeRunner:
                 json={
                     "actual_delayed": False,
                     "arrival_delay_minutes": 4,
-                    "notes": "Brief 08 smoke test",
-                    "source": "brief-08-smoke",
+                    "notes": "Deployment smoke test",
+                    "source": "deployment-smoke",
                 },
             ),
             "feedback",

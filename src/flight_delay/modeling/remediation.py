@@ -1,4 +1,4 @@
-"""Fixed Brief 04 model matrix, chronological folds, and deterministic ranking."""
+"""Fixed model matrix, chronological folds, and deterministic ranking."""
 
 from __future__ import annotations
 
@@ -117,7 +117,7 @@ def _period(frame: pd.DataFrame, start: str, end: str) -> pd.DataFrame:
 def partition_remediation_data(
     train: pd.DataFrame, november: pd.DataFrame
 ) -> RemediationPartitions:
-    """Build Brief 04 development windows without accepting December or test inputs."""
+    """Build remediation windows without accepting December or test inputs."""
 
     for name, frame in (("train", train), ("november", november)):
         if (
@@ -136,11 +136,11 @@ def partition_remediation_data(
         selection,
     ]
     if any(frame.empty for frame in frames):
-        raise DataQualityError("a Brief 04 development partition is empty")
+        raise DataQualityError("a remediation development partition is empty")
     if set(calibration.index) & set(selection.index):
         raise DataQualityError("November calibration and selection partitions overlap")
     if any(not frame["flight_date"].is_monotonic_increasing for frame in frames):
-        raise DataQualityError("Brief 04 partitions must be stably sorted")
+        raise DataQualityError("remediation partitions must be stably sorted")
     return RemediationPartitions(folds, final_fit, calibration, selection)
 
 
@@ -169,7 +169,7 @@ def rolling_origin_folds(train: pd.DataFrame) -> tuple[RollingFold, ...]:
         )
     )
     if any(fold.fit.empty or fold.evaluation.empty for fold in folds):
-        raise DataQualityError("a Brief 04 rolling-origin partition is empty")
+        raise DataQualityError("a remediation rolling-origin partition is empty")
     return folds
 
 
@@ -214,7 +214,7 @@ def build_remediation_model(
     validate_model_features(input_features)
     validate_model_features(model_features)
     if "route" in input_features:
-        raise ValueError("route is display-only in Brief 04")
+        raise ValueError("route is display-only during remediation")
     if config["estimator"] == "sgd":
         estimator: Any = SGDClassifier(
             loss="log_loss",

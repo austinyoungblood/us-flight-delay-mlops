@@ -1,4 +1,4 @@
-"""Governed Brief 05 reconstruction, immutable evidence, and release gates."""
+"""Governed reconstruction, immutable evidence, and release gates."""
 
 from __future__ import annotations
 
@@ -357,7 +357,7 @@ def write_release_bundle(
     write_json(bundle_directory / "feature_schema.json", {"features": list(result.feature_schema)})
     write_json(
         bundle_directory / "threshold.json",
-        {"threshold": LOCKED_THRESHOLD, "source": "Brief 04 R3 sigmoid locked selection"},
+        {"threshold": LOCKED_THRESHOLD, "source": "R3 sigmoid locked remediation selection"},
     )
     write_json(
         bundle_directory / "training_baseline.json",
@@ -402,7 +402,7 @@ def write_release_bundle(
         "# R3 sigmoid release candidate\n\n"
         "This immutable candidate uses only pre-departure schedule features. It was fitted on "
         "January-October 2025 and calibrated on November 1-15, 2025. The threshold was locked "
-        "from the Brief 04 November 16-30 selection evidence. `route_stats.parquet` is "
+        "from the November 16-30 remediation selection evidence. `route_stats.parquet` is "
         "display-only "
         "and is never a model input. At bundle creation, the January-May 2026 final test remained "
         "sealed. See `release_policy.yaml` for the one-time release gate.\n",

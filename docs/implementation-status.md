@@ -1,9 +1,9 @@
 # Implementation status
 
-Status reflects completed Brief 01-09B pre-AWS work. It is not cloud-deployment evidence or
-final-project completion.
+This record summarizes the repository's completed implementation stages before live AWS deployment.
+It does not itself constitute cloud-deployment evidence.
 
-## Completed in Brief 01
+## Repository foundation
 
 - Python 3.11 package metadata and src-layout monorepo scaffold
 - Typed prediction, response, feedback, route reliability, and health contracts
@@ -15,7 +15,7 @@ final-project completion.
 - Health-only FastAPI skeleton and two non-model-loading Streamlit placeholders
 - Three Dockerfiles, local Compose wiring, architecture documentation, and data policy
 
-## Completed in Brief 02
+## Data and baseline modeling
 
 - Git checkpoint `f105bd1b08921b89df56afde89e881d290057730` on `main` and isolated
   `feat/data-artifact-baselines` branch
@@ -35,11 +35,11 @@ final-project completion.
   metric keys; metadata records no test evaluation and no Registry promotion
 - Hermetic fake-W&B/model/data tests and branch-aware coverage enforcement at or above 80%
 
-## Completed in Brief 05
+## Governed release and final test
 
-- Accepted and merged the controlled Brief 04 stop, then committed a revised course-aligned release
+- Accepted the controlled remediation stop, then committed a revised course-aligned release
   policy before final-test access
-- Reconstructed only R3 sigmoid with the locked threshold and reproduced Brief 04 metrics within a
+- Reconstructed only R3 sigmoid with the locked threshold and reproduced the remediation metrics within a
   documented `1e-9` floating-point tolerance
 - Built and hashed the exact eight-file bundle plus a display-only route asset covering 6,879,484
   eligible completed 2025 flights
@@ -51,9 +51,9 @@ final-project completion.
 - Retained `staging` because Brier skill, prior log-loss, probability-gap, and ECE gates failed;
   emitted a durable one-use marker and `release/release_decision.json` with `serving_alias=staging`
 
-## Completed in Brief 06
+## API and DynamoDB persistence
 
-- Revalidated Brief 05 locally and against live W&B, reproduced all three accepted image digests,
+- Revalidated the governed release locally and against live W&B, reproduced all three accepted image digests,
   merged it into `main` at `3bc9208c06f125f7d741699f7f89b441d1295dc3`, and created clean
   `feat/api-dynamodb` from that SHA
 - Implemented the fail-closed Registry runtime: release-decision parsing, alias/version/digest/source
@@ -71,9 +71,10 @@ final-project completion.
 - Proved 119 hermetic tests at 80.67% branch coverage plus ready/degraded API container behavior; all
   three non-root Python 3.11 images build
 
-## Completed in Brief 07
+## Traveler and monitoring applications
 
-- Revalidated and merged Brief 06 to `main` at `11216f2f77e279e3a82ae326a33327b44e84de02`,
+- Revalidated and merged the API and persistence work to `main` at
+  `11216f2f77e279e3a82ae326a33327b44e84de02`,
   then created `feat/streamlit-monitoring` from that exact checkpoint
 - Added the development-only DynamoDB endpoint path, pinned DynamoDB Local Compose service, exact
   idempotent table initialization, dummy local credentials, and overridable host ports
@@ -91,9 +92,9 @@ final-project completion.
 - Passed 143 tests at 80.87% branch coverage and rebuilt all three non-root Python 3.11 images; no AWS
   Academy session or AWS service call occurred
 
-## Brief 08 deployment preflight
+## Deployment preflight and publication
 
-- Revalidated all Brief 07 acceptance evidence and merged it to `main` at
+- Revalidated all traveler and monitoring acceptance evidence and merged it to `main` at
   `02dccc4e3bd862b65df2e15b0de01215c24ca528`
 - Added strict deployment-manifest and evidence-manifest validators, including exact committed
   release identity, digest-only GHCR references, environment-name allowlists, and safe filenames
@@ -107,16 +108,16 @@ final-project completion.
   evidence matrix, and phase-gated four-hour runbook with recovery/abort criteria
 - Continued the hard zero-AWS boundary: no Learner Lab activation, credential validation, Console
   execution, AWS API call, or AWS resource interaction occurred
-- Published the audited reachable history to the public repository, protected `main`, opened Brief
-  08 draft PR #1, and proved its complete `validate` job green in GitHub Actions
+- Published the audited reachable history to the public repository, protected `main`, opened draft
+  PR #1, and proved its complete `validate` job green in GitHub Actions
 - Published three source-labeled public images by immutable GHCR digest, proved all three exact
   references anonymously pullable, materialized the strict deployment manifest, and passed the
   exact-digest local rehearsal with two persisted predictions, cache hit, feedback revision, direct
   DynamoDB Local verification, both UI health checks, and 30 demo events
 
-## Brief 09A course production-alias compliance
+## Serving-alias compliance
 
-- Revalidated and normally merged Brief 08 PR #1 at
+- Revalidated and normally merged deployment-preflight PR #1 at
   `521bb39bad46fbde328e9b386b39aebb3eb7a622`, then created
   `feat/production-promotion-automation` from that clean checkpoint
 - Added `production` to the existing immutable Registry `v0` without uploading model bytes; retained
@@ -128,7 +129,7 @@ final-project completion.
 - Made API, traveler, monitor, manifest, smoke, and current deployment documentation expose the
   academic-demo/internal-gate disclosure independently of the alias name
 
-## Brief 09B automated selection and promotion
+## Automated selection and promotion
 
 - Added versioned policy-as-code for exact Registry/project/dataset/schema/protocol scope, operational
   gates, deterministic multi-metric ranking, incumbent behavior, and dry-run/apply semantics
@@ -145,16 +146,16 @@ final-project completion.
 
 ## Partially complete
 
-- Brief 04: independent calibration metrics, six fixed rolling-origin bases, and six calibrated
+- Model remediation: independent calibration metrics, six fixed rolling-origin bases, and six calibrated
   November finalists are complete. Every finalist failed AP and F1, so December qualification and
   all downstream release work correctly did not start.
-- Brief 03: exact time partitions, calibrated Candidate A, bounded Candidate B tuning, validation
+- Model selection: exact time partitions, calibrated Candidate A, bounded Candidate B tuning, validation
   evaluation, thresholds, model artifacts, and W&B audit are complete. No candidate passed every
   mandatory validation gate, so selection/freeze, Registry, and final-test tasks did not start.
 - Data pipeline and one-time final-test evaluation are complete; the final test is consumed.
 - CI: repository-hosted pull-request evidence is green and `main` branch protection requires the
   `validate` context, one approving review, and resolved conversations.
-- Cloud deployment remains deliberately untested in Brief 08; local DynamoDB evidence is not presented
+- Cloud deployment remained deliberately untested during preflight; local DynamoDB evidence is not presented
   as AWS evidence.
 
 ## Not started

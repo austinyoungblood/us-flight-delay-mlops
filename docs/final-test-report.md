@@ -1,10 +1,10 @@
-# Brief 05 one-time final-test report
+# One-time final-test report
 
 ## Decision
 
 The immutable R3 sigmoid candidate did not pass every precommitted final-test production gate.
 Registry version `wandb-registry-Model/us-flight-arrival-delay-15m:v0` therefore retains `staging`
-and did not receive `production`. The next serving increment must consume `serving_alias=staging`
+and did not receive `production`. The serving runtime must consume `serving_alias=staging`
 from `release/release_decision.json`; no post-test retraining or threshold adjustment is authorized.
 
 ## Locked candidate and lineage
@@ -14,7 +14,7 @@ from `release/release_decision.json`; no post-test retraining or threshold adjus
   `max_iter=1000`, `tol=0.001`, seed 42
 - Base fit: January-October 2025
 - Calibration: November 1-15, 2025
-- Threshold: `0.1840285229739868`, selected once in Brief 04 and not recomputed
+- Threshold: `0.1840285229739868`, selected once during remediation and not recomputed
 - Dataset: `flight-delay-bts-sampled:v0`
 - Dataset digest: `2ecdb5a6a60b23ed1ee1d603fb976516`
 - Selection-lock SHA-256: `a730a25c34a9f259b3ca02eb92c4ad44c1e75f50fd52ce270a940e4a60142340`

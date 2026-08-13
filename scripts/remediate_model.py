@@ -1,4 +1,4 @@
-"""Run Brief 04 rolling-origin search and November calibrated-finalist selection."""
+"""Run rolling-origin search and November calibrated-finalist selection."""
 
 from __future__ import annotations
 
@@ -584,7 +584,7 @@ def run_finalists(
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Run bounded Brief 04 remediation selection.")
+    parser = argparse.ArgumentParser(description="Run bounded remediation selection.")
     parser.add_argument("--config", type=Path, default=Path("configs/experiments/remediation.yaml"))
     parser.add_argument("--wandb-mode", choices=("online",), default="online")
     return parser
@@ -597,7 +597,7 @@ def main(argv: list[str] | None = None) -> int:
         project = os.getenv("WANDB_PROJECT", "us-flight-delay-mlops")
         git = git_provenance()
         if git.dirty:
-            raise TrackingError("Brief 04 model selection requires a clean worktree")
+            raise TrackingError("model remediation requires a clean worktree")
         config = _load_config(args.config)
         _, authorized = run_base_search(entity=entity, project=project, config=config, git=git)
         _, winner = run_finalists(
@@ -609,7 +609,7 @@ def main(argv: list[str] | None = None) -> int:
         )
         return 0 if winner else 2
     except (KeyError, OSError, TypeError, ValueError, RuntimeError, TrackingError) as error:
-        print(f"Brief 04 remediation failed: {error}", file=sys.stderr)
+        print(f"Model remediation failed: {error}", file=sys.stderr)
         return 1
 
 

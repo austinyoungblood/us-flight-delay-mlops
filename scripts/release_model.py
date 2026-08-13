@@ -1,4 +1,4 @@
-"""Execute the governed Brief 05 bundle, Registry, and one-time test workflow."""
+"""Execute the governed bundle, Registry, and one-time test workflow."""
 
 from __future__ import annotations
 
@@ -152,7 +152,7 @@ def stage() -> None:
         artifact = wandb.Artifact(
             ARTIFACT_NAME,
             type="model",
-            description="Immutable Brief 05 R3 sigmoid release candidate",
+            description="Immutable R3 sigmoid release candidate",
             metadata={
                 "candidate_id": CANDIDATE_ID,
                 "dataset_artifact": DATASET_ARTIFACT,
@@ -360,7 +360,7 @@ def main() -> int:
     try:
         {"prepare": prepare, "stage": stage, "evaluate-once": evaluate_once}[args.command]()
     except (OSError, ValueError, ReleaseGuardError, wandb.Error) as error:
-        print(f"Brief 05 release failed: {error}", file=sys.stderr)
+        print(f"Governed release failed: {error}", file=sys.stderr)
         return 1
     return 0
 

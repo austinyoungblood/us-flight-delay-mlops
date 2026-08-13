@@ -1,12 +1,12 @@
-# Brief 07 UI and monitoring status
+# UI and monitoring implementation status
 
-> Historical Brief 07 report. Brief 09A later changed the unchanged `v0` serving alias to
+> Historical local-runtime report. The unchanged `v0` serving alias was later changed to
 > `production`. Both current UIs derive their persistent warning from governance metadata—not the
 > alias—so they continue to disclose the failed internal production-quality gate.
 
 ## Delivered boundary
 
-Brief 07 completes a local three-service workflow around the accepted staging backend. The traveler
+This stage completed a local three-service workflow around the accepted staging backend. The traveler
 application is an HTTP client of FastAPI only. The monitoring application is a DynamoDB client only.
 The API remains the exclusive model loader and prediction writer. No AWS Academy session was started,
 no AWS credentials were inspected, and no AWS service endpoint was called.
@@ -64,9 +64,9 @@ matching records. The dashboard warns when demo rows are present and can exclude
 
 ## Deferred boundary
 
-There is no cloud deployment evidence in Brief 07. The exact next increment is **deployment preflight
-and evidence runbook with no AWS calls; only after that review, activate one AWS Academy session for
-DynamoDB recovery + three-EC2 deployment + end-to-end evidence capture**.
+This stage produced no cloud-deployment evidence. Deployment preflight and the evidence runbook were
+completed without AWS calls before the separately authorized AWS Academy session for DynamoDB
+recovery, three-EC2 deployment, and end-to-end evidence capture.
 
 ## Future deployment evidence checklist (not executed)
 

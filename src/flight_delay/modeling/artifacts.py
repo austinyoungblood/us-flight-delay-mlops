@@ -110,7 +110,7 @@ def write_model_bundle(
     metrics: dict[str, float | int],
     metadata: dict[str, Any],
 ) -> ModelBundleResult:
-    """Write and reload the exact seven-file Brief 02 model bundle."""
+    """Write and reload the exact seven-file baseline model bundle."""
 
     directory.mkdir(parents=True, exist_ok=True)
     joblib.dump(model, directory / "model.joblib")

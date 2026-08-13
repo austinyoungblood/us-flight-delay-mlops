@@ -52,11 +52,11 @@ def candidate_a_pipeline(parameters: Mapping[str, Any]) -> Pipeline:
 
 
 def build_estimator(candidate_id: str, parameters: Mapping[str, Any]) -> Any:
-    """Build one of the two explicitly permitted Brief 02 estimators."""
+    """Build one of the two explicitly permitted baseline estimators."""
 
     validate_model_features(CANDIDATE_A_FEATURES)
     if candidate_id == "dummy":
         return DummyClassifier(strategy="prior")
     if candidate_id == "candidate_a":
         return candidate_a_pipeline(parameters)
-    raise ValueError(f"unsupported Brief 02 candidate: {candidate_id}")
+    raise ValueError(f"unsupported baseline candidate: {candidate_id}")

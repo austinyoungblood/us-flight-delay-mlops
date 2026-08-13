@@ -1,24 +1,24 @@
-# Brief 05 course-aligned release policy
+# Governed release policy
 
 This policy was committed before any January-May 2026 final-test access. It changes only the
-self-imposed release decision inherited by Brief 04; it does not revise or erase the Brief 03 or
-Brief 04 results.
+self-imposed release decision inherited from model remediation; it does not revise or erase the
+earlier model-selection or remediation results.
 
 ## Governance decision
 
-The Brief 04 absolute average-precision gate of `0.320719` and F1 gate of `0.41` remain historical
+The earlier absolute average-precision gate of `0.320719` and F1 gate of `0.41` remain historical
 evidence but are retired from the release decision. A no-skill scorer's average precision equals the
 positive prevalence, so an absolute value measured in one time period is not portable to another
 period with a different prevalence. F1 also depends on the selected decision threshold, and neither
 absolute cutoff is a course-rubric requirement.
 
 No additional model, feature, hyperparameter, calibration, training-window, or threshold search is
-authorized. R3 with sigmoid calibration is selected from already-observed Brief 04 evidence because
+authorized. R3 with sigmoid calibration is selected from already-observed remediation evidence because
 it had the highest November 16-30 average precision (`0.2823880567429311`) and ROC-AUC
 (`0.6281178113133866`) among the six calibrated finalists. Its exact previously selected threshold
-must be reconstructed from the existing Brief 04 evidence and must not be recomputed.
+must be reconstructed from the existing remediation evidence and must not be recomputed.
 
-Reconstruction metrics must match the Brief 04 evidence within an absolute floating-point tolerance
+Reconstruction metrics must match the remediation evidence within an absolute floating-point tolerance
 of `1e-9`. This tolerance accommodates sub-nanounit numerical drift between the original Python
 3.11.15 run and the Python 3.11.14 release environment; it is orders of magnitude below the
 precision of every release gate and does not permit a model or threshold change.
