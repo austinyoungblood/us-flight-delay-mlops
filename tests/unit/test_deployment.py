@@ -162,6 +162,50 @@ def test_evidence_manifest_requires_unique_complete_safe_mapping(tmp_path: Path)
         validate_evidence_manifest(manifest)
 
 
+def test_evidence_manifest_supports_curated_multi_file_evidence(tmp_path: Path) -> None:
+    captures = [
+        {
+            "criterion": criterion,
+            "filename": f"{index:02d}_{criterion.replace('.', '_')}.png",
+            "source": "application",
+            "status": "missing",
+            "capture_instruction": "Record the final evidence state.",
+        }
+        for index, criterion in enumerate(sorted(REQUIRED_CRITERIA), start=1)
+    ]
+    first = captures[0]
+    first.pop("filename")
+    first.update(
+        {
+            "filenames": ["08a_aws_security_group_api.png", "08b_aws_security_group_ui.png"],
+            "status": "captured",
+            "source_url": "live-session://flight-api/security",
+            "publication_status": "redaction-required",
+            "redaction_notes": "Remove the operator IP before publication.",
+        }
+    )
+    screenshot_root = tmp_path / "aws" / "screenshots"
+    screenshot_root.mkdir(parents=True)
+    for filename in first["filenames"]:
+        (screenshot_root / filename).write_bytes(b"png")
+    evidence_root = tmp_path / "evidence"
+    evidence_root.mkdir()
+    manifest = {
+        "schema_version": 1,
+        "artifact_directories": ["aws/screenshots"],
+        "captures": captures,
+    }
+    assert (
+        validate_evidence_manifest(manifest, evidence_root=evidence_root, require_files=True)
+        == manifest
+    )
+
+    invalid = copy.deepcopy(manifest)
+    invalid["captures"][0].pop("redaction_notes")
+    with pytest.raises(EvidenceValidationError, match="missing redaction notes"):
+        validate_evidence_manifest(invalid)
+
+
 def test_deployment_manifest_file_loader(tmp_path: Path) -> None:
     manifest, release, lock = deployment_inputs()
     paths = [tmp_path / name for name in ("manifest.json", "release.json", "lock.json")]

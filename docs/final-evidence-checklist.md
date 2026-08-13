@@ -1,33 +1,37 @@
 # Final evidence checklist
 
-The canonical mapping is `evidence/evidence_manifest.json`. Capture in filename order and update
-each entry from `pending-live-session` to `captured` with its exact source URL. Run:
+The canonical post-session mapping is `evidence/evidence_manifest.json`. It records each criterion as
+`captured` or `missing`, supports multiple files for one criterion, and flags captures that still
+require redaction before public release. Run:
 
 ```bash
 python scripts/validate_evidence_manifest.py --require-files
 ```
 
-## GitHub and W&B (before lab activation)
+## GitHub and W&B
 
 - `01_github_repository.png`: public home and rendered README in a private browser.
 - `02_github_pr_ci.png`: real PR to main with Ruff, format, coverage/tests, and three builds green.
 - `03_wandb_project.png`: public project overview.
 - `04_wandb_experiments.png`: comparable candidate/final-test run evidence.
 - `05_wandb_dataset.png`: dataset artifact name, version, digest, and lineage.
-- `06_wandb_registry.png`: Registry collection with `v0`, digest, and explicit `production` alias
-  (retain `staging` if shown).
+- `06_wandb_registry.png`: Registry collection with exact `production:v0` identity, digest, and
+  academic-demo/internal-gate disclosure.
 
-## AWS Console (live session only)
+## AWS Console
 
 - `07_aws_ec2_instances.png`: three separately named running instances and status checks.
-- `08_aws_security_groups.png`: least-privilege inbound relationships.
-- `09_aws_instance_profile.png`: role/profile attached to API and monitor, not traveler.
-- `10_aws_dynamodb_schema.png`: table key, GSI, ACTIVE state, and on-demand billing.
-- `11_aws_dynamodb_prediction.png`: representative prediction with feedback fields; hide unrelated
-  account identifiers.
-- `12_aws_status_metrics.png`: EC2 basic status/metrics or CloudWatch status evidence.
+- `08a_aws_security_group_api.png`, `08b_aws_security_group_traveler.png`, and
+  `08c_aws_security_group_monitor.png`: least-privilege inbound relationships.
+- `09a_aws_iam_api.png`, `09b_aws_iam_traveler.png`, and `09c_aws_iam_monitor.png`: `LabRole` on API
+  and Monitor and no role on Traveler.
+- `10a_aws_dynamodb_table.png` and `10b_aws_dynamodb_gsi.png`: table key, GSI, ACTIVE state,
+  projection, and on-demand billing.
+- `11a_aws_dynamodb_prediction.png` and `11b_aws_dynamodb_feedback.png`: representative prediction
+  and expanded feedback fields.
+- `12_aws_ec2_status_checks.png`: API system, instance, and EBS status checks.
 
-## Live application (live session only)
+## Live application
 
 - `13_app_api_docs.png`: FastAPI `/docs` endpoints.
 - `14_app_health.png`: ready model/database dependency health.
@@ -40,6 +44,9 @@ python scripts/validate_evidence_manifest.py --require-files
 - `20_app_monitor_feedback.png`: coverage, feedback metrics/inspector, `production:v0` identity, and
   academic-demo/internal-gate notice.
 
-Also retain `21_live_smoke_summary.json` as machine-readable supplemental evidence. Screenshots
-must never display the W&B token, AWS credentials, `.env` content, SSH keys, or terminal history
-containing secrets.
+`14_app_health.png`, `15_app_model_info.png`, and supplemental `21_live_smoke_summary.json` were not
+present in the supplied evidence set and remain missing. Do not substitute unrelated screenshots.
+
+Screenshots must never display the W&B token, AWS credentials, `.env` content, SSH keys, or terminal
+history containing secrets. Apply every `redaction-required` instruction in the evidence manifest
+before a public commit.

@@ -435,11 +435,15 @@ Capture files 07–20 in exact order. Hide credentials, account details not requ
 `.env`, private keys, and browser password overlays.
 
 1. `07_aws_ec2_instances.png` — three names, running state, and passed status checks.
-2. `08_aws_security_groups.png` — bounded inbound rules and Traveler → API relationship.
-3. `09_aws_instance_profile.png` — profile on API/Monitor and absent from Traveler.
-4. `10_aws_dynamodb_schema.png` — table/GSI ACTIVE, keys, projection, and on-demand billing.
-5. `11_aws_dynamodb_prediction.png` — representative smoke item plus feedback fields.
-6. `12_aws_status_metrics.png` — EC2 status/basic CPU or network metrics.
+2. `08a_aws_security_group_api.png`, `08b_aws_security_group_traveler.png`, and
+   `08c_aws_security_group_monitor.png` — bounded inbound rules and Traveler → API relationship.
+3. `09a_aws_iam_api.png`, `09b_aws_iam_traveler.png`, and `09c_aws_iam_monitor.png` — profile on
+   API/Monitor and absent from Traveler.
+4. `10a_aws_dynamodb_table.png` and `10b_aws_dynamodb_gsi.png` — table/GSI ACTIVE, keys,
+   projection, and on-demand billing.
+5. `11a_aws_dynamodb_prediction.png` and `11b_aws_dynamodb_feedback.png` — representative smoke item
+   plus expanded feedback fields.
+6. `12_aws_ec2_status_checks.png` — EC2 system, instance, and EBS status checks.
 7. `13_app_api_docs.png` — `/docs` endpoints.
 8. `14_app_health.png` — Registry and DynamoDB ready.
 9. `15_app_model_info.png` — exact production identity and governance fields.
