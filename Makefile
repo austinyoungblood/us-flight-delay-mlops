@@ -10,7 +10,7 @@ format-check:
 	ruff format --check .
 
 test:
-	pytest --cov=flight_delay --cov-branch --cov-report=term-missing --cov-fail-under=80
+	pytest --cov=flight_delay --cov-branch --cov-report=term-missing --cov-fail-under=82
 
 validate: lint format-check test
 

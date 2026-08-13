@@ -25,7 +25,7 @@ jobs:
       - name: Check formatting
         run: ruff format --check .
       - name: Test with coverage
-        run: pytest --cov=flight_delay --cov-branch --cov-report=term-missing --cov-fail-under=80
+        run: pytest --cov=flight_delay --cov-branch --cov-report=term-missing --cov-fail-under=82
         env:
           WANDB_MODE: disabled
       - name: Validate frozen deployment and evidence package

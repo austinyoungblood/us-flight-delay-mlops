@@ -12,6 +12,7 @@ from flight_delay.contracts import (
     FlightPredictionResponse,
     HealthResponse,
     ModelInfoResponse,
+    RiskBand,
     RouteReliability,
 )
 from flight_delay.monitoring.demo import demo_events
@@ -159,6 +160,13 @@ def test_traveler_ready_academic_production_prediction_and_feedback() -> None:
     next(button for button in app.button if button.label == "Estimate delay risk").click().run()
     assert fake.predictions == 1
     assert any(metric.label == "Delay probability" for metric in app.metric)
+    assert any(
+        metric.label == "Threshold signal" and metric.value == "Above model threshold"
+        for metric in app.metric
+    )
+    assert not any(metric.label == "Classification" for metric in app.metric)
+    assert any("Decision threshold: 18.0%" in markdown.value for markdown in app.markdown)
+    assert any("more likely than not" in caption.value for caption in app.caption)
     next(button for button in app.button if button.label == "Save feedback").click().run()
     assert fake.feedback == 1
     assert any("revision 1" in success.value for success in app.success)
@@ -175,6 +183,31 @@ def test_traveler_degraded_state_disables_prediction() -> None:
     assert any("degraded" in error.value for error in app.error)
     button = next(button for button in app.button if button.label == "Estimate delay risk")
     assert button.disabled
+
+
+def test_traveler_uses_below_threshold_signal_instead_of_on_time_classification() -> None:
+    class BelowThresholdApiClient(FakeApiClient):
+        def predict(self, request: Any) -> FlightPredictionResponse:
+            prediction = super().predict(request)
+            return prediction.model_copy(
+                update={
+                    "delay_probability": 0.1,
+                    "predicted_delayed": False,
+                    "risk_band": RiskBand.LOW,
+                }
+            )
+
+    app = AppTest.from_file(str(ROOT / "services/user_ui/app.py"))
+    app.session_state["_api_client"] = BelowThresholdApiClient()
+    app.run(timeout=10)
+    next(button for button in app.button if button.label == "Estimate delay risk").click().run()
+
+    assert not app.exception
+    assert any(
+        metric.label == "Threshold signal" and metric.value == "Below model threshold"
+        for metric in app.metric
+    )
+    assert not any(metric.value == "On time" for metric in app.metric)
 
 
 def test_traveler_safely_renders_prediction_api_error() -> None:
