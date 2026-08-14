@@ -8,6 +8,8 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
+from flight_delay.contracts import TrafficSource
+
 EPSILON = 1e-8
 
 
@@ -21,6 +23,7 @@ def prediction_frame(items: list[dict[str, Any]]) -> pd.DataFrame:
         origin = request.get("origin")
         destination = request.get("destination")
         departure = request.get("scheduled_departure")
+        traffic_source = item.get("traffic_source", TrafficSource.LEGACY_UNATTRIBUTED.value)
         try:
             departure_hour = int(str(departure).split(":", maxsplit=1)[0])
         except (TypeError, ValueError):
@@ -39,6 +42,7 @@ def prediction_frame(items: list[dict[str, Any]]) -> pd.DataFrame:
                 "actual_delayed": feedback.get("actual_delayed"),
                 "feedback_correct": feedback.get("feedback_correct"),
                 "feedback_at": feedback.get("feedback_at"),
+                "traffic_source": str(traffic_source),
                 "demo_data": bool(item.get("demo_data", False)),
             }
         )

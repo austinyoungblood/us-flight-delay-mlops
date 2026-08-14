@@ -17,6 +17,7 @@ from flight_delay.contracts import (
     ModelInfoResponse,
     PredictionRecord,
     RouteReliability,
+    TrafficSource,
 )
 
 ContractT = TypeVar("ContractT", bound=BaseModel)
@@ -112,10 +113,25 @@ class FlightDelayApiClient:
             ModelInfoResponse, self._request("GET", "/model-info").json(), "model information"
         )
 
-    def predict(self, request: FlightPredictionRequest) -> FlightPredictionResponse:
+    def predict(
+        self,
+        request: FlightPredictionRequest,
+        *,
+        traffic_source: TrafficSource = TrafficSource.API_UNSPECIFIED,
+    ) -> FlightPredictionResponse:
+        if traffic_source is TrafficSource.LEGACY_UNATTRIBUTED:
+            raise ValueError(
+                "legacy_unattributed is historical-only and cannot identify "
+                "a new prediction request"
+            )
         return _contract(
             FlightPredictionResponse,
-            self._request("POST", "/predict", json=request.model_dump(mode="json")).json(),
+            self._request(
+                "POST",
+                "/predict",
+                json=request.model_dump(mode="json"),
+                headers={"X-Traffic-Source": traffic_source.value},
+            ).json(),
             "prediction",
         )
 

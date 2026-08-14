@@ -12,6 +12,7 @@ from flight_delay.contracts.api import (
     PredictionRecord,
     RiskBand,
     RouteReliability,
+    TrafficSource,
 )
 
 __all__ = [
@@ -26,4 +27,5 @@ __all__ = [
     "PredictionRecord",
     "RiskBand",
     "RouteReliability",
+    "TrafficSource",
 ]

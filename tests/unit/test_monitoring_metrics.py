@@ -3,6 +3,7 @@ from __future__ import annotations
 import pandas as pd
 import pytest
 
+from flight_delay.contracts import TrafficSource
 from flight_delay.monitoring.metrics import (
     feedback_metrics,
     jensen_shannon_divergence,
@@ -19,6 +20,7 @@ def items() -> list[dict[str, object]]:
             "prediction_id": "one",
             "created_at": "2026-08-01T08:00:00Z",
             "request_status": "success",
+            "traffic_source": "traveler_ui",
             "cache_hit": False,
             "latency_ms": 10.0,
             "inference_latency_ms": 2.0,
@@ -50,6 +52,7 @@ def items() -> list[dict[str, object]]:
             "delay_probability": 0.2,
             "risk_band": "medium",
             "model_version": "v0",
+            "demo_data": True,
             "request": {
                 "carrier": "XX",
                 "origin": "DEN",
@@ -68,6 +71,9 @@ def test_normalization_operational_and_target_drift() -> None:
     frame = prediction_frame(items())
     assert frame.loc[0, "route"] == "DEN-LAX"
     assert frame.loc[0, "scheduled_departure_hour"] == 8
+    assert frame.loc[0, "traffic_source"] == TrafficSource.TRAVELER_UI.value
+    assert frame.loc[1, "traffic_source"] == TrafficSource.LEGACY_UNATTRIBUTED.value
+    assert frame["demo_data"].tolist() == [False, True]
     operational = operational_metrics(frame)
     assert operational["request_count"] == 2
     assert operational["cache_hit_rate"] == 0.5

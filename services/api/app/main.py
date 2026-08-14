@@ -12,10 +12,10 @@ from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
+from typing import Annotated, Any
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, Header, HTTPException, Query
 from fastapi.responses import JSONResponse
 
 from flight_delay.contracts import (
@@ -28,6 +28,7 @@ from flight_delay.contracts import (
     ModelInfoResponse,
     PredictionRecord,
     RouteReliability,
+    TrafficSource,
 )
 from flight_delay.persistence import (
     DynamoDBRepository,
@@ -241,9 +242,19 @@ def create_app(
         "/predict",
         response_model=FlightPredictionResponse,
     )
-    async def predict(payload: FlightPredictionRequest) -> FlightPredictionResponse:
+    async def predict(
+        payload: FlightPredictionRequest,
+        traffic_source: Annotated[TrafficSource, Header(alias="X-Traffic-Source")] = (
+            TrafficSource.API_UNSPECIFIED
+        ),
+    ) -> FlightPredictionResponse:
         """Infer and persist one uniquely observable prediction event."""
 
+        if traffic_source is TrafficSource.LEGACY_UNATTRIBUTED:
+            raise HTTPException(
+                status_code=422,
+                detail="legacy_unattributed is reserved for historical persisted records",
+            )
         state = _require_ready(dependencies())
         started = time.perf_counter()
         created_at = _utc_now()
@@ -264,6 +275,7 @@ def create_app(
                     "created_at": created_at,
                     "request_status": "inference_error",
                     "error_type": type(error).__name__,
+                    "traffic_source": traffic_source.value,
                 }
             )
             raise HTTPException(status_code=503, detail="model inference is unavailable") from error
@@ -277,6 +289,7 @@ def create_app(
             "prediction_id": prediction_id,
             "event_date": created_at.date(),
             "created_at": created_at,
+            "traffic_source": traffic_source.value,
             "request": payload.model_dump(mode="python"),
             **result,
             "classification_threshold": state.runtime.threshold,

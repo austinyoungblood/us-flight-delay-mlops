@@ -7,7 +7,7 @@ from datetime import date, time
 
 import streamlit as st
 
-from flight_delay.contracts import FeedbackRequest, FlightPredictionRequest
+from flight_delay.contracts import FeedbackRequest, FlightPredictionRequest, TrafficSource
 from flight_delay.ui import ApiClientError, FlightDelayApiClient
 
 
@@ -115,7 +115,7 @@ if submitted:
                 if error.status_code != 404:
                     st.warning(error.detail)
                 st.session_state["route_context"] = []
-        prediction = client.predict(request)
+        prediction = client.predict(request, traffic_source=TrafficSource.TRAVELER_UI)
         st.session_state["last_prediction"] = prediction
     except (ApiClientError, ValueError) as error:
         detail = error.detail if isinstance(error, ApiClientError) else str(error)

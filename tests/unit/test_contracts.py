@@ -3,7 +3,7 @@ from datetime import date, time
 import pytest
 from pydantic import ValidationError
 
-from flight_delay.contracts import FeedbackRequest, FlightPredictionRequest
+from flight_delay.contracts import FeedbackRequest, FlightPredictionRequest, TrafficSource
 
 
 def valid_request() -> dict[str, object]:
@@ -48,3 +48,15 @@ def test_feedback_contract_rejects_unknown_and_extreme_values() -> None:
         FeedbackRequest(actual_delayed=True, arrival_delay_minutes=5_000)
     with pytest.raises(ValidationError):
         FeedbackRequest.model_validate({"actual_delayed": False, "unknown": "nope"})
+
+
+def test_traffic_source_contract_is_closed_and_not_a_model_request_fact() -> None:
+    assert [source.value for source in TrafficSource] == [
+        "traveler_ui",
+        "synthetic_load_test",
+        "api_unspecified",
+        "legacy_unattributed",
+    ]
+    assert "traffic_source" not in FlightPredictionRequest.model_fields
+    with pytest.raises(ValueError):
+        TrafficSource("uncontrolled")
