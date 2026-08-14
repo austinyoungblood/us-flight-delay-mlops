@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "protocol_id": "us-flight-delay-v1-catboost-rolling-origin-v1",
+  "protocol_path": "configs/v1_experiment_protocol.yaml",
+  "protocol_sha256": "a6b1de9de550d1bd94eae0e56f8d88d65801ec488b6c539fc64afbafa4ccfffb",
+  "base_git_sha": "fdfb2bfe0386d016b1deaa90d946436bdc3ed14f",
+  "incumbent_registry_version": "v0",
+  "incumbent_registry_digest": "865ddd18f6debd44f24a79fc71739f2a",
+  "incumbent_bundle_digest": "2677b7093d66637852705d33bca006c3b78d8119f4d7268801453aa18c22f572",
+  "incumbent_threshold": 0.1840285229739868,
+  "historical_test_period": "2026-01-01/2026-05-31",
+  "historical_test_consumed": true,
+  "training_started": false,
+  "wandb_runs_created": false,
+  "fresh_final_accessed": false,
+  "artifact_dependencies": {
+    "incumbent_selection_lock": {
+      "path": "release/selection_lock.json",
+      "sha256": "a730a25c34a9f259b3ca02eb92c4ad44c1e75f50fd52ce270a940e4a60142340"
+    },
+    "processed_dataset_manifest": {
+      "path": "data/manifests/processed_manifest.json",
+      "sha256": "fa328e92048dededdcbdb4b61ce8c74b67b2d0ef64872dfb25949334cf22dee4",
+      "manifest_digest": "c8aa583cbfe7ad8ee4bdcedaa8d479e2056541c71296f222ae0e0a410a48cdaf"
+    },
+    "source_dataset_manifest": {
+      "path": "data/manifests/source_manifest.json",
+      "sha256": "996b1172a725bbf733f6647d436ebc30eecd1b14b2d6a3099ebeb1cd78ac9e83",
+      "manifest_digest": "0a2e8ef929dee6bc1d5a8cdcf8f0161ce0f11bb54c3809dbea1040f09624b561"
+    }
+  }
+}
