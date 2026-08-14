@@ -31,6 +31,9 @@ dev = [
     "pytest-cov==6.2.1",
     "ruff==0.12.7",
 ]
+v1 = [
+    "catboost==1.2.10",
+]
 
 [tool.setuptools.packages.find]
 where = ["src"]

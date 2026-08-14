@@ -1,7 +1,7 @@
 .PHONY: build download-data format-check install lint log-dataset prepare-data test train-candidate-a train-dummy validate
 
 install:
-	python -m pip install -c requirements.lock ".[dev]"
+	python -m pip install -c requirements.lock -c requirements-v1.lock ".[dev,v1]"
 
 lint:
 	ruff check .

@@ -1,0 +1,5 @@
+# Optional governed-v1 modeling constraints. Install with requirements.lock.
+# These packages are intentionally absent from the production runtime dependency set.
+catboost==1.2.10
+graphviz==0.21
+plotly==6.5.0
