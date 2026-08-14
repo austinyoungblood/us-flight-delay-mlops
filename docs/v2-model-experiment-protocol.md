@@ -86,7 +86,18 @@ Outer evaluation months cannot control early stopping.
 ## Exact LightGBM matrix
 
 LightGBM is pinned to `4.7.0`, uses native categorical features, and screens on CPU with `n_jobs=20`.
-All candidates also use binary objective, seed 42, `verbosity=-1`, deterministic column-wise mode.
+All candidates also use binary objective, seed 42, `verbosity=-1`, deterministic column-wise mode,
+and `subsample_freq=1`.
+
+### Pre-training subsampling correction
+
+This correction was made before any real v2 fit, W&B run, or result artifact existed. The original
+protocol intentionally varied `subsample` between `0.8` and `1.0`, but LightGBM defaults
+`subsample_freq` to `0`, which left that declared search dimension inactive. Setting the common
+parameter `subsample_freq=1` activates the existing dimension: candidates with `subsample=0.8`
+perform row bagging, while candidates with `subsample=1.0` remain effectively full-row fits. No
+candidate identity row, CatBoost value, feature, period, gate, ranking rule, backend policy, or
+advancement rule changed. No observed model result influenced this correction.
 
 | ID | leaves | depth | rate | estimators | child | subsample | columns | L2 | L1 | cat smooth | cat L2 | class weight |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |

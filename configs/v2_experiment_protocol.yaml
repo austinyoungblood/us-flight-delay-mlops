@@ -10,6 +10,17 @@ state:
   december_opened: false
   historical_test_accessed: false
 
+pretraining_correction:
+  id: activate_lightgbm_row_subsampling_v1
+  applied_before_any_real_fit: true
+  observed_model_results_available: false
+  observed_model_results_influenced_correction: false
+  original_declared_dimension: "subsample: [0.8, 1.0]"
+  inert_default: "subsample_freq: 0"
+  governed_activation: "subsample_freq: 1"
+  candidate_identity_rows_changed: false
+  catboost_protocol_changed: false
+
 dependencies:
   base_git_sha: d80f837007836576766cb92e9b11e17f9b6c1ee3
   immutable_v1:
@@ -282,6 +293,7 @@ lightgbm_search:
     verbosity: -1
     deterministic: true
     force_col_wise: true
+    subsample_freq: 1
   candidates:
     - {id: LGBM01, num_leaves: 127, max_depth: 8, learning_rate: 0.02, n_estimators: 800, min_child_samples: 100, subsample: 1.0, colsample_bytree: 1.0, reg_lambda: 1.0, reg_alpha: 1.0, cat_smooth: 50, cat_l2: 10, scale_pos_weight: 1.0}
     - {id: LGBM02, num_leaves: 31, max_depth: 12, learning_rate: 0.05, n_estimators: 500, min_child_samples: 200, subsample: 0.8, colsample_bytree: 0.8, reg_lambda: 10.0, reg_alpha: 0.0, cat_smooth: 10, cat_l2: 20, scale_pos_weight: 1.5}

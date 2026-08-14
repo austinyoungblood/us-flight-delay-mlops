@@ -2,8 +2,19 @@
   "schema_version": 1,
   "protocol_id": "us-flight-delay-v2-historical-propensity-dual-boost-v1",
   "protocol_path": "configs/v2_experiment_protocol.yaml",
-  "protocol_sha256": "6b9ac57fabc3c55047c8606a046e219ab948b3cda1650344636440d06414c0ea",
+  "protocol_sha256": "8e57b0f63656003c9981b3b5e44623e0b7c556f6e0c7222352ac38dd5119420a",
   "base_git_sha": "d80f837007836576766cb92e9b11e17f9b6c1ee3",
+  "pretraining_correction": {
+    "id": "activate_lightgbm_row_subsampling_v1",
+    "applied_before_any_real_fit": true,
+    "observed_model_results_available": false,
+    "observed_model_results_influenced_correction": false,
+    "original_declared_dimension": "subsample: [0.8, 1.0]",
+    "inert_default": "subsample_freq: 0",
+    "governed_activation": "subsample_freq: 1",
+    "candidate_identity_rows_changed": false,
+    "catboost_protocol_changed": false
+  },
   "candidate_generation": {
     "algorithm": "seeded_greedy_maximin_normalized_parameter_index_v1",
     "seed": 42,
@@ -15,6 +26,15 @@
     "total_feature_count": 37,
     "prior_strength": 50,
     "november_and_december_state_as_of_inclusive": "2025-10-31"
+  },
+  "lightgbm_common_parameters_sha256": "4e1da64004b24a403c3a64d654001da61bffb0880efcada2c722eb7127fa54ca",
+  "lightgbm_common_parameters": {
+    "objective": "binary",
+    "random_state": 42,
+    "verbosity": -1,
+    "deterministic": true,
+    "force_col_wise": true,
+    "subsample_freq": 1
   },
   "lightgbm_candidates_sha256": "71849b773eabc506b6eda2763bbd1be693a9167aee4a73e1433e43d5749de0d0",
   "lightgbm_candidates": [
@@ -35,6 +55,16 @@
     {"id":"LGBM15","num_leaves":127,"max_depth":12,"learning_rate":0.05,"n_estimators":1200,"min_child_samples":200,"subsample":0.8,"colsample_bytree":0.8,"reg_lambda":1.0,"reg_alpha":1.0,"cat_smooth":10,"cat_l2":10,"scale_pos_weight":1.0},
     {"id":"LGBM16","num_leaves":31,"max_depth":-1,"learning_rate":0.05,"n_estimators":500,"min_child_samples":200,"subsample":1.0,"colsample_bytree":0.8,"reg_lambda":1.0,"reg_alpha":1.0,"cat_smooth":50,"cat_l2":20,"scale_pos_weight":1.0}
   ],
+  "catboost_search_sha256": "1715e6385513f736c87887c7562ae3de5c7adaf93e41e9f6fb526f2db6533886",
+  "catboost_common_parameters_sha256": "477bd3112003de55b28e8127b1d4bc83d67ef4d6528d9b65ce842ec117781783",
+  "catboost_common_parameters": {
+    "loss_function": "Logloss",
+    "eval_metric": "Logloss",
+    "random_seed": 42,
+    "has_time": true,
+    "allow_writing_files": false,
+    "verbose": false
+  },
   "catboost_candidates_sha256": "d932ca00f40b60775e13dcff5d6b1a3cadd614802afee3cf4c26481bb1b8b4d8",
   "catboost_candidates": [
     {"id":"CB01","depth":6,"iterations":500,"learning_rate":0.05,"l2_leaf_reg":12,"random_strength":0.5,"bagging_temperature":3.0,"border_count":128,"max_ctr_complexity":1,"positive_class_weight":1.0},
@@ -57,6 +87,8 @@
     "docs/v1-model-experiment-result.md": "3b6f24e0613cc6693e344b0e455a30406182c1372876a43954f018622f9657a2"
   },
   "training_started": false,
+  "results_exist": false,
+  "wandb_runs_created": false,
   "december_opened": false,
   "historical_test_accessed": false,
   "production_registry_version": "v0"
