@@ -14,6 +14,7 @@ from flight_delay.contracts import (
     ModelInfoResponse,
     RiskBand,
     RouteReliability,
+    TrafficSource,
 )
 from flight_delay.monitoring.demo import demo_events
 from flight_delay.ui import ApiClientError
@@ -25,6 +26,7 @@ class FakeApiClient:
     def __init__(self, *, ready: bool = True) -> None:
         self.ready = ready
         self.predictions = 0
+        self.prediction_sources: list[TrafficSource] = []
         self.feedback = 0
 
     def health(self) -> HealthResponse:
@@ -85,8 +87,14 @@ class FakeApiClient:
             )
         ]
 
-    def predict(self, request: Any) -> FlightPredictionResponse:
+    def predict(
+        self,
+        request: Any,
+        *,
+        traffic_source: TrafficSource = TrafficSource.API_UNSPECIFIED,
+    ) -> FlightPredictionResponse:
         self.predictions += 1
+        self.prediction_sources.append(traffic_source)
         return FlightPredictionResponse(
             prediction_id="prediction-one",
             delay_probability=0.3,
@@ -150,6 +158,22 @@ class FakeMonitorRepository:
         return {"feedback_revision": self.revision, "feedback": feedback}
 
 
+def provenance_demo_events() -> list[dict[str, Any]]:
+    items = demo_events(batch_id="app-test", count=6, start_date=date(2026, 8, 8))
+    sources = [
+        TrafficSource.TRAVELER_UI,
+        TrafficSource.SYNTHETIC_LOAD_TEST,
+        TrafficSource.API_UNSPECIFIED,
+        None,
+        TrafficSource.TRAVELER_UI,
+        TrafficSource.SYNTHETIC_LOAD_TEST,
+    ]
+    for item, source in zip(items, sources, strict=True):
+        if source is not None:
+            item["traffic_source"] = source.value
+    return items
+
+
 def test_traveler_ready_academic_production_prediction_and_feedback() -> None:
     fake = FakeApiClient()
     app = AppTest.from_file(str(ROOT / "services/user_ui/app.py"))
@@ -159,6 +183,7 @@ def test_traveler_ready_academic_production_prediction_and_feedback() -> None:
     assert any("Academic demonstration" in warning.value for warning in app.warning)
     next(button for button in app.button if button.label == "Estimate delay risk").click().run()
     assert fake.predictions == 1
+    assert fake.prediction_sources == [TrafficSource.TRAVELER_UI]
     assert any(metric.label == "Delay probability" for metric in app.metric)
     assert any(
         metric.label == "Threshold signal" and metric.value == "Above model threshold"
@@ -187,8 +212,13 @@ def test_traveler_degraded_state_disables_prediction() -> None:
 
 def test_traveler_uses_below_threshold_signal_instead_of_on_time_classification() -> None:
     class BelowThresholdApiClient(FakeApiClient):
-        def predict(self, request: Any) -> FlightPredictionResponse:
-            prediction = super().predict(request)
+        def predict(
+            self,
+            request: Any,
+            *,
+            traffic_source: TrafficSource = TrafficSource.API_UNSPECIFIED,
+        ) -> FlightPredictionResponse:
+            prediction = super().predict(request, traffic_source=traffic_source)
             return prediction.model_copy(
                 update={
                     "delay_probability": 0.1,
@@ -212,7 +242,12 @@ def test_traveler_uses_below_threshold_signal_instead_of_on_time_classification(
 
 def test_traveler_safely_renders_prediction_api_error() -> None:
     class FailingApiClient(FakeApiClient):
-        def predict(self, request: Any) -> FlightPredictionResponse:
+        def predict(
+            self,
+            request: Any,
+            *,
+            traffic_source: TrafficSource = TrafficSource.API_UNSPECIFIED,
+        ) -> FlightPredictionResponse:
             raise ApiClientError("safe dependency failure", status_code=503)
 
     app = AppTest.from_file(str(ROOT / "services/user_ui/app.py"))
@@ -233,7 +268,7 @@ def test_monitor_empty_window() -> None:
 
 
 def test_monitor_populated_metrics_demo_warning_and_inspector() -> None:
-    items = demo_events(batch_id="app-test", count=6, start_date=date(2026, 8, 8))
+    items = provenance_demo_events()
     app = AppTest.from_file(str(ROOT / "services/monitor_ui/app.py"))
     app.session_state["_monitor_repository"] = FakeMonitorRepository(items)
     app.run(timeout=10)
@@ -243,6 +278,14 @@ def test_monitor_populated_metrics_demo_warning_and_inspector() -> None:
     assert any(metric.label == "Requests" and metric.value == "6" for metric in app.metric)
     assert any(metric.label == "Predicted delayed" for metric in app.metric)
     assert any(metric.label == "Predicted on time" for metric in app.metric)
+    assert any(metric.label == "traveler_ui" and metric.value == "2" for metric in app.metric)
+    assert any(
+        metric.label == "synthetic_load_test" and metric.value == "2" for metric in app.metric
+    )
+    assert any(metric.label == "api_unspecified" and metric.value == "1" for metric in app.metric)
+    assert any(
+        metric.label == "legacy_unattributed" and metric.value == "1" for metric in app.metric
+    )
     assert any(
         metric.label == "Absolute prevalence delta" and metric.value != "N/A"
         for metric in app.metric
@@ -256,12 +299,24 @@ def test_monitor_populated_metrics_demo_warning_and_inspector() -> None:
 
 
 def test_monitor_filters_and_demo_exclusion() -> None:
-    items = demo_events(batch_id="app-test", count=6, start_date=date(2026, 8, 8))
+    items = provenance_demo_events()
     app = AppTest.from_file(str(ROOT / "services/monitor_ui/app.py"))
     app.session_state["_monitor_repository"] = FakeMonitorRepository(items)
     app.run(timeout=10)
     next(select for select in app.selectbox if select.label == "Carrier").set_value("UA").run()
     assert any(metric.label == "Requests" and metric.value == "2" for metric in app.metric)
+
+    app = AppTest.from_file(str(ROOT / "services/monitor_ui/app.py"))
+    app.session_state["_monitor_repository"] = FakeMonitorRepository(items)
+    app.run(timeout=10)
+    next(select for select in app.selectbox if select.label == "Traffic source").set_value(
+        "synthetic_load_test"
+    ).run()
+    assert any(metric.label == "Requests" and metric.value == "2" for metric in app.metric)
+    assert any(
+        metric.label == "Successful predictions" and metric.value == "2" for metric in app.metric
+    )
+    assert not any(metric.label == "traveler_ui" for metric in app.metric)
 
     app = AppTest.from_file(str(ROOT / "services/monitor_ui/app.py"))
     app.session_state["_monitor_repository"] = FakeMonitorRepository(items)

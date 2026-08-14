@@ -10,7 +10,7 @@ from pathlib import Path
 
 import pytest
 
-from flight_delay.contracts import FlightPredictionResponse
+from flight_delay.contracts import FlightPredictionResponse, TrafficSource
 from flight_delay.load_testing.traffic import (
     MAX_RATE_PER_SECOND,
     MAX_REQUEST_COUNT,
@@ -107,7 +107,9 @@ def test_start_date_must_be_a_date() -> None:
 
 
 def test_dry_run_never_calls_sender() -> None:
-    def unexpected_sender(request: object) -> FlightPredictionResponse:
+    def unexpected_sender(
+        request: object, *, traffic_source: TrafficSource
+    ) -> FlightPredictionResponse:
         raise AssertionError("dry run attempted a network operation")
 
     audit = run_monitoring_traffic(
@@ -119,15 +121,18 @@ def test_dry_run_never_calls_sender() -> None:
     assert audit.planned_count == 3
     assert audit.attempted_count == 0
     assert audit.returned_prediction_ids == ()
+    assert audit.traffic_source is TrafficSource.SYNTHETIC_LOAD_TEST
 
 
 def test_apply_records_success_failure_and_rate_limit() -> None:
     calls = 0
     sleeps: list[float] = []
+    sources: list[TrafficSource] = []
 
-    def sender(request: object) -> FlightPredictionResponse:
+    def sender(request: object, *, traffic_source: TrafficSource) -> FlightPredictionResponse:
         nonlocal calls
         calls += 1
+        sources.append(traffic_source)
         if calls == 2:
             raise ApiClientError("sanitized failure", status_code=503)
         return response(f"prediction-{calls}")
@@ -144,6 +149,8 @@ def test_apply_records_success_failure_and_rate_limit() -> None:
     assert audit.failed_count == 1
     assert audit.returned_prediction_ids == ("prediction-1", "prediction-3")
     assert sleeps == [0.25, 0.25]
+    assert sources == [TrafficSource.SYNTHETIC_LOAD_TEST] * 3
+    assert audit.traffic_source is TrafficSource.SYNTHETIC_LOAD_TEST
 
 
 def test_apply_requires_sender_and_aware_timestamp() -> None:
@@ -179,6 +186,7 @@ def test_empty_templates_are_rejected_and_audit_is_atomic(tmp_path: Path) -> Non
     write_audit_summary(output, audit)
     payload = json.loads(output.read_text(encoding="utf-8"))
     assert payload["traffic_kind"] == "synthetic_load_test_via_prediction_api"
+    assert payload["traffic_source"] == "synthetic_load_test"
     assert "api_base_url" not in payload
 
 
@@ -202,7 +210,9 @@ def test_cli_defaults_to_offline_dry_run(tmp_path: Path) -> None:
         cwd=ROOT,
     )
     assert json.loads(result.stdout)["mode"] == "dry-run"
-    assert json.loads(output.read_text(encoding="utf-8"))["attempted_count"] == 0
+    payload = json.loads(output.read_text(encoding="utf-8"))
+    assert payload["attempted_count"] == 0
+    assert payload["traffic_source"] == "synthetic_load_test"
 
 
 def test_load_testing_module_import_does_not_require_aws_sdk(tmp_path: Path) -> None:

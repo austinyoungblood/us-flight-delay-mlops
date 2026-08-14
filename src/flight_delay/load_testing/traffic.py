@@ -10,14 +10,25 @@ from collections.abc import Callable, Sequence
 from dataclasses import asdict, dataclass
 from datetime import UTC, date, datetime, time, timedelta
 from pathlib import Path
-from typing import Any
+from typing import Any, Protocol
 from urllib.parse import urlsplit
 
-from flight_delay.contracts import FlightPredictionRequest, FlightPredictionResponse
+from flight_delay.contracts import FlightPredictionRequest, FlightPredictionResponse, TrafficSource
 from flight_delay.ui import ApiClientError
 
 MAX_REQUEST_COUNT = 500
 MAX_RATE_PER_SECOND = 10.0
+
+
+class PredictionSender(Protocol):
+    """API prediction callable that requires controlled request provenance."""
+
+    def __call__(
+        self,
+        request: FlightPredictionRequest,
+        *,
+        traffic_source: TrafficSource,
+    ) -> FlightPredictionResponse: ...
 
 
 @dataclass(frozen=True)
@@ -76,6 +87,7 @@ class TrafficAudit:
     generation_timestamp: str
     mode: str
     traffic_kind: str
+    traffic_source: TrafficSource
     seed: int
     planned_count: int
     attempted_count: int
@@ -87,6 +99,7 @@ class TrafficAudit:
         """Return a JSON-compatible representation."""
 
         value = asdict(self)
+        value["traffic_source"] = self.traffic_source.value
         value["returned_prediction_ids"] = list(self.returned_prediction_ids)
         return value
 
@@ -145,7 +158,7 @@ def run_monitoring_traffic(
     plan: TrafficPlan,
     *,
     apply: bool = False,
-    sender: Callable[[FlightPredictionRequest], FlightPredictionResponse] | None = None,
+    sender: PredictionSender | None = None,
     now: Callable[[], datetime] = lambda: datetime.now(UTC),
     sleep: Callable[[float], None] = time_module.sleep,
 ) -> TrafficAudit:
@@ -160,6 +173,7 @@ def run_monitoring_traffic(
             generation_timestamp=timestamp.astimezone(UTC).isoformat(),
             mode="dry-run",
             traffic_kind="synthetic_load_test_via_prediction_api",
+            traffic_source=TrafficSource.SYNTHETIC_LOAD_TEST,
             seed=plan.seed,
             planned_count=plan.count,
             attempted_count=0,
@@ -177,7 +191,7 @@ def run_monitoring_traffic(
         if index:
             sleep(interval)
         try:
-            response = sender(request)
+            response = sender(request, traffic_source=TrafficSource.SYNTHETIC_LOAD_TEST)
         except ApiClientError:
             failed += 1
         else:
@@ -186,6 +200,7 @@ def run_monitoring_traffic(
         generation_timestamp=timestamp.astimezone(UTC).isoformat(),
         mode="apply",
         traffic_kind="synthetic_load_test_via_prediction_api",
+        traffic_source=TrafficSource.SYNTHETIC_LOAD_TEST,
         seed=plan.seed,
         planned_count=plan.count,
         attempted_count=plan.count,

@@ -9,6 +9,7 @@ from typing import Any
 import pandas as pd
 import streamlit as st
 
+from flight_delay.contracts import TrafficSource
 from flight_delay.monitoring import (
     MonitoringRepository,
     feedback_metrics,
@@ -117,10 +118,17 @@ with st.sidebar:
     version_options = (
         sorted(all_frame["model_version"].dropna().unique()) if not all_frame.empty else []
     )
+    present_traffic_sources = (
+        set(all_frame["traffic_source"].dropna().astype(str)) if not all_frame.empty else set()
+    )
+    traffic_source_options = [
+        source.value for source in TrafficSource if source.value in present_traffic_sources
+    ]
     carrier_filter = st.selectbox("Carrier", ["All", *carrier_options])
     route_filter = st.selectbox("Route", ["All", *route_options])
     status_filter = st.selectbox("Request status", ["All", *status_options])
     version_filter = st.selectbox("Model version", ["All", *version_options])
+    traffic_source_filter = st.selectbox("Traffic source", ["All", *traffic_source_options])
     exclude_demo = st.checkbox("Exclude demo data", value=False)
 
 frame = all_frame.copy()
@@ -129,6 +137,7 @@ for column, selected in (
     ("route", route_filter),
     ("request_status", status_filter),
     ("model_version", version_filter),
+    ("traffic_source", traffic_source_filter),
 ):
     if selected != "All" and not frame.empty:
         frame = frame[frame[column] == selected]
@@ -188,6 +197,15 @@ columns[1].metric("Success", operational["success_count"], _pct(operational["suc
 columns[2].metric("Errors", operational["error_count"])
 columns[3].metric("Cache hits", operational["cache_hit_count"], _pct(operational["cache_hit_rate"]))
 columns[4].metric("Latency p95", f"{finite_metric(operational['latency_ms']['p95'])} ms")
+
+traffic_source_counts = frame["traffic_source"].value_counts()
+visible_traffic_sources = [
+    source.value for source in TrafficSource if source.value in traffic_source_counts
+]
+st.markdown("**Traffic source**")
+source_columns = st.columns(len(visible_traffic_sources))
+for widget, source in zip(source_columns, visible_traffic_sources, strict=True):
+    widget.metric(source, int(traffic_source_counts[source]))
 
 latency_rows = []
 for name in ("latency_ms", "inference_latency_ms", "persistence_latency_ms"):
@@ -296,6 +314,9 @@ if selected:
             "model_digest": selected.get("model_digest"),
             "latency_ms": selected.get("latency_ms"),
             "cache_hit": selected.get("cache_hit"),
+            "traffic_source": selected.get(
+                "traffic_source", TrafficSource.LEGACY_UNATTRIBUTED.value
+            ),
             "feedback": selected.get("feedback"),
             "feedback_revision": selected.get("feedback_revision", 0),
         }

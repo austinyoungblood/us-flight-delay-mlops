@@ -171,6 +171,21 @@ Interactive OpenAPI documentation is available at `/docs`. A successful predicti
 returned only after its unique event has been persisted. Feedback is revisioned on the same record,
 and monitoring queries use bounded UTC windows through the GSI.
 
+`POST /predict` accepts the controlled `X-Traffic-Source` header. If the header is omitted, the API
+persists `api_unspecified`; arbitrary values are rejected. Traffic provenance is persisted event
+metadata, not a model feature, and is intentionally absent from `FlightPredictionRequest`,
+`FlightPredictionResponse`, and the inference-cache key. The persisted retrieval contract exposes
+one of four values:
+
+- `traveler_ui` — submitted explicitly by the Traveler application;
+- `synthetic_load_test` — controlled monitoring load sent through the real prediction API;
+- `api_unspecified` — a new direct API request whose caller did not identify its source; or
+- `legacy_unattributed` — a historical record created before source tagging existed; this value is
+  rejected for new prediction requests.
+
+Historical Day-1 records remain unchanged in DynamoDB. Their missing field is normalized to
+`legacy_unattributed` only when read; it is not silently backfilled.
+
 ## Local development
 
 Python 3.11 is required. Tests use fake or disabled integrations and require no network credentials.
@@ -219,11 +234,12 @@ PYTHONPATH=src python scripts/generate_monitoring_traffic.py \
 
 Counts are restricted to 1–500 requests and the rate is capped at 10 requests/second. The default
 audit is written beneath ignored `artifacts/` and records the timestamp, seed, attempted/successful/
-failed counts, and returned prediction IDs without storing the API URL or credentials. These records
-are synthetic load-test inference traffic—not organic traveler activity and not direct `demo_data`
-items. They exercise request validation, model inference, caching, and DynamoDB persistence through
-FastAPI. The utility does not create feedback, write DynamoDB directly, use the AWS SDK, mutate W&B,
-or depend on final-test data. Its implementation lives in the AWS-independent
+failed counts, controlled source, and returned prediction IDs without storing the API URL or
+credentials. Applied requests are sent through the real prediction API and persisted with
+`traffic_source=synthetic_load_test`. They are not organic traveler traffic and are distinct from
+direct seeded `demo_data`. They exercise request validation, model inference, caching, and DynamoDB
+persistence through FastAPI. The utility does not create feedback, write DynamoDB directly, use the
+AWS SDK, mutate W&B, or depend on final-test data. Its implementation lives in the AWS-independent
 `flight_delay.load_testing` package, separate from the DynamoDB-backed monitoring data plane.
 
 ## Data and experiment lineage

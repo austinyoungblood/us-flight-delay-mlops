@@ -173,8 +173,9 @@ It does not itself constitute cloud-deployment evidence.
 
 ## Current repository validation
 
-- 292 tests pass with 85.94% branch coverage; CI enforces an 82% minimum
+- 295 tests pass with 86.05% branch coverage; CI enforces an 82% minimum
 - Coverage includes failure and edge behavior for API clients/contracts, persistence, monitoring,
-  deployment/evidence validation, promotion policy/metadata, and governed monitoring traffic
+  deployment/evidence validation, promotion policy/metadata, governed monitoring traffic, and
+  persisted prediction-source provenance
 - Ruff lint and formatting checks, deployment/evidence manifest validation, and deployment shell
   syntax checks pass without contacting W&B or AWS

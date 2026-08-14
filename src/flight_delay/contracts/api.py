@@ -24,6 +24,15 @@ class RiskBand(StrEnum):
     HIGH = "high"
 
 
+class TrafficSource(StrEnum):
+    """Controlled origin for one persisted prediction request."""
+
+    TRAVELER_UI = "traveler_ui"
+    SYNTHETIC_LOAD_TEST = "synthetic_load_test"
+    API_UNSPECIFIED = "api_unspecified"
+    LEGACY_UNATTRIBUTED = "legacy_unattributed"
+
+
 class FlightPredictionRequest(StrictContract):
     """Scheduled flight facts available before departure."""
 
@@ -118,6 +127,7 @@ class FeedbackRecord(FeedbackRequest):
 class PredictionRecord(FlightPredictionResponse):
     """Stored event returned by the prediction retrieval endpoint."""
 
+    traffic_source: TrafficSource = TrafficSource.LEGACY_UNATTRIBUTED
     request: FlightPredictionRequest
     event_date: date
     request_status: Literal["success"]

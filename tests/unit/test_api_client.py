@@ -5,7 +5,7 @@ from datetime import UTC, datetime
 import httpx
 import pytest
 
-from flight_delay.contracts import FeedbackRequest, FlightPredictionRequest
+from flight_delay.contracts import FeedbackRequest, FlightPredictionRequest, TrafficSource
 from flight_delay.ui import ApiClientError, FlightDelayApiClient
 
 
@@ -52,6 +52,7 @@ def test_prediction_and_feedback_post_once_with_typed_results() -> None:
     def handler(request: httpx.Request) -> httpx.Response:
         calls.append(request.url.path)
         if request.url.path == "/predict":
+            assert request.headers["X-Traffic-Source"] == TrafficSource.API_UNSPECIFIED.value
             return httpx.Response(
                 200,
                 json={
@@ -84,26 +85,28 @@ def test_prediction_and_feedback_post_once_with_typed_results() -> None:
         )
 
     api = client(handler)
-    prediction = api.predict(
-        FlightPredictionRequest.model_validate(
-            {
-                "carrier": "UA",
-                "origin": "DEN",
-                "destination": "LAX",
-                "flight_date": "2026-08-18",
-                "scheduled_departure": "08:00",
-                "scheduled_arrival": "09:30",
-                "scheduled_elapsed_minutes": 150,
-                "distance_miles": 862,
-            }
-        )
+    prediction_request = FlightPredictionRequest.model_validate(
+        {
+            "carrier": "UA",
+            "origin": "DEN",
+            "destination": "LAX",
+            "flight_date": "2026-08-18",
+            "scheduled_departure": "08:00",
+            "scheduled_arrival": "09:30",
+            "scheduled_elapsed_minutes": 150,
+            "distance_miles": 862,
+        }
     )
+    prediction = api.predict(prediction_request)
     feedback = api.submit_feedback(
         prediction.prediction_id,
         FeedbackRequest(actual_delayed=True, arrival_delay_minutes=20, source="traveler-ui"),
     )
     assert prediction.model_alias == "staging"
     assert feedback.feedback_revision == 1
+    assert calls == ["/predict", "/feedback/one"]
+    with pytest.raises(ValueError, match="historical"):
+        api.predict(prediction_request, traffic_source=TrafficSource.LEGACY_UNATTRIBUTED)
     assert calls == ["/predict", "/feedback/one"]
 
 
@@ -238,7 +241,9 @@ def test_route_reliability_and_prediction_retrieval_are_typed() -> None:
 
     api = client(handler)
     assert api.route_reliability(origin="DEN", destination="LAX")[0].on_time_rate == 0.7
-    assert api.get_prediction("one").request.carrier == "UA"
+    prediction = api.get_prediction("one")
+    assert prediction.request.carrier == "UA"
+    assert prediction.traffic_source is TrafficSource.LEGACY_UNATTRIBUTED
 
 
 def test_route_reliability_rejects_non_list_payload() -> None:

@@ -7,7 +7,7 @@ from typing import Any
 
 import httpx
 
-from flight_delay.contracts import RouteReliability
+from flight_delay.contracts import RouteReliability, TrafficSource
 from flight_delay.persistence import PersistenceError
 from services.api.app.main import Settings, create_app
 
@@ -203,17 +203,28 @@ def test_degraded_health_and_predict_503() -> None:
     assert prediction.status_code == 503
 
 
-def test_predict_cache_keeps_unique_persisted_events_and_feedback_round_trip() -> None:
+def test_predict_provenance_is_persisted_retrieved_and_excluded_from_cache() -> None:
     runtime = FakeRuntime()
     repository = MemoryRepository()
     app = configured_app(runtime, repository)
 
-    async def scenario() -> tuple[httpx.Response, httpx.Response, httpx.Response, httpx.Response]:
+    async def scenario() -> tuple[
+        httpx.Response, httpx.Response, httpx.Response, httpx.Response, httpx.Response
+    ]:
         async with app.router.lifespan_context(app):
             transport = httpx.ASGITransport(app=app)
             async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
                 first = await client.post("/predict", json=prediction_payload())
-                second = await client.post("/predict", json=prediction_payload())
+                second = await client.post(
+                    "/predict",
+                    json=prediction_payload(),
+                    headers={"X-Traffic-Source": TrafficSource.TRAVELER_UI.value},
+                )
+                third = await client.post(
+                    "/predict",
+                    json=prediction_payload(),
+                    headers={"X-Traffic-Source": TrafficSource.SYNTHETIC_LOAD_TEST.value},
+                )
                 prediction_id = first.json()["prediction_id"]
                 feedback = await client.post(
                     f"/feedback/{prediction_id}",
@@ -224,20 +235,30 @@ def test_predict_cache_keeps_unique_persisted_events_and_feedback_round_trip() -
                         "source": "traveler",
                     },
                 )
-                retrieved = await client.get(f"/predictions/{prediction_id}")
-                return first, second, feedback, retrieved
+                retrieved = await client.get(f"/predictions/{second.json()['prediction_id']}")
+                return first, second, third, feedback, retrieved
 
-    first, second, feedback, retrieved = run(scenario())
-    assert first.status_code == second.status_code == 200
+    first, second, third, feedback, retrieved = run(scenario())
+    assert first.status_code == second.status_code == third.status_code == 200
     assert first.json()["cache_hit"] is False
     assert second.json()["cache_hit"] is True
-    assert first.json()["prediction_id"] != second.json()["prediction_id"]
+    assert third.json()["cache_hit"] is True
+    assert len({item.json()["prediction_id"] for item in (first, second, third)}) == 3
+    assert all("traffic_source" not in item.json() for item in (first, second, third))
     assert runtime.calls == 1
-    assert len([key for key in repository.items if key.startswith("PREDICTION#")]) == 2
+    records = {
+        item["prediction_id"]: item
+        for key, item in repository.items.items()
+        if key.startswith("PREDICTION#")
+    }
+    assert len(records) == 3
+    assert records[first.json()["prediction_id"]]["traffic_source"] == "api_unspecified"
+    assert records[second.json()["prediction_id"]]["traffic_source"] == "traveler_ui"
+    assert records[third.json()["prediction_id"]]["traffic_source"] == "synthetic_load_test"
     assert feedback.status_code == 200
     assert feedback.json()["feedback_correct"] is True
     assert feedback.json()["feedback_revision"] == 1
-    assert retrieved.json()["feedback"]["source"] == "traveler"
+    assert retrieved.json()["traffic_source"] == "traveler_ui"
 
 
 def test_endpoint_errors_and_route_fallback() -> None:
@@ -248,16 +269,45 @@ def test_endpoint_errors_and_route_fallback() -> None:
             transport = httpx.ASGITransport(app=app)
             async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
                 invalid = await client.post("/predict", json={"carrier": "bad"})
+                invalid_source = await client.post(
+                    "/predict",
+                    json=prediction_payload(),
+                    headers={"X-Traffic-Source": "uncontrolled"},
+                )
+                legacy_source = await client.post(
+                    "/predict",
+                    json=prediction_payload(),
+                    headers={"X-Traffic-Source": TrafficSource.LEGACY_UNATTRIBUTED.value},
+                )
                 missing_route = await client.get("/route-reliability?origin=DEN&destination=JFK")
                 route = await client.get("/route-reliability?origin=den&destination=lax&carrier=ua")
                 missing_prediction = await client.get("/predictions/missing")
                 missing_feedback = await client.post(
                     "/feedback/missing", json={"actual_delayed": False}
                 )
-                return [invalid, missing_route, route, missing_prediction, missing_feedback]
+                return [
+                    invalid,
+                    invalid_source,
+                    legacy_source,
+                    missing_route,
+                    route,
+                    missing_prediction,
+                    missing_feedback,
+                ]
 
-    invalid, missing_route, route, missing_prediction, missing_feedback = run(scenario())
+    (
+        invalid,
+        invalid_source,
+        legacy_source,
+        missing_route,
+        route,
+        missing_prediction,
+        missing_feedback,
+    ) = run(scenario())
     assert invalid.status_code == 422
+    assert invalid_source.status_code == 422
+    assert legacy_source.status_code == 422
+    assert "reserved" in legacy_source.json()["detail"]
     assert missing_route.status_code == 404
     assert route.status_code == 200
     assert route.json()[0]["scope"] == "all_carriers"
@@ -270,3 +320,46 @@ def test_persistence_failure_never_returns_prediction_success() -> None:
     response = run(request(app, "POST", "/predict", json=prediction_payload()))
     assert response.status_code == 503
     assert response.json()["detail"] == "prediction persistence is unavailable"
+
+
+def test_legacy_prediction_without_provenance_remains_retrievable_without_backfill() -> None:
+    repository = MemoryRepository()
+    app = configured_app(repository=repository)
+
+    async def scenario() -> httpx.Response:
+        async with app.router.lifespan_context(app):
+            transport = httpx.ASGITransport(app=app)
+            async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+                created = await client.post("/predict", json=prediction_payload())
+                prediction_id = created.json()["prediction_id"]
+                record = repository.items[f"PREDICTION#{prediction_id}"]
+                record.pop("traffic_source")
+                retrieved = await client.get(f"/predictions/{prediction_id}")
+                assert "traffic_source" not in record
+                return retrieved
+
+    retrieved = run(scenario())
+    assert retrieved.status_code == 200
+    assert retrieved.json()["traffic_source"] == TrafficSource.LEGACY_UNATTRIBUTED.value
+
+
+def test_inference_error_event_retains_validated_traffic_source() -> None:
+    class FailingRuntime(FakeRuntime):
+        def predict(self, request: Any) -> dict[str, Any]:
+            raise RuntimeError("model unavailable")
+
+    repository = MemoryRepository()
+    app = configured_app(FailingRuntime(), repository)
+    response = run(
+        request(
+            app,
+            "POST",
+            "/predict",
+            json=prediction_payload(),
+            headers={"X-Traffic-Source": TrafficSource.TRAVELER_UI.value},
+        )
+    )
+    assert response.status_code == 503
+    error = next(item for key, item in repository.items.items() if key.startswith("ERROR#"))
+    assert error["request_status"] == "inference_error"
+    assert error["traffic_source"] == TrafficSource.TRAVELER_UI.value
