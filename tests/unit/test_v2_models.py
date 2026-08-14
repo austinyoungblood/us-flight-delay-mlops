@@ -60,8 +60,24 @@ def test_exact_model_specs_and_backend_separation(v2_protocol: dict[str, Any]) -
     assert all(spec.constructor_parameters["task_type"] == "CPU" for spec in cpu)
     assert all("devices" not in spec.constructor_parameters for spec in cpu)
     assert all(spec.constructor_parameters["n_jobs"] == 20 for spec in lightgbm)
+    assert all(spec.constructor_parameters["subsample_freq"] == 1 for spec in lightgbm)
+    bagged = [spec for spec in lightgbm if spec.identity_parameters["subsample"] == 0.8]
+    full_row = [spec for spec in lightgbm if spec.identity_parameters["subsample"] == 1.0]
+    assert bagged and full_row
+    assert all(spec.constructor_parameters["subsample"] == 0.8 for spec in bagged)
+    assert all(spec.constructor_parameters["subsample_freq"] == 1 for spec in bagged)
+    assert all(spec.constructor_parameters["subsample"] == 1.0 for spec in full_row)
+    assert all(spec.constructor_parameters["subsample_freq"] == 1 for spec in full_row)
     with pytest.raises(V2ModelError, match="CPU-only"):
         candidate_specs(v2_protocol, family="lightgbm", backend="GPU")
+
+    drifted = {**v2_protocol, "lightgbm_search": dict(v2_protocol["lightgbm_search"])}
+    drifted["lightgbm_search"]["common_parameters"] = {
+        **v2_protocol["lightgbm_search"]["common_parameters"],
+        "subsample_freq": 0,
+    }
+    with pytest.raises(V2ModelError, match="subsampling must be activated"):
+        candidate_specs(drifted, family="lightgbm", backend="CPU")
 
 
 def test_constructor_contract_uses_all_frozen_candidates(v2_protocol: dict[str, Any]) -> None:

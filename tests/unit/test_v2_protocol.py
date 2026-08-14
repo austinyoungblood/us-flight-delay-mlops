@@ -21,6 +21,24 @@ from flight_delay.modeling.v2.protocol import (
 )
 
 ROOT = Path(__file__).resolve().parents[2]
+ORIGINAL_LIGHTGBM_CANDIDATES_SHA256 = (
+    "71849b773eabc506b6eda2763bbd1be693a9167aee4a73e1433e43d5749de0d0"
+)
+ORIGINAL_CATBOOST_SEARCH_SHA256 = "1715e6385513f736c87887c7562ae3de5c7adaf93e41e9f6fb526f2db6533886"
+IMMUTABLE_V1_SHA256 = {
+    "configs/v1_experiment_protocol.yaml": (
+        "a6b1de9de550d1bd94eae0e56f8d88d65801ec488b6c539fc64afbafa4ccfffb"
+    ),
+    "experiments/v1/protocol_lock.json": (
+        "e5373df1c8d11e75132769283f4c784420637f73f9cb11a87d61895462d29b38"
+    ),
+    "experiments/v1/development_result.json": (
+        "de8dd8221e72187dad82bcd1f81f633eae7d908d9a09e82da4480c184536ce5c"
+    ),
+    "docs/v1-model-experiment-result.md": (
+        "3b6f24e0613cc6693e344b0e455a30406182c1372876a43954f018622f9657a2"
+    ),
+}
 
 
 def test_frozen_protocol_validates_exact_contract() -> None:
@@ -38,6 +56,29 @@ def test_frozen_protocol_validates_exact_contract() -> None:
     assert lock["catboost_candidates"] == protocol["catboost_search"]["candidates"]
     assert canonical_sha256(lock["lightgbm_candidates"]) == lock["lightgbm_candidates_sha256"]
     assert canonical_sha256(lock["catboost_candidates"]) == lock["catboost_candidates_sha256"]
+
+
+def test_pretraining_subsampling_correction_preserves_candidate_identity_and_v1() -> None:
+    protocol = yaml.safe_load((ROOT / "configs/v2_experiment_protocol.yaml").read_text())
+    lock = json.loads((ROOT / "experiments/v2/protocol_lock.json").read_text())
+    lightgbm = protocol["lightgbm_search"]
+
+    assert lightgbm["common_parameters"]["subsample_freq"] == 1
+    assert canonical_sha256(lightgbm["candidates"]) == ORIGINAL_LIGHTGBM_CANDIDATES_SHA256
+    assert [row["id"] for row in lightgbm["candidates"]] == [
+        f"LGBM{index:02d}" for index in range(1, 17)
+    ]
+    assert canonical_sha256(protocol["catboost_search"]) == ORIGINAL_CATBOOST_SEARCH_SHA256
+    assert lock["immutable_v1_sha256"] == IMMUTABLE_V1_SHA256
+    for path, expected in IMMUTABLE_V1_SHA256.items():
+        assert hashlib.sha256((ROOT / path).read_bytes()).hexdigest() == expected
+
+    correction = protocol["pretraining_correction"]
+    assert correction["applied_before_any_real_fit"] is True
+    assert correction["observed_model_results_available"] is False
+    assert correction["observed_model_results_influenced_correction"] is False
+    assert correction["candidate_identity_rows_changed"] is False
+    assert correction["catboost_protocol_changed"] is False
 
 
 @pytest.mark.parametrize(
@@ -135,6 +176,9 @@ def test_v2_protocol_documentation_is_public_and_complete() -> None:
         "Exact CatBoost matrix",
         "GPU screening",
         "authoritative CPU confirmation",
+        "subsample_freq=1",
+        "before any real v2 fit",
+        "No observed model result influenced this correction",
         "production `v0`",
     ):
         assert phrase in text

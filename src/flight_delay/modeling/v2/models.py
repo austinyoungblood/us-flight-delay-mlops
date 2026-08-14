@@ -86,6 +86,8 @@ def candidate_specs(
         raise V2ModelError("LightGBM screening and confirmation are CPU-only")
     search = protocol[f"{family}_search"]
     common = dict(search["common_parameters"])
+    if family == "lightgbm" and common.get("subsample_freq") != 1:
+        raise V2ModelError("LightGBM row subsampling must be activated with subsample_freq=1")
     result: list[CandidateSpec] = []
     for row in search["candidates"]:
         identity = {name: value for name, value in row.items() if name != "id"}
