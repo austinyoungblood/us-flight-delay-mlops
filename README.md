@@ -223,7 +223,8 @@ failed counts, and returned prediction IDs without storing the API URL or creden
 are synthetic load-test inference traffic—not organic traveler activity and not direct `demo_data`
 items. They exercise request validation, model inference, caching, and DynamoDB persistence through
 FastAPI. The utility does not create feedback, write DynamoDB directly, use the AWS SDK, mutate W&B,
-or depend on final-test data.
+or depend on final-test data. Its implementation lives in the AWS-independent
+`flight_delay.load_testing` package, separate from the DynamoDB-backed monitoring data plane.
 
 ## Data and experiment lineage
 

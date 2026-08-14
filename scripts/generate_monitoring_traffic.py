@@ -8,7 +8,7 @@ import sys
 from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 
-from flight_delay.monitoring.traffic import (
+from flight_delay.load_testing.traffic import (
     TrafficPlan,
     run_monitoring_traffic,
     validate_api_base_url,

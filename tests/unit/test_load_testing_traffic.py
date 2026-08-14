@@ -1,15 +1,17 @@
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import sys
+import textwrap
 from datetime import UTC, date, datetime
 from pathlib import Path
 
 import pytest
 
 from flight_delay.contracts import FlightPredictionResponse
-from flight_delay.monitoring.traffic import (
+from flight_delay.load_testing.traffic import (
     MAX_RATE_PER_SECOND,
     MAX_REQUEST_COUNT,
     TrafficPlan,
@@ -19,6 +21,39 @@ from flight_delay.monitoring.traffic import (
     write_audit_summary,
 )
 from flight_delay.ui import ApiClientError
+
+ROOT = Path(__file__).resolve().parents[2]
+
+
+def _aws_sdk_forbidden_environment(tmp_path: Path) -> dict[str, str]:
+    """Install an import guard before application imports and omit AWS configuration."""
+
+    (tmp_path / "sitecustomize.py").write_text(
+        textwrap.dedent(
+            """
+            import sys
+
+            FORBIDDEN_ROOTS = {"boto3", "botocore"}
+            preloaded = sorted(
+                name for name in sys.modules if name.partition(".")[0] in FORBIDDEN_ROOTS
+            )
+            if preloaded:
+                raise RuntimeError(f"AWS SDK was preloaded: {preloaded}")
+
+            class DenyAwsSdkImports:
+                def find_spec(self, fullname, path=None, target=None):
+                    if fullname.partition(".")[0] in FORBIDDEN_ROOTS:
+                        raise RuntimeError(f"AWS SDK import attempted: {fullname}")
+                    return None
+
+            sys.meta_path.insert(0, DenyAwsSdkImports())
+            """
+        ).lstrip(),
+        encoding="utf-8",
+    )
+    environment = {key: value for key, value in os.environ.items() if not key.startswith("AWS_")}
+    environment["PYTHONPATH"] = os.pathsep.join((str(tmp_path), str(ROOT / "src")))
+    return environment
 
 
 def response(prediction_id: str) -> FlightPredictionResponse:
@@ -163,7 +198,29 @@ def test_cli_defaults_to_offline_dry_run(tmp_path: Path) -> None:
         check=True,
         capture_output=True,
         text=True,
-        env={"PYTHONPATH": "src"},
+        env=_aws_sdk_forbidden_environment(tmp_path),
+        cwd=ROOT,
     )
     assert json.loads(result.stdout)["mode"] == "dry-run"
     assert json.loads(output.read_text(encoding="utf-8"))["attempted_count"] == 0
+
+
+def test_load_testing_module_import_does_not_require_aws_sdk(tmp_path: Path) -> None:
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            (
+                "import sys; import flight_delay.load_testing.traffic; "
+                "assert 'boto3' not in sys.modules; "
+                "assert 'botocore' not in sys.modules; "
+                "print('aws-sdk-isolated')"
+            ),
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+        env=_aws_sdk_forbidden_environment(tmp_path),
+        cwd=ROOT,
+    )
+    assert result.stdout.strip() == "aws-sdk-isolated"
