@@ -225,10 +225,14 @@ def test_optional_dependency_is_absent_from_runtime_dockerfiles() -> None:
         assert "requirements-v1" not in source
 
 
-def test_ci_installs_both_locks_and_probes_every_runtime_image() -> None:
+def test_ci_installs_modeling_locks_and_probes_every_runtime_image() -> None:
     workflow = (ROOT / ".github/workflows/ci.yml").read_text()
-    assert '-c requirements.lock -c requirements-v1.lock ".[dev,v1]"' in workflow
+    assert (
+        '-c requirements.lock -c requirements-v1.lock -c requirements-v2.lock ".[dev,v1,v2]"'
+        in workflow
+    )
     assert 'find_spec("catboost") is None' in workflow
+    assert 'find_spec("lightgbm") is None' in workflow
     for image in (
         "flight-delay-api:scaffold",
         "flight-delay-user-ui:scaffold",

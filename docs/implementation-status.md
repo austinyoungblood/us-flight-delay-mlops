@@ -201,9 +201,28 @@ It does not itself constitute cloud-deployment evidence.
 
 ## Current repository validation
 
-- 410 tests pass with 87.08% branch coverage; CI enforces an 82% minimum
+- 453 tests pass with 86.84% branch coverage; CI enforces an 86% minimum
 - Coverage includes failure and edge behavior for API clients/contracts, persistence, monitoring,
   deployment/evidence validation, promotion policy/metadata, governed monitoring traffic, and
-  persisted prediction-source provenance, plus v1 protocol drift and offline-isolation enforcement
-- Ruff lint and formatting checks, v1/deployment/evidence manifest validation, and deployment shell
-  syntax checks pass without contacting W&B or AWS
+  persisted prediction-source provenance, plus v1/v2 protocol drift, temporal-state parity, and
+  offline-isolation enforcement
+- Ruff lint and formatting checks, v1/v2/deployment/evidence manifest validation, and deployment
+  shell syntax checks pass without contacting W&B or AWS
+
+## Governed v2 model-improvement track
+
+- Froze a 37-feature protocol before implementation: the original 20 schedule features plus 17
+  strictly prior-month historical propensity/support features with empirical-Bayes strength 50.
+- Sealed exact 16-LightGBM and 12-CatBoost matrices, four temporal folds, sequential CatBoost GPU
+  screening, bounded LightGBM CPU screening, and authoritative top-four-per-family CPU confirmation.
+- Implemented canonical historical-state serialization and SHA256 identity, full-history lookup
+  construction, trailing-three-month rates, unseen-key fallback, and identical batch/serving
+  transformation.
+- Implemented primary operating-region ranking, CPU-only final refit, 12 November calibration
+  variants, unchanged threshold and acceptance gates, one-time markers, and separate December
+  qualification using the unchanged October-31 state.
+- Both model packages remain optional and absent from the API, Traveler, and Monitor images. Both
+  runners default to offline preflight and applied development is locked until reviewed code is on
+  clean `main`.
+- No v2 BTS model has been fit. December and January-May 2026 were not opened, v1 evidence remains
+  immutable, and Registry `production:v0` is unchanged.

@@ -34,6 +34,10 @@ dev = [
 v1 = [
     "catboost==1.2.10",
 ]
+v2 = [
+    "lightgbm==4.7.0",
+    "catboost==1.2.10",
+]
 
 [tool.setuptools.packages.find]
 where = ["src"]
