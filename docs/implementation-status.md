@@ -179,21 +179,29 @@ It does not itself constitute cloud-deployment evidence.
 - Froze the complete v1 experiment protocol in Git before training, including the exact four-model
   grid, rolling-origin folds, calibration variants, operating constraints, acceptance gates,
   retrospective December qualification, and future untouched final-holdout rule.
-- No v1 training or result exists yet. The consumed January-May 2026 test remains prohibited from
-  development, qualification, feature decisions, or gate changes.
-- Production remains the unchanged Registry `production:v0` release; this protocol creates no W&B,
-  AWS, model, Registry, deployment, or application-runtime mutation.
 - Implemented the protocol-bound runner on a separate review branch with canonical predicate-filtered
   data access, exact native-category CatBoost constructors, frozen-base calibration, pure threshold
   and gate selection, deterministic local bundles, durable one-time markers, and a separate
   qualification CLI.
 - CatBoost is isolated in the optional `v1` extra and remains absent from all three base runtime
-  images. Both CLIs default to offline preflight; no real v1 development or qualification execution
-  has occurred and no v1 result is claimed.
+  images. Both CLIs continue to default to offline preflight.
+- Completed the one-time governed development execution at implementation SHA
+  `1923658881a0c5cbc9c7c03595671a6aced71dc6`. The durable marker records `status=complete` and
+  `decision=governed_stop` after 46 minutes 35.265 seconds.
+- Rolling selection advanced CB2 and CB4. Their raw, sigmoid, and isotonic variants produced exactly
+  six finalists, but every finalist had `status=no_eligible_threshold`: no threshold simultaneously
+  met recall >= 0.60, precision >= 0.30, and predicted-positive rate <= 0.50.
+- The workflow intentionally stopped before downstream November gates, so no pass/fail claim is made
+  for finalist Brier, log-loss, ECE, calibration, latency, or bundle-size gates.
+- No November winner lock exists. December was not authorized, the consumed January-May 2026 test
+  remained untouched by v1, and Registry `production:v0` remains unchanged.
+- The complete interpretation and W&B finalist references are recorded in the
+  [governed v1 result report](v1-model-experiment-result.md), with sanitized machine-readable evidence
+  in [`experiments/v1/development_result.json`](../experiments/v1/development_result.json).
 
 ## Current repository validation
 
-- 326 tests pass with 86.08% branch coverage; CI enforces an 82% minimum
+- 410 tests pass with 87.08% branch coverage; CI enforces an 82% minimum
 - Coverage includes failure and edge behavior for API clients/contracts, persistence, monitoring,
   deployment/evidence validation, promotion policy/metadata, governed monitoring traffic, and
   persisted prediction-source provenance, plus v1 protocol drift and offline-isolation enforcement
