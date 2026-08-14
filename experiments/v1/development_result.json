@@ -1,0 +1,213 @@
+{
+  "schema_version": 1,
+  "result_type": "governed_v1_development",
+  "protocol": {
+    "id": "us-flight-delay-v1-catboost-rolling-origin-v1",
+    "sha256": "a6b1de9de550d1bd94eae0e56f8d88d65801ec488b6c539fc64afbafa4ccfffb"
+  },
+  "implementation": {
+    "git_sha": "1923658881a0c5cbc9c7c03595671a6aced71dc6"
+  },
+  "execution": {
+    "status": "complete",
+    "decision": "governed_stop",
+    "started_at": "2026-08-14T18:51:36.359832+00:00",
+    "completed_at": "2026-08-14T19:38:11.625011+00:00",
+    "duration_seconds": 2795.265179,
+    "historical_test_accessed": false
+  },
+  "source_evidence": {
+    "execution_marker": {
+      "path": "artifacts/v1/development/execution_marker.json",
+      "sha256": "e4814e25ca9d4dd7e7c278337ad783132b00fe6faaaa0f6d582387390d402e53",
+      "bytes": 330
+    },
+    "decision": {
+      "path": "artifacts/v1/development/decision.json",
+      "sha256": "7d8aebc9aa6f2cd048b27ac00ca6c3c168ecccedcdd9625003b26bb873ca942c",
+      "bytes": 27745562
+    },
+    "stop_report": {
+      "path": "artifacts/v1/development/stop-report.md",
+      "sha256": "e90f9c59fa1f49e3c810b256173672c63e7a3a03d423b399539e28872d3ee964",
+      "bytes": 105
+    },
+    "dataset_manifest_digest": "c8aa583cbfe7ad8ee4bdcedaa8d479e2056541c71296f222ae0e0a410a48cdaf"
+  },
+  "threshold_requirements": {
+    "recall_min": 0.6,
+    "precision_min": 0.3,
+    "predicted_positive_rate_max": 0.5
+  },
+  "finalists": [
+    {
+      "finalist_id": "CB2-none",
+      "status": "no_eligible_threshold",
+      "best_unrestricted_operating_point": {
+        "f1": 0.37739577158664295,
+        "precision": 0.2699417717225394,
+        "recall": 0.6269695378151261,
+        "predicted_positive_rate": 0.4592517589635745,
+        "threshold": 0.20717677884012428
+      },
+      "near_miss": {
+        "max_recall_with_precision_gte_0_30_and_ppr_lte_0_50": 0.44459033613445376,
+        "max_precision_with_recall_gte_0_60_and_ppr_lte_0_50": 0.2730583248761268
+      },
+      "wandb": {
+        "run_id": "a62xjekg",
+        "url": "https://wandb.ai/austin-youngblood-university-of-denver/us-flight-delay-mlops/runs/a62xjekg"
+      }
+    },
+    {
+      "finalist_id": "CB2-sigmoid",
+      "status": "no_eligible_threshold",
+      "best_unrestricted_operating_point": {
+        "f1": 0.37739577158664295,
+        "precision": 0.2699417717225394,
+        "recall": 0.6269695378151261,
+        "predicted_positive_rate": 0.4592517589635745,
+        "threshold": 0.20149220126483844
+      },
+      "near_miss": {
+        "max_recall_with_precision_gte_0_30_and_ppr_lte_0_50": 0.44459033613445376,
+        "max_precision_with_recall_gte_0_60_and_ppr_lte_0_50": 0.2730583248761268
+      },
+      "wandb": {
+        "run_id": "i9hlnog9",
+        "url": "https://wandb.ai/austin-youngblood-university-of-denver/us-flight-delay-mlops/runs/i9hlnog9"
+      }
+    },
+    {
+      "finalist_id": "CB2-isotonic",
+      "status": "no_eligible_threshold",
+      "best_unrestricted_operating_point": {
+        "f1": 0.3769188380697473,
+        "precision": 0.2691399662731872,
+        "recall": 0.6286764705882353,
+        "predicted_positive_rate": 0.4618739777241218,
+        "threshold": 0.21983715766099185
+      },
+      "near_miss": {
+        "max_recall_with_precision_gte_0_30_and_ppr_lte_0_50": 0.43054096638655465,
+        "max_precision_with_recall_gte_0_60_and_ppr_lte_0_50": 0.2691399662731872
+      },
+      "wandb": {
+        "run_id": "my75aegk",
+        "url": "https://wandb.ai/austin-youngblood-university-of-denver/us-flight-delay-mlops/runs/my75aegk"
+      }
+    },
+    {
+      "finalist_id": "CB4-none",
+      "status": "no_eligible_threshold",
+      "best_unrestricted_operating_point": {
+        "f1": 0.3789805061145417,
+        "precision": 0.27358545539304235,
+        "recall": 0.6164653361344538,
+        "predicted_positive_rate": 0.4455435262351689,
+        "threshold": 0.21330363767103241
+      },
+      "near_miss": {
+        "max_recall_with_precision_gte_0_30_and_ppr_lte_0_50": 0.45588235294117646,
+        "max_precision_with_recall_gte_0_60_and_ppr_lte_0_50": 0.276101388050694
+      },
+      "wandb": {
+        "run_id": "l1ai1u2k",
+        "url": "https://wandb.ai/austin-youngblood-university-of-denver/us-flight-delay-mlops/runs/l1ai1u2k"
+      }
+    },
+    {
+      "finalist_id": "CB4-sigmoid",
+      "status": "no_eligible_threshold",
+      "best_unrestricted_operating_point": {
+        "f1": 0.3789805061145417,
+        "precision": 0.27358545539304235,
+        "recall": 0.6164653361344538,
+        "predicted_positive_rate": 0.4455435262351689,
+        "threshold": 0.20908508911736085
+      },
+      "near_miss": {
+        "max_recall_with_precision_gte_0_30_and_ppr_lte_0_50": 0.45588235294117646,
+        "max_precision_with_recall_gte_0_60_and_ppr_lte_0_50": 0.276101388050694
+      },
+      "wandb": {
+        "run_id": "mskckd0f",
+        "url": "https://wandb.ai/austin-youngblood-university-of-denver/us-flight-delay-mlops/runs/mskckd0f"
+      }
+    },
+    {
+      "finalist_id": "CB4-isotonic",
+      "status": "no_eligible_threshold",
+      "best_unrestricted_operating_point": {
+        "f1": 0.378406007942437,
+        "precision": 0.2700791379020037,
+        "recall": 0.631827731092437,
+        "predicted_positive_rate": 0.4625749668977335,
+        "threshold": 0.23107569721115537
+      },
+      "near_miss": {
+        "max_recall_with_precision_gte_0_30_and_ppr_lte_0_50": 0.45181197478991597,
+        "max_precision_with_recall_gte_0_60_and_ppr_lte_0_50": 0.2749581039023222
+      },
+      "wandb": {
+        "run_id": "4twrtfg5",
+        "url": "https://wandb.ai/austin-youngblood-university-of-denver/us-flight-delay-mlops/runs/4twrtfg5"
+      }
+    }
+  ],
+  "threshold_eligibility": {
+    "eligible_finalist_count": 0,
+    "downstream_november_gates_evaluated": false,
+    "not_evaluated": [
+      "brier_score",
+      "log_loss",
+      "equal_frequency_ece_15",
+      "calibration",
+      "single_row_inference_latency",
+      "serialized_bundle_size"
+    ],
+    "reason": "Every finalist failed the precommitted operating-point eligibility constraints."
+  },
+  "period_matched_incumbent_comparison": {
+    "period_start": "2025-11-16",
+    "period_end_exclusive": "2025-12-01",
+    "r3": {
+      "precision": 0.2501731861635801,
+      "recall": 0.711265756302521,
+      "f1": 0.37015272130923504,
+      "predicted_positive_rate": 0.5621673546745592
+    },
+    "cb4_none_best_unrestricted": {
+      "precision": 0.27358545539304235,
+      "recall": 0.6164653361344538,
+      "f1": 0.3789805061145417,
+      "predicted_positive_rate": 0.4455435262351689
+    },
+    "cb4_minus_r3_percentage_points": {
+      "precision": 2.341226922946227,
+      "recall": -9.480042016806722,
+      "f1": 0.882778480530666,
+      "predicted_positive_rate": -11.662382843939035
+    }
+  },
+  "interpretation": {
+    "principal_blocker": "No threshold simultaneously achieved precision >= 0.30 and recall >= 0.60.",
+    "predicted_positive_rate_was_principal_blocker": false,
+    "model_behavior": "CatBoost was more selective than the period-matched R3 operating point, with higher precision and slightly higher F1 but lower recall.",
+    "ranking_conclusion": "The near misses indicate insufficient class ranking and separation in the high-recall operating region, not merely a poor threshold choice.",
+    "calibration_conclusion": "Sigmoid preserved the uncalibrated precision-recall frontier; isotonic changed available cutoffs slightly but produced no eligible point.",
+    "claims_better_probability_calibration": false,
+    "claims_better_final_test_performance": false
+  },
+  "governance": {
+    "november_winner_lock_created": false,
+    "december_qualification_authorized": false,
+    "december_qualification_accessed": false,
+    "january_may_2026_historical_test_accessed_by_v1": false,
+    "production_alias": "production",
+    "production_registry_version": "v0",
+    "production_unchanged": true,
+    "registry_mutated": false,
+    "deployment_mutated": false
+  }
+}
