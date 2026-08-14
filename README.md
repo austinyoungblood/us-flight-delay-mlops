@@ -256,6 +256,19 @@ AWS SDK, mutate W&B, or depend on final-test data. Its implementation lives in t
 
 ## Data and experiment lineage
 
+### Precommitted v1 experiment protocol
+
+One governed nonlinear model iteration is precommitted in the
+[v1 model experiment protocol](docs/v1-model-experiment-protocol.md), with its machine-readable
+contract in [`configs/v1_experiment_protocol.yaml`](configs/v1_experiment_protocol.yaml). The
+primary challenger is CatBoost, and the design, candidate grid, temporal folds, calibration,
+threshold rules, acceptance gates, and future untouched holdout rule were frozen before training.
+
+V1 has **not** been trained and has no performance results. The consumed January-May 2026 test data
+remains prohibited from v1 development, and the deployed model remains immutable
+Registry `production:v0`. The older W&B artifact version named `flight-delay-model:v1` below
+predates this governed iteration and is not a result or candidate produced by this protocol.
+
 Experiment runs, model and dataset artifacts, and release lineage are available in the public
 [Weights & Biases project](https://wandb.ai/austin-youngblood-university-of-denver/us-flight-delay-mlops/overview).
 

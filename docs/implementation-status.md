@@ -171,11 +171,24 @@ It does not itself constitute cloud-deployment evidence.
 - CI: repository-hosted pull-request evidence is green and `main` branch protection requires the
   `validate` context, one approving review, and resolved conversations.
 
+## Governed v1 nonlinear iteration
+
+- Instructor feedback motivated one governed nonlinear iteration using CatBoost as the predeclared
+  primary challenger for individual-flight classification; Prophet was considered but excluded
+  from the gating classifier experiment.
+- Froze the complete v1 experiment protocol in Git before training, including the exact four-model
+  grid, rolling-origin folds, calibration variants, operating constraints, acceptance gates,
+  retrospective December qualification, and future untouched final-holdout rule.
+- No v1 training or result exists yet. The consumed January-May 2026 test remains prohibited from
+  development, qualification, feature decisions, or gate changes.
+- Production remains the unchanged Registry `production:v0` release; this protocol creates no W&B,
+  AWS, model, Registry, deployment, or application-runtime mutation.
+
 ## Current repository validation
 
-- 295 tests pass with 86.05% branch coverage; CI enforces an 82% minimum
+- 326 tests pass with 86.08% branch coverage; CI enforces an 82% minimum
 - Coverage includes failure and edge behavior for API clients/contracts, persistence, monitoring,
   deployment/evidence validation, promotion policy/metadata, governed monitoring traffic, and
-  persisted prediction-source provenance
-- Ruff lint and formatting checks, deployment/evidence manifest validation, and deployment shell
+  persisted prediction-source provenance, plus v1 protocol drift and offline-isolation enforcement
+- Ruff lint and formatting checks, v1/deployment/evidence manifest validation, and deployment shell
   syntax checks pass without contacting W&B or AWS

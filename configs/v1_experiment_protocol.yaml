@@ -1,0 +1,412 @@
+schema_version: 1
+protocol_id: us-flight-delay-v1-catboost-rolling-origin-v1
+
+state:
+  phase: pretraining_protocol_locked
+  protocol_precedes_training: true
+  training_started: false
+  results_exist: false
+  wandb_runs_created: false
+  fresh_final_accessed: false
+
+dependencies:
+  base_git_sha: fdfb2bfe0386d016b1deaa90d946436bdc3ed14f
+  incumbent_selection_lock:
+    path: release/selection_lock.json
+    sha256: a730a25c34a9f259b3ca02eb92c4ad44c1e75f50fd52ce270a940e4a60142340
+  processed_dataset_manifest:
+    path: data/manifests/processed_manifest.json
+    sha256: fa328e92048dededdcbdb4b61ce8c74b67b2d0ef64872dfb25949334cf22dee4
+    manifest_digest: c8aa583cbfe7ad8ee4bdcedaa8d479e2056541c71296f222ae0e0a410a48cdaf
+  source_dataset_manifest:
+    path: data/manifests/source_manifest.json
+    sha256: 996b1172a725bbf733f6647d436ebc30eecd1b14b2d6a3099ebeb1cd78ac9e83
+    manifest_digest: 0a2e8ef929dee6bc1d5a8cdcf8f0161ce0f11bb54c3809dbea1040f09624b561
+
+incumbent:
+  registry_collection: wandb-registry-Model/us-flight-arrival-delay-15m
+  serving_alias: production
+  registry_version: v0
+  registry_digest: 865ddd18f6debd44f24a79fc71739f2a
+  bundle_sha256: 2677b7093d66637852705d33bca006c3b78d8119f4d7268801453aa18c22f572
+  threshold: 0.1840285229739868
+  internal_production_gate_passed: false
+  deployment_purpose: academic_demo
+  production_mutation_prohibited: true
+
+historical_test:
+  period: 2026-01-01/2026-05-31
+  start: "2026-01-01"
+  end_exclusive: "2026-06-01"
+  consumed: true
+  source_path: data/processed/test.parquet
+  access_prohibited: true
+  prohibited_uses:
+    - training
+    - hyperparameter_selection
+    - calibration
+    - threshold_selection
+    - finalist_selection
+    - qualification
+    - feature_engineering_decisions
+    - acceptance_criteria_changes
+
+model_family:
+  primary:
+    estimator: CatBoostClassifier
+    package: catboost
+    version: 1.2.10
+    dependency_scope: modeling_optional
+    installed_in_protocol_pr: false
+    rationale:
+      - nonlinear_gradient_boosted_tabular_model
+      - native_high_cardinality_categorical_handling
+      - individual_flight_binary_classification
+      - avoids_supervised_target_encoding_for_route_and_airport_categories
+  alternatives:
+    prophet:
+      status: considered_but_not_selected
+      primary_selection_influence: none
+      reason: aggregate_time_series_forecasting_does_not_match_individual_flight_classification
+      permitted_future_scope: non_gating_daily_network_delay_prevalence_research
+
+feature_contract:
+  canonical_source: flight_delay.data.prepare.PROCESSED_FEATURES
+  leakage_guard_source: flight_delay.features.leakage
+  model_features:
+    - Month
+    - DayofMonth
+    - DayOfWeek
+    - Reporting_Airline
+    - Origin
+    - Dest
+    - CRSDepTime
+    - CRSArrTime
+    - CRSElapsedTime
+    - Distance
+    - route
+    - scheduled_departure_hour
+    - scheduled_arrival_hour
+    - scheduled_departure_minute_bucket
+    - scheduled_arrival_minute_bucket
+    - is_weekend
+    - scheduled_departure_sin
+    - scheduled_departure_cos
+    - scheduled_arrival_sin
+    - scheduled_arrival_cos
+  categorical_features:
+    - Reporting_Airline
+    - Origin
+    - Dest
+    - route
+  ordering_only:
+    - flight_date
+  label_only:
+    - target
+  chronological_sort_before_fit: true
+  postdeparture_features_permitted: false
+
+development_data:
+  allowed_year: 2025
+  allowed_sources:
+    - data/processed/train.parquet
+    - data/processed/validation.parquet
+  forbidden_sources:
+    - data/processed/test.parquet
+  development_end_exclusive: "2026-01-01"
+
+rolling_origin:
+  fold_count: 4
+  folds:
+    - id: FOLD_1
+      train_start: "2025-01-01"
+      train_end_exclusive: "2025-07-01"
+      validation_start: "2025-07-01"
+      validation_end_exclusive: "2025-08-01"
+    - id: FOLD_2
+      train_start: "2025-01-01"
+      train_end_exclusive: "2025-08-01"
+      validation_start: "2025-08-01"
+      validation_end_exclusive: "2025-09-01"
+    - id: FOLD_3
+      train_start: "2025-01-01"
+      train_end_exclusive: "2025-09-01"
+      validation_start: "2025-09-01"
+      validation_end_exclusive: "2025-10-01"
+    - id: FOLD_4
+      train_start: "2025-01-01"
+      train_end_exclusive: "2025-10-01"
+      validation_start: "2025-10-01"
+      validation_end_exclusive: "2025-11-01"
+  validation_used_for_early_stopping: false
+  per_fold_metrics:
+    - average_precision
+    - roc_auc
+    - log_loss
+    - brier_score
+    - prevalence
+    - probability_mean
+  threshold_metrics_used: false
+  ranking_order:
+    - mean_average_precision_desc
+    - mean_roc_auc_desc
+    - mean_log_loss_asc
+    - mean_brier_score_asc
+    - average_precision_standard_deviation_asc
+    - candidate_id_lexical_asc
+  catboost_finalists_advanced: 2
+  control_consumes_finalist_slot: false
+
+catboost_search:
+  search_type: fixed_grid
+  candidate_count: 4
+  common_parameters:
+    loss_function: Logloss
+    eval_metric: Logloss
+    task_type: CPU
+    random_seed: 42
+    has_time: true
+    allow_writing_files: false
+    verbose: false
+    class_weights: null
+    auto_class_weights: null
+    early_stopping: disabled
+  candidates:
+    - id: CB1
+      depth: 6
+      iterations: 300
+      learning_rate: 0.05
+      l2_leaf_reg: 3
+    - id: CB2
+      depth: 8
+      iterations: 300
+      learning_rate: 0.05
+      l2_leaf_reg: 5
+    - id: CB3
+      depth: 6
+      iterations: 500
+      learning_rate: 0.03
+      l2_leaf_reg: 5
+    - id: CB4
+      depth: 8
+      iterations: 500
+      learning_rate: 0.03
+      l2_leaf_reg: 7
+  prohibited_searches:
+    - bayesian_optimization
+    - optuna
+    - random_search
+    - manual_out_of_grid_tuning
+
+control:
+  id: R3-sigmoid
+  role: comparator_only
+  consumes_catboost_finalist_slot: false
+  reconstruction_required_before_challenger_trust: true
+  configuration:
+    estimator: SGDClassifier
+    loss: log_loss
+    penalty: l2
+    alpha: 0.00001
+    average: true
+    class_weight: null
+    max_iter: 1000
+    tol: 0.001
+    random_state: 42
+    calibration: sigmoid
+  historical_november_metrics:
+    average_precision: 0.2823880567429311
+    roc_auc: 0.6281178113133866
+    brier_score: 0.153685956583994
+    log_loss: 0.48140966513585765
+    equal_frequency_ece_15: 0.011190971017293109
+    f1: 0.37015272130923504
+    predicted_positive_rate: 0.5621673546745592
+    threshold: 0.1840285229739868
+
+refit_calibration:
+  refit_period:
+    start: "2025-01-01"
+    end_exclusive: "2025-11-01"
+  calibration_period:
+    start: "2025-11-01"
+    end_exclusive: "2025-11-16"
+  variants:
+    - none
+    - sigmoid
+    - isotonic
+  expected_finalist_variant_count: 6
+  base_frozen_before_calibration: true
+  calibration_refits_base_estimator: false
+  none_uses_calibration_labels: false
+
+november_selection:
+  period:
+    start: "2025-11-16"
+    end_exclusive: "2025-12-01"
+  use_count_per_variant: 1
+  training_permitted: false
+  calibration_permitted: false
+  threshold_objective:
+    constraints:
+      recall_min: 0.60
+      precision_min: 0.30
+      predicted_positive_rate_max: 0.50
+    objective: maximize_f1
+    tie_break_order:
+      - f1_desc
+      - precision_desc
+      - recall_desc
+      - predicted_positive_rate_asc
+      - distance_from_0_50_asc
+      - threshold_desc
+    no_eligible_threshold_outcome: finalist_fails
+  acceptance_gates:
+    discrimination:
+      average_precision_incumbent_margin_min: 0.01
+      roc_auc_incumbent_margin_min: 0.005
+      average_precision_lift_over_prevalence_min: 1.35
+    proper_scoring:
+      brier_skill_score_vs_prior_strictly_positive: true
+      brier_score_below_prior: true
+      log_loss_below_prior: true
+      brier_score_incumbent_max: 0.153685956583994
+      log_loss_incumbent_max: 0.48140966513585765
+    calibration:
+      absolute_probability_prevalence_gap_max: 0.03
+      equal_frequency_ece_15_max: 0.03
+    operating_point:
+      recall_min: 0.60
+      precision_min: 0.30
+      f1_min: 0.38
+      predicted_positive_rate_max: 0.50
+    operational:
+      single_row_inference_p95_ms_strict_max: 25
+      serialized_bundle_bytes_strict_max: 10485760
+    governance:
+      lineage_verified: true
+      schema_check_passed: true
+      leakage_check_passed: true
+      deterministic_reconstruction_check_passed: true
+      serialization_load_inference_check_passed: true
+      no_prohibited_test_access: true
+      no_training_convergence_or_runtime_failure: true
+  every_gate_mandatory: true
+  zero_pass_outcome: stop_v1_development_and_retain_v0
+  winner_order:
+    - average_precision_desc
+    - log_loss_asc
+    - brier_score_asc
+    - roc_auc_desc
+    - f1_desc
+    - predicted_positive_rate_asc
+    - single_row_inference_p95_ms_asc
+    - finalist_id_lexical_asc
+  winner_freeze_fields:
+    - base_candidate_id
+    - complete_catboost_parameters
+    - feature_schema
+    - categorical_feature_schema
+    - calibration_method
+    - threshold
+    - development_metrics
+    - protocol_sha256
+    - dataset_digest
+    - code_sha
+
+december_qualification:
+  characterization: retrospective_temporal_qualification_holdback
+  period:
+    start: "2025-12-01"
+    end_exclusive: "2026-01-01"
+  evaluation_count: 1
+  prohibited_actions:
+    - retraining
+    - recalibration
+    - threshold_adjustment
+    - candidate_switching
+    - gate_changes
+  gates:
+    brier_skill_score_vs_prior_strictly_positive: true
+    log_loss_below_prior: true
+    absolute_probability_prevalence_gap_max: 0.05
+    equal_frequency_ece_15_max: 0.05
+    average_precision_lift_over_prevalence_min: 1.25
+    roc_auc_min: 0.60
+    recall_min: 0.55
+    precision_min: 0.25
+    f1_min: 0.36
+    predicted_positive_rate_max: 0.60
+    single_row_inference_p95_ms_strict_max: 25
+    serialized_bundle_bytes_strict_max: 10485760
+    lineage_schema_leakage_serialization_checks_pass: true
+  failure_outcome: record_failure_no_v1_release_candidate_retain_v0
+  pass_outcome: freeze_v1_release_candidate_without_production_promotion
+
+fresh_final:
+  named_month_precommitted: false
+  selection_rule:
+    source: DOT_BTS_Reporting_Carrier_On_Time_Performance
+    first_complete_month: true
+    flight_date_strictly_after: "2026-05-31"
+    unused_by_existing_project_decisions: true
+    unopened_for_v1_development_decisions: true
+    availability_after_protocol_lock: true
+    archive_identity_and_sha256_recorded_before_label_evaluation: true
+  monthly_sample_cap: null
+  full_eligible_month_required: true
+  immutable_after_selection: true
+  evaluation_count: 1
+  compare_on_identical_rows:
+    - frozen_v1_challenger
+    - frozen_production_v0_incumbent
+  post_result_model_change_prohibited: true
+  absolute_v1_gates:
+    brier_skill_score_vs_prior_strictly_positive: true
+    log_loss_below_prior: true
+    absolute_probability_prevalence_gap_max: 0.05
+    equal_frequency_ece_15_max: 0.05
+    average_precision_lift_over_prevalence_min: 1.25
+    roc_auc_min: 0.60
+    recall_min: 0.55
+    precision_min: 0.25
+    f1_min: 0.36
+    predicted_positive_rate_max: 0.60
+    single_row_inference_p95_ms_strict_max: 25
+    serialized_bundle_bytes_strict_max: 10485760
+    lineage_schema_leakage_serialization_checks_pass: true
+  paired_incumbent_gates:
+    average_precision_v1_gte_v0: true
+    roc_auc_v1_gte_v0: true
+    brier_score_v1_strictly_below_v0: true
+    log_loss_v1_strictly_below_v0: true
+  pass_outcome: eligible_for_separately_reviewed_production_promotion
+  failure_outcome: retain_production_v0_without_retuning
+
+uncertainty:
+  method: paired_day_block_bootstrap
+  descriptive_only: true
+  replicates: 500
+  random_seed: 42
+  resampling_unit: flight_date
+  confidence_interval: percentile_95
+  metrics:
+    - average_precision
+    - roc_auc
+    - brier_score
+    - log_loss
+  contrast: v1_minus_v0
+  overrides_pass_fail_gates: false
+
+future_registry:
+  action_in_protocol_pr: none
+  prerequisites:
+    - november_all_gates_pass
+    - december_all_gates_pass
+  new_immutable_version_required: true
+  overwrite_v0_prohibited: true
+  mutate_v0_bytes_prohibited: true
+  silent_production_replacement_prohibited: true
+  record_artifact_digest_and_protocol_sha: true
+  candidate_alias_if_needed: candidate-v1
+  production_alias_mutation_before_fresh_final_and_review_prohibited: true
