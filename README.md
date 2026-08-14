@@ -63,7 +63,8 @@ Representative end-to-end smoke-test record:
 | Prediction ID | `e8d9c837-abe5-4c8c-9d88-4ebdd5c6cf04` |
 | Route | `UA DEN → LAX` |
 | Delay probability | `0.20431692609038393` |
-| Classification | `Delayed` |
+| Threshold signal | `Above model threshold` |
+| Decision threshold | `0.1840285229739868` |
 | Risk band | `Medium` |
 | Feedback revision | `1` |
 
@@ -118,6 +119,54 @@ FastAPI exposes:
 - `GET /predictions/{prediction_id}`
 - `POST /feedback/{prediction_id}`
 
+### Worked prediction example
+
+Set `API_BASE_URL` to the reachable API origin, without a trailing slash. No live AWS address is
+embedded in this repository.
+
+```bash
+curl --fail --silent --show-error \
+  --request POST "$API_BASE_URL/predict" \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "carrier": "UA",
+    "origin": "DEN",
+    "destination": "LAX",
+    "flight_date": "2026-08-13",
+    "scheduled_departure": "08:00:00",
+    "scheduled_arrival": "09:30:00",
+    "scheduled_elapsed_minutes": 150,
+    "distance_miles": 862.0
+  }'
+```
+
+Representative response from the governed academic release:
+
+```json
+{
+  "prediction_id": "e8d9c837-abe5-4c8c-9d88-4ebdd5c6cf04",
+  "delay_probability": 0.20431692609038393,
+  "predicted_delayed": true,
+  "risk_band": "medium",
+  "classification_threshold": 0.1840285229739868,
+  "route_reliability": [],
+  "support_warning": null,
+  "model_alias": "production",
+  "model_version": "v0",
+  "model_digest": "865ddd18f6debd44f24a79fc71739f2a",
+  "cache_hit": false,
+  "latency_ms": 64.28,
+  "created_at": "2026-08-13T22:47:31.821000Z"
+}
+```
+
+`delay_probability` is the estimated chance of arriving at least 15 minutes late. Here,
+`predicted_delayed=true` means `0.2043` exceeded the model's selected operating threshold of
+`0.1840`; it does **not** mean the model assigned greater than 50% probability to a delay.
+`risk_band` is the threshold-relative display category, while the model alias, version, and digest
+identify the exact served release. `cache_hit` describes inference reuse, and `latency_ms` is the
+total API processing time reported for the request.
+
 Interactive OpenAPI documentation is available at `/docs`. A successful prediction response is
 returned only after its unique event has been persisted. Feedback is revisioned on the same record,
 and monitoring queries use bounded UTC windows through the GSI.
@@ -133,7 +182,7 @@ python -m pip install -c requirements.lock ".[dev]"
 
 ruff check .
 ruff format --check .
-pytest --cov=flight_delay --cov-branch --cov-report=term-missing --cov-fail-under=80
+pytest --cov=flight_delay --cov-branch --cov-report=term-missing --cov-fail-under=82
 ```
 
 For a local application rehearsal, copy `.env.example` to ignored `.env` and supply only the W&B
@@ -148,6 +197,33 @@ curl http://127.0.0.1:8502/_stcore/health
 ```
 
 Default host ports are API `8000`, DynamoDB Local `8001`, Traveler `8501`, and Monitor `8502`.
+
+### Governed monitoring traffic
+
+The monitoring-load utility creates deterministic, leakage-safe scheduled-flight requests and sends
+them only through the real `POST /predict` path. It is a dry run unless `--apply` is supplied:
+
+```bash
+PYTHONPATH=src python scripts/generate_monitoring_traffic.py \
+  --count 50 \
+  --seed 42 \
+  --rate-per-second 2
+
+PYTHONPATH=src python scripts/generate_monitoring_traffic.py \
+  --api-base-url "$API_BASE_URL" \
+  --count 50 \
+  --seed 42 \
+  --rate-per-second 2 \
+  --apply
+```
+
+Counts are restricted to 1–500 requests and the rate is capped at 10 requests/second. The default
+audit is written beneath ignored `artifacts/` and records the timestamp, seed, attempted/successful/
+failed counts, and returned prediction IDs without storing the API URL or credentials. These records
+are synthetic load-test inference traffic—not organic traveler activity and not direct `demo_data`
+items. They exercise request validation, model inference, caching, and DynamoDB persistence through
+FastAPI. The utility does not create feedback, write DynamoDB directly, use the AWS SDK, mutate W&B,
+or depend on final-test data.
 
 ## Data and experiment lineage
 
@@ -192,8 +268,9 @@ and
 └── tests/                   # Unit and integration coverage
 ```
 
-The [evidence manifest](evidence/evidence_manifest.json) maps deployment and application validation
-claims to captured or missing evidence without substituting local output for AWS proof. Detailed
+The [evidence manifest](evidence/evidence_manifest.json) identifies each required criterion, its
+verification mode (`public_url` or `screenshot`), and its availability without substituting local
+output for AWS proof. Non-required supplemental captures are labeled separately. Detailed
 implementation history remains available in
 [docs/implementation-status.md](docs/implementation-status.md).
 

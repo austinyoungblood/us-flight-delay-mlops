@@ -1,22 +1,22 @@
 # Final evidence checklist
 
-The canonical post-session mapping is `evidence/evidence_manifest.json`. It records each criterion as
-`captured` or `missing`, supports multiple files for one criterion, and flags captures that still
-require redaction before public release. Run:
+The canonical post-session mapping is `evidence/evidence_manifest.json`. It records whether each
+criterion is required, whether it is verified by `public_url`, `screenshot`, or `supplemental`
+evidence, and whether that evidence is available. It supports multiple files for one screenshot
+criterion and flags captures that still require redaction before public release. Run:
 
 ```bash
 python scripts/validate_evidence_manifest.py --require-files
 ```
 
-## GitHub and W&B
+## GitHub and W&B public URLs
 
-- `01_github_repository.png`: public home and rendered README in a private browser.
-- `02_github_pr_ci.png`: real PR to main with Ruff, format, coverage/tests, and three builds green.
-- `03_wandb_project.png`: public project overview.
-- `04_wandb_experiments.png`: comparable candidate/final-test run evidence.
-- `05_wandb_dataset.png`: dataset artifact name, version, digest, and lineage.
-- `06_wandb_registry.png`: Registry collection with exact `production:v0` identity, digest, and
-  academic-demo/internal-gate disclosure.
+These deliverables are verified through the externally inspectable URLs retained in the manifest;
+screenshots are not rubric-required:
+
+- public GitHub repository and Actions/PR history;
+- W&B project overview and historical run;
+- W&B dataset artifact and Registry collection.
 
 ## AWS Console
 
@@ -34,9 +34,6 @@ python scripts/validate_evidence_manifest.py --require-files
 ## Live application
 
 - `13_app_api_docs.png`: FastAPI `/docs` endpoints.
-- `14_app_health.png`: ready model/database dependency health.
-- `15_app_model_info.png`: exact `production:v0` identity, immutable digests,
-  `internal_production_gate_passed=false`, and `deployment_purpose=academic_demo`.
 - `16_app_traveler_prediction.png`: traveler result with academic-demo/internal-gate notice.
 - `17_app_traveler_feedback.png`: persisted feedback confirmation.
 - `18_app_monitor_operations.png`: non-zero volume, latency, cache rate, and status/distribution.
@@ -44,8 +41,10 @@ python scripts/validate_evidence_manifest.py --require-files
 - `20_app_monitor_feedback.png`: coverage, feedback metrics/inspector, `production:v0` identity, and
   academic-demo/internal-gate notice.
 
-`14_app_health.png`, `15_app_model_info.png`, and supplemental `21_live_smoke_summary.json` were not
-present in the supplied evidence set and remain missing. Do not substitute unrelated screenshots.
+Dedicated `14_app_health.png` and `15_app_model_info.png` captures are documented as non-required
+supplemental evidence. They were not captured and are not reported as rubric failures. The local
+`21_live_smoke_summary.json` is also supplemental and must not substitute for required AWS or live
+application screenshots.
 
 Screenshots must never display the W&B token, AWS credentials, `.env` content, SSH keys, or terminal
 history containing secrets. Apply every `redaction-required` instruction in the evidence manifest

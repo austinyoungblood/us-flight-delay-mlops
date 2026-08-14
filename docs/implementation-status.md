@@ -144,23 +144,37 @@ It does not itself constitute cloud-deployment evidence.
 - Proved a real W&B dry-run against `production:v0`: `retain_current`, no mutation, exact digest
   verified; the selector used development-validation metadata only
 
-## Partially complete
+## Live AWS deployment
+
+- Completed the reviewed live deployment in `us-east-1` on three separate `t3.small` EC2 hosts:
+  `flight-api`, `flight-user-ui`, and `flight-monitor`
+- Validated the `flight-delay-events` DynamoDB table, `PAY_PER_REQUEST` billing, String `pk`, and
+  `event-date-created-at-index` GSI with `event_date`/`created_at` keys and `ALL` projection
+- Served the unchanged Registry `production:v0` release for the course deployment while preserving
+  `deployment_purpose=academic_demo` and `internal_production_gate_passed=false`
+- Validated end-to-end prediction persistence, retrieval, revisioned feedback, Traveler-to-API
+  communication, and the Monitor's direct DynamoDB query path
+- Captured required AWS Console and live application evidence for host health, security groups,
+  instance profiles, DynamoDB, API documentation, Traveler prediction/feedback, and Monitor views
+- Preserved the immutable image digests and deployment manifest that describe the validated live
+  deployment; subsequent source-only changes are not represented as deployed
+
+## Historical model-development stop points
 
 - Model remediation: independent calibration metrics, six fixed rolling-origin bases, and six calibrated
   November finalists are complete. Every finalist failed AP and F1, so December qualification and
-  all downstream release work correctly did not start.
+  downstream work in that workflow correctly did not start.
 - Model selection: exact time partitions, calibrated Candidate A, bounded Candidate B tuning, validation
   evaluation, thresholds, model artifacts, and W&B audit are complete. No candidate passed every
-  mandatory validation gate, so selection/freeze, Registry, and final-test tasks did not start.
+  mandatory validation gate, so that workflow stopped before selection/freeze or test access.
 - Data pipeline and one-time final-test evaluation are complete; the final test is consumed.
 - CI: repository-hosted pull-request evidence is green and `main` branch protection requires the
   `validate` context, one approving review, and resolved conversations.
-- Cloud deployment remained deliberately untested during preflight; local DynamoDB evidence is not presented
-  as AWS evidence.
 
-## Not started
+## Current repository validation
 
-- After separate review only: one AWS Academy session for DynamoDB recovery, three-EC2 deployment,
-  end-to-end evidence capture, and teardown
-- One AWS Academy live session, EC2/DynamoDB deployment, live validation, screenshots, and rubric
-  evidence capture
+- 291 tests pass with 85.94% branch coverage; CI enforces an 82% minimum
+- Coverage includes failure and edge behavior for API clients/contracts, persistence, monitoring,
+  deployment/evidence validation, promotion policy/metadata, and governed monitoring traffic
+- Ruff lint and formatting checks, deployment/evidence manifest validation, and deployment shell
+  syntax checks pass without contacting W&B or AWS

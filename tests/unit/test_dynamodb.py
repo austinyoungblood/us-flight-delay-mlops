@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime, time
 from decimal import Decimal
 from typing import Any
 
@@ -11,6 +11,7 @@ from flight_delay.contracts import RiskBand, RouteReliability
 from flight_delay.persistence.dynamodb import (
     DynamoDBRepository,
     PersistenceConflict,
+    PersistenceError,
     from_dynamodb,
     to_dynamodb,
 )
@@ -43,6 +44,13 @@ def conditional_error() -> ClientError:
     return ClientError(
         {"Error": {"Code": "ConditionalCheckFailedException", "Message": "conflict"}},
         "UpdateItem",
+    )
+
+
+def service_error() -> ClientError:
+    return ClientError(
+        {"Error": {"Code": "InternalServerError", "Message": "private service detail"}},
+        "DynamoDBOperation",
     )
 
 
@@ -177,3 +185,92 @@ def test_model_metadata_uses_immutable_identity_condition() -> None:
     call = table.updates[0]
     assert "attribute_not_exists(pk) OR" in call["ConditionExpression"]
     assert "if_not_exists(first_loaded_at" in call["UpdateExpression"]
+
+
+def test_serialization_rejects_naive_datetime_and_unknown_types() -> None:
+    with pytest.raises(ValueError, match="timezone-aware"):
+        to_dynamodb(datetime(2026, 8, 10))
+    with pytest.raises(TypeError, match="unsupported DynamoDB value type"):
+        to_dynamodb({1, 2})
+    assert to_dynamodb(date(2026, 8, 10)) == "2026-08-10"
+    assert to_dynamodb(time(8, 30)) == "08:30:00"
+    assert to_dynamodb((1, 2)) == [1, 2]
+    assert from_dynamodb(Decimal("2")) == 2
+
+
+def test_connect_and_prediction_failures_are_sanitized() -> None:
+    table = FakeTable()
+
+    def fail_load() -> None:
+        raise RuntimeError("private endpoint detail")
+
+    table.load = fail_load
+    repository = DynamoDBRepository(resource=FakeResource(table))
+    with pytest.raises(PersistenceError, match="table is unavailable"):
+        repository.connect()
+    repository.close()
+
+    def fail_put(**kwargs: Any) -> None:
+        raise service_error()
+
+    table.put_item = fail_put
+    with pytest.raises(PersistenceError, match="prediction persistence failed"):
+        repository.put_prediction({"pk": "PREDICTION#one"})
+
+
+def test_error_write_is_best_effort_for_success_and_failure() -> None:
+    table = FakeTable()
+    repository = DynamoDBRepository(resource=FakeResource(table))
+    repository.put_error({"pk": "ERROR#one", "detail": "sanitized"})
+    assert table.items["ERROR#one"]["detail"] == "sanitized"
+
+    def fail_put(**kwargs: Any) -> None:
+        raise service_error()
+
+    table.put_item = fail_put
+    assert repository.put_error({"pk": "ERROR#two"}) is None
+
+
+def test_retrieval_and_model_metadata_service_failures_are_sanitized() -> None:
+    table = FakeTable()
+    repository = DynamoDBRepository(resource=FakeResource(table))
+
+    def fail_get(**kwargs: Any) -> dict[str, Any]:
+        raise service_error()
+
+    table.get_item = fail_get
+    with pytest.raises(PersistenceError, match="prediction retrieval failed"):
+        repository.get_prediction("one")
+
+    model = {
+        "pk": "MODEL#v0",
+        "registry_version": "v0",
+        "registry_digest": "digest",
+        "bundle_digest": "bundle",
+        "last_loaded_at": datetime(2026, 8, 10, tzinfo=UTC),
+    }
+
+    def fail_update(**kwargs: Any) -> dict[str, Any]:
+        raise service_error()
+
+    table.update_item = fail_update
+    with pytest.raises(PersistenceError, match="model metadata persistence failed"):
+        repository.put_model_metadata(model)
+
+    table.fail_condition = True
+    table.update_item = FakeTable.update_item.__get__(table)
+    with pytest.raises(PersistenceConflict, match="metadata identity conflict"):
+        repository.put_model_metadata(model)
+
+
+def test_feedback_service_failure_is_sanitized() -> None:
+    table = FakeTable()
+    table.items["PREDICTION#one"] = {"pk": "PREDICTION#one"}
+    repository = DynamoDBRepository(resource=FakeResource(table))
+
+    def fail_update(**kwargs: Any) -> dict[str, Any]:
+        raise service_error()
+
+    table.update_item = fail_update
+    with pytest.raises(PersistenceError, match="feedback persistence failed"):
+        repository.update_feedback("one", {"actual_delayed": False})

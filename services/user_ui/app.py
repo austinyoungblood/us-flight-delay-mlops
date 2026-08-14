@@ -127,8 +127,17 @@ if prediction is not None:
     st.subheader("Estimate")
     one, two, three = st.columns(3)
     one.metric("Delay probability", f"{prediction.delay_probability:.1%}")
-    two.metric("Classification", "Delayed" if prediction.predicted_delayed else "On time")
+    threshold_signal = (
+        "Above model threshold" if prediction.predicted_delayed else "Below model threshold"
+    )
+    two.metric("Threshold signal", threshold_signal)
     three.metric("Risk band", prediction.risk_band.value.title())
+    st.write(f"**Decision threshold: {prediction.classification_threshold:.1%}**")
+    st.caption(
+        "The threshold signal indicates whether the estimated probability exceeds the model's "
+        "selected operating point. It does not mean the flight is more likely than not to be "
+        "delayed."
+    )
     if prediction.support_warning:
         st.warning(prediction.support_warning)
     _show_reliability(prediction.route_reliability or st.session_state.get("route_context", []))
@@ -137,6 +146,7 @@ if prediction is not None:
         st.warning(model_info.governance_notice)
     with st.expander("Technical details"):
         st.write(f"Threshold: {prediction.classification_threshold:.6f}")
+        st.write(f"Raw predicted_delayed: {prediction.predicted_delayed}")
         st.write(f"Model: {prediction.model_alias} / {prediction.model_version}")
         st.write(f"Total latency: {prediction.latency_ms:.2f} ms")
         st.write(f"Inference cache hit: {prediction.cache_hit}")

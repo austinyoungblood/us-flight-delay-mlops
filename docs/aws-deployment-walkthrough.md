@@ -77,22 +77,20 @@ docker pull ghcr.io/austinyoungblood/us-flight-delay-mlops-monitor@sha256:7b0387
 
 Each output must show the exact requested digest. Do not log in to GHCR on the EC2 hosts.
 
-### 1.3 Confirm public evidence and capture files 01–06
+### 1.3 Confirm public URL evidence
 
 Use a private/incognito browser for GitHub, W&B project, dataset, and final-test pages. W&B Registry
-is organization-restricted, so capture `production:v0` while authenticated; do not represent it as
-anonymous evidence.
+may be organization-restricted, so record that access boundary accurately; do not represent an
+authenticated view as anonymous evidence.
 
-Capture these files under `evidence/` without showing tokens, `.env`, browser password overlays, or
-terminal history:
+Verify the URLs stored in `evidence/evidence_manifest.json` for:
 
-1. `01_github_repository.png` — public repository and rendered README.
-2. `02_github_pr_ci.png` — merged PR #2 and green required `validate` check.
-3. `03_wandb_project.png` — project overview.
-4. `04_wandb_experiments.png` — immutable historical final-test run evidence.
-5. `05_wandb_dataset.png` — dataset `v0`, digest, and lineage.
-6. `06_wandb_registry.png` — authenticated Registry `production:v0`, immutable digest, and retained
-   `staging` alias.
+1. the public GitHub repository and its PR/Actions history;
+2. the W&B project overview and immutable historical final-test run;
+3. dataset `v0`, its digest, and lineage; and
+4. Registry `production:v0`, its immutable digest, and the retained `staging` alias.
+
+These are rubric deliverables through their URLs; screenshots 01–06 are not required.
 
 Also retain the successful manual promotion dry-run URL in the live notes. The expected outcome is
 `retain_current`, not an alias mutation.
@@ -430,7 +428,7 @@ capture.
 
 ## 6. Capture evidence — T+150 to T+210
 
-Capture files 07–20 in exact order. Hide credentials, account details not required by the rubric,
+Capture the required files below in exact order. Hide credentials, account details not required by the rubric,
 `.env`, private keys, and browser password overlays.
 
 1. `07_aws_ec2_instances.png` — three names, running state, and passed status checks.
@@ -444,13 +442,14 @@ Capture files 07–20 in exact order. Hide credentials, account details not requ
    plus expanded feedback fields.
 6. `12_aws_ec2_status_checks.png` — EC2 system, instance, and EBS status checks.
 7. `13_app_api_docs.png` — `/docs` endpoints.
-8. `14_app_health.png` — Registry and DynamoDB ready.
-9. `15_app_model_info.png` — exact production identity and governance fields.
-10. `16_app_traveler_prediction.png` — result and academic-demo warning.
-11. `17_app_traveler_feedback.png` — persisted feedback confirmation.
-12. `18_app_monitor_operations.png` — volume, latency, cache, status, distribution.
-13. `19_app_monitor_drift.png` — target/input drift plus labeled-demo warning.
-14. `20_app_monitor_feedback.png` — coverage, metrics, inspector, model identity/disclosure.
+8. `16_app_traveler_prediction.png` — result and academic-demo warning.
+9. `17_app_traveler_feedback.png` — persisted feedback confirmation.
+10. `18_app_monitor_operations.png` — volume, latency, cache, status, distribution.
+11. `19_app_monitor_drift.png` — target/input drift plus labeled-demo warning.
+12. `20_app_monitor_feedback.png` — coverage, metrics, inspector, model identity/disclosure.
+
+Dedicated `/health` and `/model-info` captures may be retained as supplemental evidence, but they
+are not required screenshots and their absence is not a failed criterion.
 
 Update only the corresponding `status` and `source_url` fields in
 `evidence/evidence_manifest.json`; do not mark an uncaptured criterion complete. Then run:

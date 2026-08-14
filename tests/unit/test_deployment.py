@@ -21,7 +21,12 @@ from flight_delay.deployment import (
     validate_deployment_manifest,
     validate_evidence_manifest,
 )
-from flight_delay.deployment.evidence import REQUIRED_CRITERIA, load_evidence_manifest
+from flight_delay.deployment.evidence import (
+    KNOWN_CRITERIA,
+    REQUIRED_CRITERIA,
+    load_evidence_manifest,
+    missing_required_evidence,
+)
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -110,6 +115,10 @@ def deployment_inputs() -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]
     return manifest, release, lock
 
 
+def evidence_inputs() -> dict[str, Any]:
+    return json.loads((ROOT / "evidence/evidence_manifest.json").read_text(encoding="utf-8"))
+
+
 def test_deployment_manifest_accepts_only_frozen_identifiers() -> None:
     manifest, release, lock = deployment_inputs()
     assert (
@@ -141,19 +150,131 @@ def test_deployment_manifest_rejects_credentials_and_bad_environment() -> None:
         validate_deployment_manifest(manifest, release_decision=release, selection_lock=lock)
 
 
+@pytest.mark.parametrize(
+    ("path", "value", "message"),
+    [
+        (("schema_version",), 2, "schema_version"),
+        (("project", "name"), "other", "project name"),
+        (("project", "public_repository_url"), "https://example.com/repo", "repository URL"),
+        (("project", "wandb_project_url"), "https://wandb.ai/other", "W&B project URL"),
+        (("deployment_git_sha",), "short", "full Git SHA"),
+        (("model", "classification_threshold"), 0.5, "classification threshold"),
+        (("model", "release_bundle_digest"), "other", "release decision"),
+        (("images", "api", "reference"), "flight-api:latest", "immutable GHCR"),
+        (("images", "api", "source_git_sha"), "b" * 40, "source SHA"),
+        (("runtime", "python"), "3.12", "Python runtime"),
+        (("runtime", "ports", "api"), 8080, "ports"),
+        (("runtime", "ec2_logical_names", "api"), "api", "logical names"),
+        (("dynamodb", "billing_mode"), "PROVISIONED", "DynamoDB identity"),
+        (("smoke_test", "schema_version"), 2, "smoke-test metadata"),
+        (("smoke_test", "reviewed_date"), "August 10", "smoke-test metadata"),
+    ],
+)
+def test_deployment_manifest_rejects_structural_drift(
+    path: tuple[str, ...], value: object, message: str
+) -> None:
+    manifest, release, lock = deployment_inputs()
+    target: dict[str, Any] = manifest
+    for key in path[:-1]:
+        target = target[key]
+    target[path[-1]] = value
+    with pytest.raises(DeploymentManifestError, match=message):
+        validate_deployment_manifest(manifest, release_decision=release, selection_lock=lock)
+
+
+def test_deployment_manifest_rejects_missing_duplicate_and_secret_values() -> None:
+    manifest, release, lock = deployment_inputs()
+    manifest.pop("project")
+    with pytest.raises(DeploymentManifestError, match="missing project"):
+        validate_deployment_manifest(manifest, release_decision=release, selection_lock=lock)
+
+    manifest, release, lock = deployment_inputs()
+    manifest["images"].pop("monitor")
+    with pytest.raises(DeploymentManifestError, match="exactly api"):
+        validate_deployment_manifest(manifest, release_decision=release, selection_lock=lock)
+
+    manifest, release, lock = deployment_inputs()
+    manifest["images"]["monitor"]["reference"] = manifest["images"]["api"]["reference"]
+    with pytest.raises(DeploymentManifestError, match="must be distinct"):
+        validate_deployment_manifest(manifest, release_decision=release, selection_lock=lock)
+
+    manifest, release, lock = deployment_inputs()
+    manifest["environment_variable_names"]["unexpected"] = ["AWS_SESSION_TOKEN"]
+    with pytest.raises(DeploymentManifestError, match="credential names"):
+        validate_deployment_manifest(manifest, release_decision=release, selection_lock=lock)
+
+    manifest, release, lock = deployment_inputs()
+    manifest["notes"] = "WANDB_API_KEY=exposed-value"
+    with pytest.raises(DeploymentManifestError, match="credential-like"):
+        validate_deployment_manifest(manifest, release_decision=release, selection_lock=lock)
+
+
+def test_deployment_manifest_preserves_governance_even_if_release_is_changed() -> None:
+    manifest, release, lock = deployment_inputs()
+    manifest["model"]["serving_alias"] = release["serving_alias"] = "staging"
+    with pytest.raises(DeploymentManifestError, match="production alias"):
+        validate_deployment_manifest(manifest, release_decision=release, selection_lock=lock)
+
+    manifest, release, lock = deployment_inputs()
+    manifest["model"]["internal_production_gate_passed"] = release[
+        "internal_production_gate_passed"
+    ] = True
+    with pytest.raises(DeploymentManifestError, match="failed internal production gate"):
+        validate_deployment_manifest(manifest, release_decision=release, selection_lock=lock)
+
+    manifest, release, lock = deployment_inputs()
+    manifest["model"]["deployment_purpose"] = release["deployment_purpose"] = "operational"
+    with pytest.raises(DeploymentManifestError, match="academic-demo"):
+        validate_deployment_manifest(manifest, release_decision=release, selection_lock=lock)
+
+
+def test_deployment_git_sha_must_be_reachable_when_repository_is_supplied() -> None:
+    manifest, release, lock = deployment_inputs()
+    with pytest.raises(DeploymentManifestError, match="reachable local commit"):
+        validate_deployment_manifest(
+            manifest,
+            release_decision=release,
+            selection_lock=lock,
+            repository_root=ROOT,
+        )
+
+    sha = subprocess.run(
+        ["git", "rev-parse", "HEAD"],
+        cwd=ROOT,
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
+    manifest["deployment_git_sha"] = sha
+    for image in manifest["images"].values():
+        image["source_git_sha"] = sha
+    assert (
+        validate_deployment_manifest(
+            manifest,
+            release_decision=release,
+            selection_lock=lock,
+            repository_root=ROOT,
+        )
+        == manifest
+    )
+
+
 def test_evidence_manifest_requires_unique_complete_safe_mapping(tmp_path: Path) -> None:
     captures = [
         {
             "criterion": criterion,
             "filename": f"{index:02d}_{criterion.replace('.', '_')}.png",
+            "evidence_mode": "supplemental" if criterion not in REQUIRED_CRITERIA else "screenshot",
+            "required": criterion in REQUIRED_CRITERIA,
             "source": "application",
-            "status": "pending-live-session",
-            "capture_instruction": "Capture the frozen gate.",
+            "status": "missing" if criterion not in REQUIRED_CRITERIA else "pending-live-session",
+            "verification": "Capture or inspect the frozen gate.",
         }
-        for index, criterion in enumerate(sorted(REQUIRED_CRITERIA), start=1)
+        for index, criterion in enumerate(sorted(KNOWN_CRITERIA), start=1)
     ]
-    manifest = {"schema_version": 1, "captures": captures}
+    manifest = {"schema_version": 2, "captures": captures}
     assert validate_evidence_manifest(manifest, evidence_root=tmp_path) == manifest
+    assert missing_required_evidence(manifest) == sorted(REQUIRED_CRITERIA)
     evidence_path = tmp_path / "evidence.json"
     evidence_path.write_text(json.dumps(manifest), encoding="utf-8")
     assert load_evidence_manifest(evidence_path) == manifest
@@ -167,11 +288,13 @@ def test_evidence_manifest_supports_curated_multi_file_evidence(tmp_path: Path) 
         {
             "criterion": criterion,
             "filename": f"{index:02d}_{criterion.replace('.', '_')}.png",
+            "evidence_mode": "supplemental" if criterion not in REQUIRED_CRITERIA else "screenshot",
+            "required": criterion in REQUIRED_CRITERIA,
             "source": "application",
             "status": "missing",
-            "capture_instruction": "Record the final evidence state.",
+            "verification": "Record the final evidence state.",
         }
-        for index, criterion in enumerate(sorted(REQUIRED_CRITERIA), start=1)
+        for index, criterion in enumerate(sorted(KNOWN_CRITERIA), start=1)
     ]
     first = captures[0]
     first.pop("filename")
@@ -191,7 +314,7 @@ def test_evidence_manifest_supports_curated_multi_file_evidence(tmp_path: Path) 
     evidence_root = tmp_path / "evidence"
     evidence_root.mkdir()
     manifest = {
-        "schema_version": 1,
+        "schema_version": 2,
         "artifact_directories": ["aws/screenshots"],
         "captures": captures,
     }
@@ -204,6 +327,146 @@ def test_evidence_manifest_supports_curated_multi_file_evidence(tmp_path: Path) 
     invalid["captures"][0].pop("redaction_notes")
     with pytest.raises(EvidenceValidationError, match="missing redaction notes"):
         validate_evidence_manifest(invalid)
+
+
+def test_final_evidence_manifest_has_complete_required_evidence_modes() -> None:
+    manifest = evidence_inputs()
+    assert validate_evidence_manifest(manifest) == manifest
+    assert missing_required_evidence(manifest) == []
+    assert {item["evidence_mode"] for item in manifest["captures"]} == {
+        "public_url",
+        "screenshot",
+        "supplemental",
+    }
+
+
+@pytest.mark.parametrize(
+    ("field", "value", "message"),
+    [
+        ("evidence_mode", "archive", "unsupported evidence mode"),
+        ("required", "yes", "required must be boolean"),
+        ("required", False, "disagrees with rubric"),
+        ("source", "application", "public URL evidence has unsupported source"),
+        ("status", "captured", "unsupported public_url evidence status"),
+        ("verification", " ", "missing verification"),
+        ("source_url", "http://example.com", "lacks an HTTPS URL"),
+    ],
+)
+def test_public_url_evidence_rejects_unsafe_metadata(
+    field: str, value: object, message: str
+) -> None:
+    manifest = evidence_inputs()
+    manifest["captures"][0][field] = value
+    with pytest.raises(EvidenceValidationError, match=message):
+        validate_evidence_manifest(manifest)
+
+
+def test_public_url_evidence_cannot_claim_a_screenshot_file() -> None:
+    manifest = evidence_inputs()
+    manifest["captures"][0]["filename"] = "01_public.png"
+    with pytest.raises(EvidenceValidationError, match="must not declare screenshot"):
+        validate_evidence_manifest(manifest)
+
+
+@pytest.mark.parametrize(
+    ("mutation", "message"),
+    [
+        ({"source_url": "file:///tmp/capture.png"}, "safe source URL"),
+        ({"publication_status": "private"}, "publication status"),
+        ({"filename": "../../secret.png"}, "unsafe evidence filename"),
+    ],
+)
+def test_screenshot_evidence_rejects_unsafe_metadata(
+    mutation: dict[str, object], message: str
+) -> None:
+    manifest = evidence_inputs()
+    manifest["captures"][6].update(mutation)
+    with pytest.raises(EvidenceValidationError, match=message):
+        validate_evidence_manifest(manifest)
+
+
+def test_evidence_filenames_must_be_unambiguous_and_unique() -> None:
+    manifest = evidence_inputs()
+    manifest["captures"][6]["filenames"] = ["07_duplicate.png"]
+    with pytest.raises(EvidenceValidationError, match="exactly one"):
+        validate_evidence_manifest(manifest)
+
+    manifest = evidence_inputs()
+    manifest["captures"][6].pop("filename")
+    with pytest.raises(EvidenceValidationError, match="exactly one"):
+        validate_evidence_manifest(manifest)
+
+    manifest = evidence_inputs()
+    manifest["captures"][6].pop("filename")
+    manifest["captures"][6]["filenames"] = []
+    with pytest.raises(EvidenceValidationError, match="non-empty list"):
+        validate_evidence_manifest(manifest)
+
+    manifest = evidence_inputs()
+    manifest["captures"][7]["filenames"] = ["08a_duplicate.png", "08a_duplicate.png"]
+    with pytest.raises(EvidenceValidationError, match="within criterion"):
+        validate_evidence_manifest(manifest)
+
+    manifest = evidence_inputs()
+    manifest["captures"][12]["filename"] = manifest["captures"][6]["filename"]
+    with pytest.raises(EvidenceValidationError, match="duplicate filename"):
+        validate_evidence_manifest(manifest)
+
+
+def test_redaction_and_required_file_failures_are_explicit(tmp_path: Path) -> None:
+    manifest = evidence_inputs()
+    manifest["captures"][6].pop("redaction_notes")
+    with pytest.raises(EvidenceValidationError, match="missing redaction notes"):
+        validate_evidence_manifest(manifest)
+
+    manifest = evidence_inputs()
+    with pytest.raises(EvidenceValidationError, match="captured evidence file is missing"):
+        validate_evidence_manifest(manifest, evidence_root=tmp_path, require_files=True)
+
+
+@pytest.mark.parametrize("directories", [[], "aws/screenshots", [42], ["../screenshots"]])
+def test_artifact_directories_must_be_safe(directories: object) -> None:
+    manifest = evidence_inputs()
+    manifest["artifact_directories"] = directories
+    with pytest.raises(EvidenceValidationError, match=r"artifact.director"):
+        validate_evidence_manifest(manifest)
+
+
+def test_evidence_top_level_and_criterion_integrity() -> None:
+    with pytest.raises(EvidenceValidationError, match="schema_version"):
+        validate_evidence_manifest({"schema_version": 1, "captures": []})
+    with pytest.raises(EvidenceValidationError, match="non-empty list"):
+        validate_evidence_manifest({"schema_version": 2, "captures": []})
+
+    manifest = evidence_inputs()
+    manifest["captures"][0] = "not-an-object"
+    with pytest.raises(EvidenceValidationError, match="must be an object"):
+        validate_evidence_manifest(manifest)
+
+    manifest = evidence_inputs()
+    manifest["captures"][1]["criterion"] = manifest["captures"][0]["criterion"]
+    with pytest.raises(EvidenceValidationError, match="duplicate criterion"):
+        validate_evidence_manifest(manifest)
+
+    manifest = evidence_inputs()
+    manifest["captures"][0]["criterion"] = "unknown.criterion"
+    with pytest.raises(EvidenceValidationError, match="unsupported evidence criterion"):
+        validate_evidence_manifest(manifest)
+
+    manifest = evidence_inputs()
+    manifest["captures"].pop()
+    with pytest.raises(EvidenceValidationError, match="criteria are missing"):
+        validate_evidence_manifest(manifest)
+
+
+def test_evidence_loader_rejects_invalid_json_and_non_object(tmp_path: Path) -> None:
+    path = tmp_path / "manifest.json"
+    path.write_text("not json", encoding="utf-8")
+    with pytest.raises(EvidenceValidationError, match="unable to read"):
+        load_evidence_manifest(path)
+    path.write_text("[]", encoding="utf-8")
+    with pytest.raises(EvidenceValidationError, match="must be a JSON object"):
+        load_evidence_manifest(path)
 
 
 def test_deployment_manifest_file_loader(tmp_path: Path) -> None:
@@ -234,10 +497,29 @@ def test_host_manifest_reader_uses_only_standard_library() -> None:
         check=True,
         capture_output=True,
         text=True,
+        env={"PYTHONPATH": "src"},
     )
     assert result.stdout.strip().startswith(
         "ghcr.io/austinyoungblood/us-flight-delay-mlops-api@sha256:"
     )
+
+
+def test_evidence_cli_reports_required_evidence_complete() -> None:
+    result = subprocess.run(
+        [sys.executable, "scripts/validate_evidence_manifest.py"],
+        cwd=ROOT,
+        check=True,
+        capture_output=True,
+        text=True,
+        env={"PYTHONPATH": "src"},
+    )
+    payload = json.loads(result.stdout)
+    assert payload["required_evidence"] == {
+        "complete": True,
+        "missing": [],
+        "present": 18,
+        "total": 18,
+    }
 
 
 def model_info(manifest: dict[str, Any]) -> dict[str, Any]:

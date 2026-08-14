@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 import wandb
+import yaml
 
 from flight_delay.promotion import (
     AliasState,
@@ -103,6 +104,52 @@ def test_policy_is_versioned_and_prohibits_final_test_ranking(tmp_path: Path) ->
         load_policy(path)
 
 
+@pytest.mark.parametrize(
+    ("path", "value", "message"),
+    [
+        (("schema_version",), "v2", "schema version"),
+        (("policy_version",), "", "non-empty string"),
+        (("dry_run_default",), "yes", "must be boolean"),
+        (("scope",), None, "scope must be a mapping"),
+        (("selection_inputs", "development_validation_only"), False, "development/validation"),
+        (("ranking",), [], "ranking must be non-empty"),
+        (("ranking", 0, "field"), "", "ranking field"),
+        (("ranking", 0, "direction"), "sideways", "direction is invalid"),
+        (("mandatory_gates", "lineage_verified"), None, "candidate gates must be boolean"),
+        (("mandatory_gates", "max_bundle_size_bytes"), 0, "must be positive"),
+        (("allowed_target_aliases",), [], "allowed aliases"),
+        (("scope", "registry_collection"), "", "scope or lineage is incomplete"),
+        (("target_alias",), "candidate", "target alias is not allowed"),
+        (("tie_breaking", "final_field"), "version", "final deterministic tie-break"),
+    ],
+)
+def test_policy_validation_rejects_unsafe_shapes(
+    tmp_path: Path, path: tuple[object, ...], value: object, message: str
+) -> None:
+    payload = yaml.safe_load((ROOT / "configs/promotion_policy.yaml").read_text(encoding="utf-8"))
+    target: object = payload
+    for key in path[:-1]:
+        target = target[key]
+    target[path[-1]] = value
+    policy_path = tmp_path / "policy.yaml"
+    policy_path.write_text(yaml.safe_dump(payload), encoding="utf-8")
+    with pytest.raises(PolicyError, match=message):
+        load_policy(policy_path)
+
+
+def test_policy_root_and_ranking_items_must_be_mappings(tmp_path: Path) -> None:
+    policy_path = tmp_path / "policy.yaml"
+    policy_path.write_text("- not-a-mapping\n", encoding="utf-8")
+    with pytest.raises(PolicyError, match="promotion policy must be a mapping"):
+        load_policy(policy_path)
+
+    payload = yaml.safe_load((ROOT / "configs/promotion_policy.yaml").read_text(encoding="utf-8"))
+    payload["ranking"][0] = "not-a-rule"
+    policy_path.write_text(yaml.safe_dump(payload), encoding="utf-8")
+    with pytest.raises(PolicyError, match="ranking rule must be a mapping"):
+        load_policy(policy_path)
+
+
 def test_one_candidate_promotes_and_incumbent_retains() -> None:
     item = candidate()
     promotion = select_candidates([item], policy(), incumbent_identity=None)
@@ -195,6 +242,45 @@ def test_final_test_fields_are_rejected_as_selection_inputs(forbidden: dict) -> 
     raw = candidate().__dict__ | {"aliases": []} | forbidden
     with pytest.raises(CandidateMetadataError, match="forbidden key"):
         CandidateRecord.from_mapping(raw)
+
+
+@pytest.mark.parametrize(
+    ("mutation", "message"),
+    [
+        ({"unknown": "value"}, "unknown fields"),
+        ({"candidate_id": ""}, "identity fields"),
+        ({"git_sha": "short"}, "full commit SHA"),
+        ({"bundle_size_bytes": 0}, "must be positive"),
+        ({"release_eligible": 1}, "gate fields must be boolean"),
+        ({"development_metrics": {}}, "non-empty mapping"),
+        ({"development_metrics": {"": 0.2}}, "metric names"),
+        ({"development_metrics": {"average_precision": True}}, "must be numeric"),
+        ({"aliases": ["production", ""]}, "aliases must be strings"),
+    ],
+)
+def test_candidate_metadata_rejects_malformed_fields(mutation: dict, message: str) -> None:
+    raw = candidate().__dict__ | {"aliases": []}
+    raw.update(mutation)
+    with pytest.raises(CandidateMetadataError, match=message):
+        CandidateRecord.from_mapping(raw)
+
+
+def test_candidate_metadata_requires_mapping_and_all_fields() -> None:
+    with pytest.raises(CandidateMetadataError, match="must be a mapping"):
+        CandidateRecord.from_mapping([])
+    raw = candidate().__dict__ | {"aliases": []}
+    raw.pop("dataset_digest")
+    with pytest.raises(CandidateMetadataError, match="missing fields"):
+        CandidateRecord.from_mapping(raw)
+
+
+def test_candidate_aliases_are_deduplicated_and_audit_metrics_are_allowlisted() -> None:
+    raw = candidate().__dict__ | {"aliases": ["staging", "production", "staging"]}
+    item = CandidateRecord.from_mapping(raw)
+    assert item.aliases == ("production", "staging")
+    assert item.audit_view(("average_precision", "not-present"))["development_metrics"] == {
+        "average_precision": 0.28
+    }
 
 
 def test_no_candidates_and_all_invalid_outcomes_are_explicit() -> None:
