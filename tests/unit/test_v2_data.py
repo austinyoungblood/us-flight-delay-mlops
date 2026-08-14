@@ -20,6 +20,38 @@ from flight_delay.modeling.v2.protocol import HISTORICAL_FEATURES, V2_FEATURES
 ROOT = Path(__file__).resolve().parents[2]
 
 
+@pytest.fixture
+def synthetic_repository_root(tmp_path: Path) -> Path:
+    """Stage governed metadata plus synthetic source sentinels outside the checkout."""
+
+    governed_files = (
+        "configs/v2_experiment_protocol.yaml",
+        "experiments/v2/protocol_lock.json",
+        "configs/v1_experiment_protocol.yaml",
+        "experiments/v1/protocol_lock.json",
+        "experiments/v1/development_result.json",
+        "docs/v1-model-experiment-result.md",
+        "release/selection_lock.json",
+        "release/release_decision.json",
+        "deploy/deployment_manifest.json",
+        "data/manifests/processed_manifest.json",
+        "data/manifests/source_manifest.json",
+    )
+    for relative in governed_files:
+        destination = tmp_path / relative
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        destination.symlink_to(ROOT / relative)
+
+    manifest = json.loads((ROOT / "data/manifests/processed_manifest.json").read_text())
+    processed = tmp_path / "data/processed"
+    processed.mkdir(parents=True)
+    for split in ("train", "validation"):
+        specification = manifest["parquet_files"][split]
+        with (processed / specification["filename"]).open("wb") as stream:
+            stream.truncate(specification["byte_size"])
+    return tmp_path
+
+
 def _reader(frame: pd.DataFrame, calls: list[tuple[str, str]]) -> Any:
     def read(path: Path, *, filters: list[tuple[str, str, datetime]]) -> pd.DataFrame:
         start = filters[0][2]
@@ -34,6 +66,7 @@ def _reader(frame: pd.DataFrame, calls: list[tuple[str, str]]) -> Any:
 def test_prepare_development_data_stops_before_december_and_uses_full_history(
     monkeypatch: pytest.MonkeyPatch,
     synthetic_v2_frame: pd.DataFrame,
+    synthetic_repository_root: Path,
 ) -> None:
     calls: list[tuple[str, str]] = []
     hash_calls: list[str] = []
@@ -46,7 +79,10 @@ def test_prepare_development_data_stops_before_december_and_uses_full_history(
         return train_sha
 
     monkeypatch.setattr("flight_delay.modeling.v2.data.sha256_file", fake_sha)
-    prepared = prepare_development_data(ROOT, reader=_reader(synthetic_v2_frame, calls))
+    prepared = prepare_development_data(
+        synthetic_repository_root,
+        reader=_reader(synthetic_v2_frame, calls),
+    )
     assert calls == [("2025-01-01", "2025-11-01"), ("2025-11-01", "2025-12-01")]
     assert hash_calls == ["train.parquet"]
     assert tuple(prepared.search.features.columns) == V2_FEATURES
@@ -64,6 +100,7 @@ def test_prepare_development_data_stops_before_december_and_uses_full_history(
 
 def test_december_loader_is_separate_and_reuses_october_state(
     synthetic_v2_frame: pd.DataFrame,
+    synthetic_repository_root: Path,
 ) -> None:
     history = synthetic_v2_frame.loc[
         pd.to_datetime(synthetic_v2_frame["flight_date"]).dt.month.le(10)
@@ -71,7 +108,7 @@ def test_december_loader_is_separate_and_reuses_october_state(
     state = build_historical_state(history, as_of="2025-10-31")
     calls: list[tuple[str, str]] = []
     features, target, dates = load_december_features(
-        ROOT,
+        synthetic_repository_root,
         state=state,
         reader=_reader(synthetic_v2_frame, calls),
         verify_source_hash=False,
@@ -84,7 +121,7 @@ def test_december_loader_is_separate_and_reuses_october_state(
     wrong_state = build_historical_state(history.iloc[:-4], as_of="2025-09-30")
     with pytest.raises(V2DataGuardError, match="October-31"):
         load_december_features(
-            ROOT,
+            synthetic_repository_root,
             state=wrong_state,
             reader=_reader(synthetic_v2_frame, []),
             verify_source_hash=False,
