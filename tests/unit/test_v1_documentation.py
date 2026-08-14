@@ -34,3 +34,21 @@ def test_protocol_lock_records_pre_result_state_and_immutable_incumbent() -> Non
     assert lock["fresh_final_accessed"] is False
     assert lock["incumbent_registry_version"] == "v0"
     assert lock["historical_test_consumed"] is True
+
+
+def test_implementation_document_preserves_unexecuted_and_v0_boundaries() -> None:
+    implementation = (ROOT / "docs/v1-model-experiment-implementation.md").read_text(
+        encoding="utf-8"
+    )
+    for required in (
+        "PROTOCOL MERGED",
+        "IMPLEMENTATION UNDER REVIEW",
+        "REAL v1 TRAINING NOT YET RUN",
+        "PRODUCTION STILL v0",
+        'find_spec("catboost") is None',
+        "R3-base rolling evidence",
+        "governed R3-sigmoid reconstruction",
+        "explicit November predicate",
+        "explicit December predicate",
+    ):
+        assert required in implementation

@@ -183,6 +183,13 @@ It does not itself constitute cloud-deployment evidence.
   development, qualification, feature decisions, or gate changes.
 - Production remains the unchanged Registry `production:v0` release; this protocol creates no W&B,
   AWS, model, Registry, deployment, or application-runtime mutation.
+- Implemented the protocol-bound runner on a separate review branch with canonical predicate-filtered
+  data access, exact native-category CatBoost constructors, frozen-base calibration, pure threshold
+  and gate selection, deterministic local bundles, durable one-time markers, and a separate
+  qualification CLI.
+- CatBoost is isolated in the optional `v1` extra and remains absent from all three base runtime
+  images. Both CLIs default to offline preflight; no real v1 development or qualification execution
+  has occurred and no v1 result is claimed.
 
 ## Current repository validation
 

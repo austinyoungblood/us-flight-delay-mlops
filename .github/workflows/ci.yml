@@ -19,7 +19,9 @@ jobs:
           python-version: "3.11"
           cache: pip
       - name: Install package and development dependencies
-        run: python -m pip install --disable-pip-version-check -c requirements.lock ".[dev]"
+        run: >-
+          python -m pip install --disable-pip-version-check
+          -c requirements.lock -c requirements-v1.lock ".[dev,v1]"
       - name: Lint
         run: ruff check .
       - name: Check formatting
@@ -30,8 +32,11 @@ jobs:
           WANDB_MODE: disabled
       - name: Validate frozen deployment and evidence package
         run: |
+          python scripts/validate_v1_protocol.py
+          python scripts/run_v1_development.py
+          python scripts/run_v1_december_qualification.py
           python scripts/validate_deployment_manifest.py
-          python scripts/validate_evidence_manifest.py
+          python scripts/validate_evidence_manifest.py --require-files
           bash -n deploy/*.sh deploy/lib/*.sh
       - name: Build API image
         run: docker build -f services/api/Dockerfile -t flight-delay-api:scaffold .
@@ -39,3 +44,13 @@ jobs:
         run: docker build -f services/user_ui/Dockerfile -t flight-delay-user-ui:scaffold .
       - name: Build monitoring UI image
         run: docker build -f services/monitor_ui/Dockerfile -t flight-delay-monitor-ui:scaffold .
+      - name: Prove modeling dependency isolation
+        run: |
+          for image in \
+            flight-delay-api:scaffold \
+            flight-delay-user-ui:scaffold \
+            flight-delay-monitor-ui:scaffold
+          do
+            docker run --rm --entrypoint python "$image" -c \
+              'import importlib.util; assert importlib.util.find_spec("catboost") is None'
+          done
