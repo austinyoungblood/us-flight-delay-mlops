@@ -115,6 +115,43 @@ def deployment_inputs() -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]
     return manifest, release, lock
 
 
+def deployment_env_values() -> dict[str, dict[str, str]]:
+    return {
+        "api": {
+            "WANDB_API_KEY": "test-only-value",
+            "WANDB_ENTITY": "test-entity",
+            "WANDB_PROJECT": "us-flight-delay-mlops",
+            "AWS_REGION": "us-west-2",
+            "DYNAMODB_TABLE": "flight-delay-events",
+            "MODEL_DOWNLOAD_DIR": "/opt/us-flight-delay-mlops/model",
+            "PREDICTION_CACHE_MAXSIZE": "1024",
+            "PREDICTION_CACHE_TTL_SECONDS": "300",
+        },
+        "traveler": {
+            "API_BASE_URL": "http://10.0.0.8:8000",
+            "API_CONNECT_TIMEOUT_SECONDS": "3",
+            "API_READ_TIMEOUT_SECONDS": "15",
+        },
+        "monitor": {
+            "AWS_REGION": "us-west-2",
+            "DYNAMODB_TABLE": "flight-delay-events",
+            "MONITOR_DEFAULT_DAYS": "7",
+            "MONITOR_MAX_DAYS": "31",
+            "MONITOR_QUERY_CACHE_TTL_SECONDS": "30",
+        },
+    }
+
+
+def write_deployment_env(
+    tmp_path: Path, component: str, *, extra: dict[str, str] | None = None
+) -> Path:
+    values = {**deployment_env_values()[component], **(extra or {})}
+    path = tmp_path / f"{component}.env"
+    path.write_text("".join(f"{key}={value}\n" for key, value in values.items()), encoding="utf-8")
+    path.chmod(0o600)
+    return path
+
+
 def evidence_inputs() -> dict[str, Any]:
     return json.loads((ROOT / "evidence/evidence_manifest.json").read_text(encoding="utf-8"))
 
@@ -720,30 +757,7 @@ def test_component_deploy_scripts_pass_validated_dry_run(tmp_path: Path) -> None
         image["source_git_sha"] = sha
     manifest_path = tmp_path / "manifest.json"
     manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
-    values = {
-        "api": {
-            "WANDB_API_KEY": "test-only-value",
-            "WANDB_ENTITY": "test-entity",
-            "WANDB_PROJECT": "us-flight-delay-mlops",
-            "AWS_REGION": "us-west-2",
-            "DYNAMODB_TABLE": "flight-delay-events",
-            "MODEL_DOWNLOAD_DIR": "/opt/us-flight-delay-mlops/model",
-            "PREDICTION_CACHE_MAXSIZE": "1024",
-            "PREDICTION_CACHE_TTL_SECONDS": "300",
-        },
-        "traveler": {
-            "API_BASE_URL": "http://10.0.0.8:8000",
-            "API_CONNECT_TIMEOUT_SECONDS": "3",
-            "API_READ_TIMEOUT_SECONDS": "15",
-        },
-        "monitor": {
-            "AWS_REGION": "us-west-2",
-            "DYNAMODB_TABLE": "flight-delay-events",
-            "MONITOR_DEFAULT_DAYS": "7",
-            "MONITOR_MAX_DAYS": "31",
-            "MONITOR_QUERY_CACHE_TTL_SECONDS": "30",
-        },
-    }
+    values = deployment_env_values()
     test_environment = {
         **os.environ,
         "DEPLOY_DRY_RUN": "1",
@@ -772,6 +786,116 @@ def test_component_deploy_scripts_pass_validated_dry_run(tmp_path: Path) -> None
         )
         assert result.returncode == 0, result.stderr
         assert "dry-run validated" in result.stdout
+
+
+def test_component_runtime_arguments_are_isolated_and_health_retries_preserved(
+    tmp_path: Path,
+) -> None:
+    fake_bin = tmp_path / "bin"
+    fake_bin.mkdir()
+    docker_audit = tmp_path / "docker-audit.log"
+    curl_audit = tmp_path / "curl-audit.log"
+    fake_docker = fake_bin / "docker"
+    fake_docker.write_text(
+        "#!/usr/bin/env bash\n"
+        'printf \'%s\\n\' "$*" >> "${DOCKER_AUDIT:?}"\n'
+        'if [[ "$1" == "inspect" ]]; then printf \'true\\n\'; fi\n',
+        encoding="utf-8",
+    )
+    fake_docker.chmod(0o755)
+    fake_curl = fake_bin / "curl"
+    fake_curl.write_text(
+        "#!/usr/bin/env bash\n"
+        'printf \'%s\\n\' "$*" >> "${CURL_AUDIT:?}"\n'
+        'if [[ "$*" == *"/model-info"* ]]; then\n'
+        "  printf '%s\\n' "
+        '\'{"registry_path":"registry","serving_alias":"production",'
+        '"registry_version":"v0","registry_digest":"digest",'
+        '"bundle_digest":"bundle"}\'\n'
+        "fi\n",
+        encoding="utf-8",
+    )
+    fake_curl.chmod(0o755)
+    environment = {
+        **os.environ,
+        "PATH": f"{fake_bin}:{Path(sys.executable).parent}:{os.environ['PATH']}",
+        "DOCKER_AUDIT": str(docker_audit),
+        "CURL_AUDIT": str(curl_audit),
+    }
+    env_paths = {
+        component: write_deployment_env(tmp_path, component)
+        for component in ("api", "traveler", "monitor")
+    }
+
+    for component, env_path in env_paths.items():
+        subprocess.run(
+            [str(ROOT / f"deploy/deploy_{component}.sh"), "--env-file", str(env_path)],
+            cwd=ROOT,
+            env=environment,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+
+    run_lines = [
+        line
+        for line in docker_audit.read_text(encoding="utf-8").splitlines()
+        if line.startswith("run ")
+    ]
+    assert len(run_lines) == 3
+    api_run = next(line for line in run_lines if "--name flight-delay-api" in line)
+    traveler_run = next(line for line in run_lines if "--name flight-delay-traveler" in line)
+    monitor_run = next(line for line in run_lines if "--name flight-delay-monitor" in line)
+    assert f"--env-file {env_paths['api']} -e HOME=/tmp -p 8000:8000" in api_run
+    assert "HOME=/tmp" not in traveler_run
+    assert "HOME=/tmp" not in monitor_run
+
+    health_calls = [
+        line for line in curl_audit.read_text(encoding="utf-8").splitlines() if "/health" in line
+    ]
+    assert len(health_calls) == 3
+    assert all("--retry 12 --retry-delay 5" in line for line in health_calls)
+
+
+def test_api_home_override_remains_outside_host_env_contract(tmp_path: Path) -> None:
+    env_path = write_deployment_env(tmp_path, "api", extra={"HOME": "/tmp"})
+    result = subprocess.run(
+        [str(ROOT / "deploy/deploy_api.sh"), "--env-file", str(env_path)],
+        cwd=ROOT,
+        env={
+            **os.environ,
+            "DEPLOY_DRY_RUN": "1",
+            "PATH": f"{Path(sys.executable).parent}:{os.environ['PATH']}",
+        },
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode != 0
+    assert "environment file names disagree with the manifest" in result.stderr
+
+
+@pytest.mark.parametrize(
+    "credential_name", ["AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_SESSION_TOKEN"]
+)
+def test_deployment_wrapper_rejects_temporary_aws_credentials(
+    tmp_path: Path, credential_name: str
+) -> None:
+    env_path = write_deployment_env(tmp_path, "api", extra={credential_name: "forbidden"})
+    result = subprocess.run(
+        [str(ROOT / "deploy/deploy_api.sh"), "--env-file", str(env_path)],
+        cwd=ROOT,
+        env={
+            **os.environ,
+            "DEPLOY_DRY_RUN": "1",
+            "PATH": f"{Path(sys.executable).parent}:{os.environ['PATH']}",
+        },
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode != 0
+    assert "forbidden AWS credential or endpoint variable" in result.stderr
 
 
 def test_live_package_has_no_mutable_latest_reference_or_private_key() -> None:

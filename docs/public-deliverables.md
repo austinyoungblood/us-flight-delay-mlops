@@ -36,3 +36,16 @@ All three carry source revision `355d99226883ebae1705d9f5a12eaffbe7bc6c8a`. On 2
 Packages API reported each package `public`. After `docker logout ghcr.io`, anonymous pulls of all
 three exact references succeeded and returned the expected digests; no publisher credential was
 available to those pulls.
+
+## Pending provenance application release
+
+On 2026-08-14, three provenance-enabled application images were built from exact source revision
+`ce10f1a123bbe21eb75ca31b2681caf90ccda731` and published at these immutable references:
+
+- `ghcr.io/austinyoungblood/us-flight-delay-mlops-api@sha256:8c70e59c1cd24be98be5e47fd318464d7bae95aaf1be44608af3b33adacbca0e`
+- `ghcr.io/austinyoungblood/us-flight-delay-mlops-traveler@sha256:06d36b32304b9f7711d0b224fa9d7f049a8875b761dffd907c17a73f3eebef94`
+- `ghcr.io/austinyoungblood/us-flight-delay-mlops-monitor@sha256:97a4e6bb99358e8cfe6885581713fd2731f64ea97164ad6a4d64f6efb1c7277c`
+
+Each digest passed an anonymous pull using an isolated Docker configuration with no credentials.
+This is a pending application deployment release, not evidence that AWS is already running these
+images. The governed Registry `production:v0` model and its immutable digests are unchanged.

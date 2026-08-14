@@ -27,6 +27,10 @@ sudo deploy/deploy_traveler.sh --env-file /opt/us-flight-delay-mlops/traveler.en
 sudo deploy/deploy_monitor.sh --env-file /opt/us-flight-delay-mlops/monitor.env
 ```
 
+The shared deployment wrapper supplies `HOME=/tmp` as a fixed runtime argument only for the
+non-root API container. Do not add `HOME` to `api.env` or to the deployment manifest's host
+environment-variable contract. Traveler and Monitor receive no `HOME` override.
+
 The frozen topology consumes exact Registry `production:v0` and must display the
 academic-demo/internal-gate disclosure. AWS provisioning and these live commands must not be run
 until every pre-activation gate in the four-hour runbook is green.
