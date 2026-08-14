@@ -5,7 +5,7 @@
     "public_repository_url": "https://github.com/austinyoungblood/us-flight-delay-mlops",
     "wandb_project_url": "https://wandb.ai/austin-youngblood-university-of-denver/us-flight-delay-mlops"
   },
-  "deployment_git_sha": "355d99226883ebae1705d9f5a12eaffbe7bc6c8a",
+  "deployment_git_sha": "ce10f1a123bbe21eb75ca31b2681caf90ccda731",
   "model": {
     "registry_collection": "wandb-registry-Model/us-flight-arrival-delay-15m",
     "serving_alias": "production",
@@ -18,16 +18,16 @@
   },
   "images": {
     "api": {
-      "reference": "ghcr.io/austinyoungblood/us-flight-delay-mlops-api@sha256:7175844d53a46ed96c5cd3198e8fb6defbdf67bd0c640999914272b26e9433d4",
-      "source_git_sha": "355d99226883ebae1705d9f5a12eaffbe7bc6c8a"
+      "reference": "ghcr.io/austinyoungblood/us-flight-delay-mlops-api@sha256:8c70e59c1cd24be98be5e47fd318464d7bae95aaf1be44608af3b33adacbca0e",
+      "source_git_sha": "ce10f1a123bbe21eb75ca31b2681caf90ccda731"
     },
     "traveler": {
-      "reference": "ghcr.io/austinyoungblood/us-flight-delay-mlops-traveler@sha256:9afd05f6697609fbda7b130ff6e61afa29cab936981ae6f990fe5914fb71fb47",
-      "source_git_sha": "355d99226883ebae1705d9f5a12eaffbe7bc6c8a"
+      "reference": "ghcr.io/austinyoungblood/us-flight-delay-mlops-traveler@sha256:06d36b32304b9f7711d0b224fa9d7f049a8875b761dffd907c17a73f3eebef94",
+      "source_git_sha": "ce10f1a123bbe21eb75ca31b2681caf90ccda731"
     },
     "monitor": {
-      "reference": "ghcr.io/austinyoungblood/us-flight-delay-mlops-monitor@sha256:7b038768c7474d7702909a747014e2725b77654d83aeb0fac1f1dac4db41ef62",
-      "source_git_sha": "355d99226883ebae1705d9f5a12eaffbe7bc6c8a"
+      "reference": "ghcr.io/austinyoungblood/us-flight-delay-mlops-monitor@sha256:97a4e6bb99358e8cfe6885581713fd2731f64ea97164ad6a4d64f6efb1c7277c",
+      "source_git_sha": "ce10f1a123bbe21eb75ca31b2681caf90ccda731"
     }
   },
   "runtime": {

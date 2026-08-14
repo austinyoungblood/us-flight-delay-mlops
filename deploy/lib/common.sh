@@ -61,11 +61,15 @@ deploy_component() {
   done
   [[ -n "${env_file}" ]] || fail "--env-file is required"
   local image port
+  local -a runtime_args=()
   image="$(manifest_value image "${component}" "${manifest}")"
   port="$(manifest_value port "${component}" "${manifest}")"
   [[ "${image}" =~ ^ghcr\.io/[a-z0-9_.-]+/[a-z0-9_.-]+@sha256:[0-9a-f]{64}$ ]] || \
     fail "image must be pinned by GHCR digest"
   validate_env_file "${component}" "${env_file}" "${manifest}"
+  if [[ "${component}" == "api" ]]; then
+    runtime_args=(-e HOME=/tmp)
+  fi
 
   if [[ "${DEPLOY_DRY_RUN:-0}" == "1" ]]; then
     printf 'dry-run validated component=%s container=%s image=%s port=%s health=%s\n' \
@@ -80,7 +84,7 @@ deploy_component() {
   "${docker_parts[@]}" stop "${container_name}" >/dev/null 2>&1 || true
   "${docker_parts[@]}" rm "${container_name}" >/dev/null 2>&1 || true
   "${docker_parts[@]}" run -d --name "${container_name}" --restart unless-stopped \
-    --env-file "${env_file}" -p "${port}:${port}" "${image}" >/dev/null
+    --env-file "${env_file}" "${runtime_args[@]}" -p "${port}:${port}" "${image}" >/dev/null
   [[ "$("${docker_parts[@]}" inspect --format '{{.State.Running}}' "${container_name}")" == "true" ]] || \
     fail "named container is not running"
   curl --fail --silent --show-error --retry 12 --retry-delay 5 \

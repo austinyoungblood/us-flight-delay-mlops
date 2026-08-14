@@ -96,6 +96,18 @@ Immutable public images:
 - Traveler: `ghcr.io/austinyoungblood/us-flight-delay-mlops-traveler@sha256:9afd05f6697609fbda7b130ff6e61afa29cab936981ae6f990fe5914fb71fb47`
 - Monitor: `ghcr.io/austinyoungblood/us-flight-delay-mlops-monitor@sha256:7b038768c7474d7702909a747014e2725b77654d83aeb0fac1f1dac4db41ef62`
 
+The image set above is the previously validated live AWS deployment. A provenance-enabled
+application release is published and pending deployment; it has not yet been run or validated on
+AWS. Its application/image source is `ce10f1a123bbe21eb75ca31b2681caf90ccda731`:
+
+- API: `ghcr.io/austinyoungblood/us-flight-delay-mlops-api@sha256:8c70e59c1cd24be98be5e47fd318464d7bae95aaf1be44608af3b33adacbca0e`
+- Traveler: `ghcr.io/austinyoungblood/us-flight-delay-mlops-traveler@sha256:06d36b32304b9f7711d0b224fa9d7f049a8875b761dffd907c17a73f3eebef94`
+- Monitor: `ghcr.io/austinyoungblood/us-flight-delay-mlops-monitor@sha256:97a4e6bb99358e8cfe6885581713fd2731f64ea97164ad6a4d64f6efb1c7277c`
+
+The deployment manifest records the application source SHA rather than the later
+deployment-package commit. The governed model remains the unchanged `production:v0` identity
+shown above.
+
 The non-root API container used `MODEL_DOWNLOAD_DIR=/tmp/flight-delay-model` and `HOME=/tmp` for W&B
 runtime compatibility. These accommodations did not change model identity or bypass Registry,
 digest, or file-hash verification; W&B downloaded and verified all ten release files successfully.
