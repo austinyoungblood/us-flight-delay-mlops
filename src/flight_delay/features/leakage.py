@@ -26,6 +26,23 @@ ALLOWED_MODEL_FEATURES: frozenset[str] = frozenset(
         "scheduled_arrival_cos",
         "month_sin",
         "month_cos",
+        "prior_global_delay_rate",
+        "prior_carrier_delay_rate",
+        "prior_origin_delay_rate",
+        "prior_destination_delay_rate",
+        "prior_route_delay_rate",
+        "prior_carrier_route_delay_rate",
+        "prior_carrier_origin_delay_rate",
+        "prior_carrier_destination_delay_rate",
+        "prior_origin_departure_hour_delay_rate",
+        "prior_destination_arrival_hour_delay_rate",
+        "log_route_support",
+        "log_carrier_route_support",
+        "recent_global_delay_rate_3m",
+        "recent_carrier_delay_rate_3m",
+        "recent_origin_delay_rate_3m",
+        "recent_destination_delay_rate_3m",
+        "recent_route_delay_rate_3m",
     }
 )
 

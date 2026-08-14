@@ -1,0 +1,4 @@
+# Optional governed-v2 modeling constraints. Install with requirements.lock.
+# These packages are intentionally absent from the production runtime dependency set.
+lightgbm==4.7.0
+catboost==1.2.10
