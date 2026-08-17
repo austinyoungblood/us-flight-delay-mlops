@@ -259,11 +259,27 @@ def bundle_evidence(
     }
 
 
+NOVEMBER_CALENDAR_MONTH = 11
+NOVEMBER_EVALUATION_YEAR = 2025
+
+
+def seasonal_prior_year_check(state: V3HistoricalState) -> bool:
+    """Require November seasonal state to exist and to predate the evaluation year.
+
+    An absent November entry must fail rather than pass vacuously: it would mean the seasonal
+    feature carried no prior-year signal at all, which is the thing v3 exists to add.
+    """
+
+    contributing = state.same_calendar_month_max_year.get(NOVEMBER_CALENDAR_MONTH)
+    return contributing is not None and contributing < NOVEMBER_EVALUATION_YEAR
+
+
 def _governance(
     *,
     prepared: PreparedV3Data,
     bundle: dict[str, Any],
     r3_reconstruction_passed: bool,
+    weight_policies_normalized: bool,
 ) -> dict[str, bool]:
     return {
         "lineage_verified": True,
@@ -272,12 +288,8 @@ def _governance(
         "leakage_check_passed": True,
         "historical_state_integrity_passed": bundle["historical_state_integrity_passed"],
         "training_serving_parity_passed": True,
-        "seasonal_prior_year_check_passed": all(
-            year < 2025
-            for month, year in prepared.november_state.same_calendar_month_max_year.items()
-            if month == 11
-        ),
-        "weight_policy_check_passed": True,
+        "seasonal_prior_year_check_passed": seasonal_prior_year_check(prepared.november_state),
+        "weight_policy_check_passed": weight_policies_normalized,
         "r3_reconstruction_passed": r3_reconstruction_passed,
         "serialization_load_inference_passed": bundle["serialization_load_inference_passed"],
         "no_prohibited_test_access": True,
@@ -295,13 +307,17 @@ def _evaluate_finalist(
     tracker: V3Tracker,
     metadata: dict[str, Any],
     r3_reconstruction_passed: bool,
+    weight_policies_normalized: bool,
     extra_metadata: dict[str, Any],
 ) -> dict[str, Any]:
     scores = model.predict_proba(prepared.selection_features)[:, 1]
     audit = calibration_audit(prepared.selection_target, scores)
     bundle = bundle_evidence(model, prepared.selection_features, prepared.november_state)
     governance = _governance(
-        prepared=prepared, bundle=bundle, r3_reconstruction_passed=r3_reconstruction_passed
+        prepared=prepared,
+        bundle=bundle,
+        r3_reconstruction_passed=r3_reconstruction_passed,
+        weight_policies_normalized=weight_policies_normalized,
     )
     with tracker.start_run(
         name=f"v3-{finalist_id}-november",
@@ -391,6 +407,9 @@ def run_refit_and_november(
             "refit_runtime_seconds": float(time.perf_counter() - started),
         }
 
+    weight_policies_normalized = all(
+        bool(base["weight_summary"]["normalized_to_mean_one"]) for base in bases.values()
+    )
     finalists: list[dict[str, Any]] = []
     for family, base in bases.items():
         spec: V3CandidateSpec = base["spec"]
@@ -411,6 +430,7 @@ def run_refit_and_november(
                     tracker=tracker,
                     metadata=metadata,
                     r3_reconstruction_passed=r3_reconstruction_passed,
+                    weight_policies_normalized=weight_policies_normalized,
                     extra_metadata={
                         "kind": "base",
                         "family": family,
@@ -441,6 +461,7 @@ def run_refit_and_november(
                     tracker=tracker,
                     metadata=metadata,
                     r3_reconstruction_passed=r3_reconstruction_passed,
+                    weight_policies_normalized=weight_policies_normalized,
                     extra_metadata={
                         "kind": "ensemble",
                         "family": "ensemble",

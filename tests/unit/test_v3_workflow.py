@@ -303,3 +303,65 @@ def test_sanitized_result_drops_models_and_is_json_safe(
     sanitized = sanitized_workflow_result(result)
     assert all("model" not in row for row in sanitized["finalists"])
     assert json.dumps(sanitized, default=float)
+
+
+def test_seasonal_prior_year_check_requires_real_prior_year_state() -> None:
+    from flight_delay.modeling.v3.workflow import seasonal_prior_year_check
+
+    class Fake:
+        def __init__(self, ledger):
+            self.same_calendar_month_max_year = ledger
+
+    assert seasonal_prior_year_check(Fake({11: 2024})) is True
+    # Same-year contribution must fail.
+    assert seasonal_prior_year_check(Fake({11: 2025})) is False
+    # An absent November entry must fail rather than pass vacuously.
+    assert seasonal_prior_year_check(Fake({10: 2025})) is False
+
+
+def test_weight_policy_gate_reflects_the_actual_refit_weights(
+    prepared: PreparedV3Data, v3_protocol: dict
+) -> None:
+    result = run_refit_and_november(
+        prepared=prepared,
+        protocol=v3_protocol,
+        advanced=[
+            {"family": "lightgbm", "candidate_id": "LGBM12-EXP120"},
+            {"family": "catboost", "candidate_id": "CB04-EXP120"},
+        ],
+        tracker=NullTracker(),
+        metadata={"group": "test"},
+        r3_reconstruction_passed=True,
+        builder=builder,
+        fitter=fitter,
+    )
+    for base in result["base_refits"].values():
+        assert base["weight_summary"]["normalized_to_mean_one"] is True
+
+
+def test_governance_flags_track_real_evidence(prepared: PreparedV3Data) -> None:
+    from flight_delay.modeling.v3.workflow import _governance
+
+    bundle = {
+        "historical_state_integrity_passed": True,
+        "serialization_load_inference_passed": True,
+    }
+    passing = _governance(
+        prepared=prepared,
+        bundle=bundle,
+        r3_reconstruction_passed=True,
+        weight_policies_normalized=True,
+    )
+    assert passing["seasonal_prior_year_check_passed"] is True
+    assert passing["weight_policy_check_passed"] is True
+    assert passing["no_december_access_during_development"] is True
+    assert passing["schema_check_passed"] is True
+
+    # The weight-policy gate is real evidence, not a constant.
+    failing = _governance(
+        prepared=prepared,
+        bundle=bundle,
+        r3_reconstruction_passed=True,
+        weight_policies_normalized=False,
+    )
+    assert failing["weight_policy_check_passed"] is False
