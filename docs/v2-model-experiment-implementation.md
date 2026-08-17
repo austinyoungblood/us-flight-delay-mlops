@@ -1,8 +1,10 @@
 # Governed v2 implementation
 
-The v2 implementation is complete for review but remains deliberately unexecuted. Both commands
-default to an offline preflight, and applied development refuses to run from any branch other than a
-clean reviewed `main` containing the frozen protocol commit.
+The v2 implementation completed its one-time governed development execution at implementation SHA
+`6966562dcc2a7959f27e662e97cfeec8a4aa43a6`. It returned `decision=governed_stop` after all 12
+November finalists had `status=no_eligible_threshold`; no winner lock exists, and December remained
+unopened. The commands still default to offline preflight, and the durable marker prevents a second
+applied development run. See the [governed v2 result](v2-model-experiment-result.md).
 
 ## Components
 
@@ -49,9 +51,14 @@ open December unless a hash-verified November winner, model, and October-31 stat
 file. Production Dockerfiles still install the base package without `v1` or `v2` extras. CI builds
 all three images and asserts that neither model package is importable inside them.
 
-## Review boundary
+## Validation and result boundary
 
 All implementation tests use generated rows, fake constructors, in-memory tracking, and temporary
 markers/bundles. They cover temporal leakage, state parity, family/backend sequencing, ranking,
 gates, winner/stop behavior, December handoff, and dependency isolation without fitting BTS data or
 contacting W&B, AWS, or the Registry.
+
+The applied result retained only sanitized public evidence in Git. Raw decisions, thresholds,
+historical-state payloads, candidate bundles, and model files remain ignored. Threshold eligibility
+short-circuited before downstream November gates, so no downstream gate pass/fail claim is made.
+Registry `production:v0` remains unchanged.

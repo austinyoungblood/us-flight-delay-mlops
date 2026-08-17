@@ -62,21 +62,19 @@ matching records. The dashboard warns when demo rows are present and can exclude
   dummy credentials. Alternate host ports were used because port 8000 was already occupied; Compose
   now supports non-breaking host-port overrides while retaining the documented defaults.
 
-## Deferred boundary
+## Historical stage boundary
 
-This stage produced no cloud-deployment evidence. Deployment preflight and the evidence runbook were
-completed without AWS calls before the separately authorized AWS Academy session for DynamoDB
-recovery, three-EC2 deployment, and end-to-end evidence capture.
+This stage itself produced no cloud evidence. It completed the local services and deployment
+preflight without AWS calls; the live AWS work occurred later under separate authorization.
 
-## Future deployment evidence checklist (not executed)
+## Subsequent validated outcome
 
-- Preflight records exact branch/commit, image digests, release-decision hashes, required ports,
-  environment names, IAM assumptions, expected table/GSI contract, health commands, and teardown.
-- After explicit review, record one Learner Lab session start/end and current credential expiry without
-  ever writing credentials into evidence.
-- Prove DynamoDB recovery/validation without schema replacement, then capture separate API, traveler,
-  and monitor EC2 identity, process, port, and non-root container evidence.
-- Capture API ready/degraded health, unique persisted predictions across a cache hit, feedback revision,
-  bounded monitoring query, staging banners, and traveler/monitor screenshots.
-- Capture table/item evidence with secrets and personal data redacted, then execute and record teardown
-  before the Academy session expires.
+The later time-bounded Academy deployment validated separate API, Traveler, and Monitor hosts, the
+DynamoDB table/GSI, `production:v0` identity, prediction persistence, feedback, and monitoring. The
+required captures and redaction status are indexed in the
+[final evidence checklist](final-evidence-checklist.md) and
+[`evidence/evidence_manifest.json`](../evidence/evidence_manifest.json).
+
+A provenance-enabled API path was also verified by the August 15, 2026 scheduled batch: 150 planned,
+150 successful, zero failed, `traffic_source=synthetic_load_test`, and persistence validation passed.
+That batch is synthetic operational evidence, not organic traffic or model-performance evidence.

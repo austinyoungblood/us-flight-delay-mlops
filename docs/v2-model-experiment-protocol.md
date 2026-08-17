@@ -1,7 +1,12 @@
 # Governed v2 model-improvement protocol
 
-Status: **precommitted before training**. No v2 model has been fit, no v2 result exists, December
-2025 remains unopened for v2, and production remains Registry `production:v0`.
+Protocol-lock status: **precommitted before training**.
+At protocol lock time, no v2 model had been fit and no v2 result existed. The contract below remains
+frozen and unchanged.
+
+Execution status: development later completed with a governed stop; see the
+[v2 result report](v2-model-experiment-result.md). December 2025 remained unopened, and production
+remains Registry `production:v0`.
 
 The machine-readable source of truth is
 [`configs/v2_experiment_protocol.yaml`](../configs/v2_experiment_protocol.yaml). Its byte-level

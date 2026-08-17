@@ -1,0 +1,217 @@
+{
+  "schema_version": 1,
+  "result_type": "governed_v2_development",
+  "protocol": {
+    "id": "us-flight-delay-v2-historical-propensity-dual-boost-v1",
+    "sha256": "8e57b0f63656003c9981b3b5e44623e0b7c556f6e0c7222352ac38dd5119420a"
+  },
+  "implementation": {
+    "git_sha": "6966562dcc2a7959f27e662e97cfeec8a4aa43a6"
+  },
+  "execution": {
+    "status": "complete",
+    "decision": "governed_stop",
+    "started_at": "2026-08-14T22:44:06.128373+00:00",
+    "completed_at": "2026-08-17T19:34:10.480915+00:00",
+    "duration_seconds": 247804.352542,
+    "december_opened": false,
+    "historical_test_accessed": false
+  },
+  "runtime": {
+    "lightgbm_version": "4.7.0",
+    "catboost_version": "1.2.10",
+    "cpu_confirmation_backend": "CPU",
+    "full_refit_backend": "CPU",
+    "catboost_screening_cuda_device": "0"
+  },
+  "lineage": {
+    "dataset_manifest_digest": "c8aa583cbfe7ad8ee4bdcedaa8d479e2056541c71296f222ae0e0a410a48cdaf",
+    "feature_state_sha256": "81f822fdc4783fab400df305c346e689561386f57cedc134e188d2f2cb9c44de",
+    "feature_state_as_of_inclusive": "2025-10-31",
+    "source_row_counts": {
+      "january_october": 750000,
+      "november": 75000
+    },
+    "model_row_counts": {
+      "search": 675000,
+      "full_refit": 675000,
+      "november_calibration": 36483,
+      "november_selection": 38517
+    }
+  },
+  "cpu_confirmation": [
+    {
+      "candidate_id": "LGBM01",
+      "family": "lightgbm",
+      "mean_precision_at_recall_gte_0_60": 0.3357765869055038,
+      "worst_fold_precision_at_recall_gte_0_60": 0.2514095851792187,
+      "mean_average_precision": 0.36103325481330534,
+      "mean_roc_auc": 0.6813929754336889,
+      "wandb_run_id": "efc7y4vz",
+      "wandb_run_url": "https://wandb.ai/austin-youngblood-university-of-denver/us-flight-delay-mlops/runs/efc7y4vz"
+    },
+    {
+      "candidate_id": "LGBM10",
+      "family": "lightgbm",
+      "mean_precision_at_recall_gte_0_60": 0.3362610757156285,
+      "worst_fold_precision_at_recall_gte_0_60": 0.25060257096946975,
+      "mean_average_precision": 0.3634605137810826,
+      "mean_roc_auc": 0.6824625125147799,
+      "wandb_run_id": "kwtdnq2q",
+      "wandb_run_url": "https://wandb.ai/austin-youngblood-university-of-denver/us-flight-delay-mlops/runs/kwtdnq2q"
+    },
+    {
+      "candidate_id": "LGBM12",
+      "family": "lightgbm",
+      "mean_precision_at_recall_gte_0_60": 0.33677678848113557,
+      "worst_fold_precision_at_recall_gte_0_60": 0.2530250794294599,
+      "mean_average_precision": 0.36225240149272386,
+      "mean_roc_auc": 0.6821142331107227,
+      "wandb_run_id": "v6bm3cy3",
+      "wandb_run_url": "https://wandb.ai/austin-youngblood-university-of-denver/us-flight-delay-mlops/runs/v6bm3cy3"
+    },
+    {
+      "candidate_id": "LGBM16",
+      "family": "lightgbm",
+      "mean_precision_at_recall_gte_0_60": 0.3357483728172222,
+      "worst_fold_precision_at_recall_gte_0_60": 0.2516607394484332,
+      "mean_average_precision": 0.3603584110734942,
+      "mean_roc_auc": 0.6796201658927632,
+      "wandb_run_id": "s2s69efw",
+      "wandb_run_url": "https://wandb.ai/austin-youngblood-university-of-denver/us-flight-delay-mlops/runs/s2s69efw"
+    },
+    {
+      "candidate_id": "CB04",
+      "family": "catboost",
+      "mean_precision_at_recall_gte_0_60": 0.3377148079433444,
+      "worst_fold_precision_at_recall_gte_0_60": 0.2554460846145979,
+      "mean_average_precision": 0.3612055870225208,
+      "mean_roc_auc": 0.6831631081534921,
+      "wandb_run_id": "4450asos",
+      "wandb_run_url": "https://wandb.ai/austin-youngblood-university-of-denver/us-flight-delay-mlops/runs/4450asos"
+    },
+    {
+      "candidate_id": "CB06",
+      "family": "catboost",
+      "mean_precision_at_recall_gte_0_60": 0.33718299891074477,
+      "worst_fold_precision_at_recall_gte_0_60": 0.2535387741280054,
+      "mean_average_precision": 0.36187036123097777,
+      "mean_roc_auc": 0.6832680532785846,
+      "wandb_run_id": "7f44prnu",
+      "wandb_run_url": "https://wandb.ai/austin-youngblood-university-of-denver/us-flight-delay-mlops/runs/7f44prnu"
+    },
+    {
+      "candidate_id": "CB07",
+      "family": "catboost",
+      "mean_precision_at_recall_gte_0_60": 0.33810453057541456,
+      "worst_fold_precision_at_recall_gte_0_60": 0.25605169584245074,
+      "mean_average_precision": 0.363088634928717,
+      "mean_roc_auc": 0.6840587971516444,
+      "wandb_run_id": "5te9q8a8",
+      "wandb_run_url": "https://wandb.ai/austin-youngblood-university-of-denver/us-flight-delay-mlops/runs/5te9q8a8"
+    },
+    {
+      "candidate_id": "CB10",
+      "family": "catboost",
+      "mean_precision_at_recall_gte_0_60": 0.33723875526258046,
+      "worst_fold_precision_at_recall_gte_0_60": 0.2537854408725992,
+      "mean_average_precision": 0.36149805294279636,
+      "mean_roc_auc": 0.6832651342781004,
+      "wandb_run_id": "1sk0ga0o",
+      "wandb_run_url": "https://wandb.ai/austin-youngblood-university-of-denver/us-flight-delay-mlops/runs/1sk0ga0o"
+    }
+  ],
+  "advanced_to_full_refit": [
+    "LGBM12",
+    "LGBM10",
+    "CB07",
+    "CB04"
+  ],
+  "november": {
+    "eligibility": {
+      "recall_min": 0.6,
+      "precision_min": 0.3,
+      "predicted_positive_rate_max": 0.5
+    },
+    "finalist_count": 12,
+    "eligible_finalist_count": 0,
+    "downstream_gates_evaluated": false,
+    "winner": null,
+    "finalists": [
+      {"id": "LGBM12-none", "status": "no_eligible_threshold", "wandb_run_id": "bt5q98e4"},
+      {"id": "LGBM12-sigmoid", "status": "no_eligible_threshold", "wandb_run_id": "z2by3map"},
+      {"id": "LGBM12-isotonic", "status": "no_eligible_threshold", "wandb_run_id": "zk84csat"},
+      {"id": "LGBM10-none", "status": "no_eligible_threshold", "wandb_run_id": "savbk5yy"},
+      {"id": "LGBM10-sigmoid", "status": "no_eligible_threshold", "wandb_run_id": "hpmhxwq8"},
+      {"id": "LGBM10-isotonic", "status": "no_eligible_threshold", "wandb_run_id": "s4womnbv"},
+      {"id": "CB07-none", "status": "no_eligible_threshold", "wandb_run_id": "uz2ld1qp"},
+      {"id": "CB07-sigmoid", "status": "no_eligible_threshold", "wandb_run_id": "k2c63egv"},
+      {"id": "CB07-isotonic", "status": "no_eligible_threshold", "wandb_run_id": "b3insd4a"},
+      {"id": "CB04-none", "status": "no_eligible_threshold", "wandb_run_id": "192thf0w"},
+      {"id": "CB04-sigmoid", "status": "no_eligible_threshold", "wandb_run_id": "hcj30i3s"},
+      {"id": "CB04-isotonic", "status": "no_eligible_threshold", "wandb_run_id": "8i2dz386"}
+    ],
+    "best_evidence": {
+      "base_candidate_id": "CB04",
+      "none_and_sigmoid": {
+        "maximum_precision_at_recall_gte_0_60": {
+          "precision": 0.27848101265822783,
+          "recall": 0.6008403361344538,
+          "f1": 0.3805721889554225,
+          "predicted_positive_rate": 0.42661681854765426
+        },
+        "best_unrestricted_f1": {
+          "f1": 0.3836007666002781,
+          "precision": 0.2687022900763359,
+          "recall": 0.6701680672268907,
+          "predicted_positive_rate": 0.49315886491679
+        },
+        "maximum_recall_at_precision_gte_0_30": {
+          "recall": 0.48686974789915966,
+          "precision": 0.30007283321194467,
+          "f1": 0.37130125669654035,
+          "predicted_positive_rate": 0.32081937845626607
+        }
+      },
+      "isotonic": {
+        "maximum_precision_at_recall_gte_0_60": {
+          "precision": 0.2732025408960594,
+          "recall": 0.6381302521008403,
+          "f1": 0.38260185002952174,
+          "predicted_positive_rate": 0.4618480151621362
+        },
+        "maximum_recall_at_precision_gte_0_30": {
+          "recall": 0.47584033613445376,
+          "precision": 0.3035684369241079,
+          "f1": 0.37066584841976064,
+          "predicted_positive_rate": 0.30994106498429264
+        }
+      }
+    }
+  },
+  "source_evidence": {
+    "execution_marker": {
+      "path": "artifacts/v2/development/execution_marker.json",
+      "sha256": "3e95f7bcb27e4ebebdc53c750e8ddc3733bc523d9a4c3a2b8583403b0e34795a",
+      "bytes": 354
+    },
+    "decision": {
+      "path": "artifacts/v2/development/decision.json",
+      "sha256": "5d48013593821adc4f974163e270ce3b9831b9cc68c3228b4032cc32dd13c166",
+      "bytes": 55640435
+    },
+    "historical_state": {
+      "path": "artifacts/v2/development/historical_state.json",
+      "sha256": "81f822fdc4783fab400df305c346e689561386f57cedc134e188d2f2cb9c44de",
+      "bytes": 1960339
+    }
+  },
+  "governance": {
+    "december_opened": false,
+    "historical_test_accessed": false,
+    "winner_lock_created": false,
+    "registry_mutated": false,
+    "aws_mutated": false,
+    "production_registry_version": "v0"
+  }
+}
