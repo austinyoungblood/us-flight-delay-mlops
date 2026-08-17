@@ -32,19 +32,19 @@ REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
     ],
 )
 def test_months_route_to_their_split(year: int, month: int, expected: str) -> None:
-    assert split_for_month(YearMonth(year, month), include_december=False) == expected
+    assert split_for_month(YearMonth(year, month)) == expected
 
 
-def test_december_is_skipped_unless_authorized() -> None:
-    december = YearMonth(2025, 12)
-    assert split_for_month(december, include_december=False) is None
-    assert split_for_month(december, include_december=True) == DECEMBER_SPLIT
+def test_development_has_no_december_branch_at_all() -> None:
+    """December is unreachable from development routing, not merely gated behind a flag."""
+
+    assert split_for_month(YearMonth(2025, 12)) is None
 
 
 def test_2026_is_never_routable() -> None:
     for month in (1, 3, 5):
         with pytest.raises(V3PreparationError, match="prohibited"):
-            split_for_month(YearMonth(2026, month), include_december=True)
+            split_for_month(YearMonth(2026, month))
 
 
 def test_split_boundaries_are_contiguous_and_month_aligned() -> None:
@@ -53,13 +53,13 @@ def test_split_boundaries_are_contiguous_and_month_aligned() -> None:
     assert SPLIT_BOUNDARIES[DECEMBER_SPLIT] == ("2025-12-01", "2026-01-01")
 
 
-def test_a_wrong_december_authorization_is_refused(tmp_path: Path) -> None:
-    with pytest.raises(V3PreparationError, match="exact qualification authorization"):
-        prepare_v3_dataset(
-            tmp_path,
-            source_manifest_path=REPOSITORY_ROOT / "data/manifests/v3_source_manifest.json",
-            december_authorization="please",
-        )
+def test_development_preparation_accepts_no_december_authorization() -> None:
+    """The development entry point has no December parameter to pass at all."""
+
+    import inspect
+
+    signature = inspect.signature(prepare_v3_dataset)
+    assert "december_authorization" not in signature.parameters
 
 
 def test_the_authorization_constant_is_explicit() -> None:

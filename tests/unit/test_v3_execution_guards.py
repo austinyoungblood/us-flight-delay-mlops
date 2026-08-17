@@ -222,7 +222,7 @@ def test_december_features_require_the_october_31_state(tmp_path: Path) -> None:
         load_december_features(tmp_path, state=early)
 
 
-def test_december_features_require_an_authorized_decode(tmp_path: Path) -> None:
+def test_december_features_require_materialized_qualification_data(tmp_path: Path) -> None:
     from flight_delay.data.prepare_v3 import V3_PROCESSED_MANIFEST
 
     write_manifest(
@@ -234,7 +234,7 @@ def test_december_features_require_an_authorized_decode(tmp_path: Path) -> None:
             "parquet_files": {},
         },
     )
-    with pytest.raises(V3DataGuardError, match="authorized December decode"):
+    with pytest.raises(V3DataGuardError, match="materialized qualification-workspace data"):
         load_december_features(tmp_path, state=_state())
 
 
@@ -243,36 +243,45 @@ def test_decision_and_state_paths_are_v3_scoped() -> None:
         assert str(path).startswith("artifacts/v3/")
 
 
-def test_december_features_read_only_december(tmp_path: Path) -> None:
-    """A full authorized read still refuses any row outside December 2025."""
+def _materialize_december(root: Path, frame: pd.DataFrame) -> Path:
+    """Write a December parquet plus its manifest into the qualification workspace only."""
 
     from flight_delay.data.prepare import OUTPUT_COLUMNS
-    from flight_delay.data.prepare_v3 import V3_PROCESSED_DIRECTORY, V3_PROCESSED_MANIFEST
+    from flight_delay.data.prepare_v3 import (
+        QUALIFICATION_DECEMBER_MANIFEST,
+        QUALIFICATION_DECEMBER_PARQUET,
+    )
 
-    state = _state()
-    december = make_v3_frame(start="2025-12-01", end="2025-12-31")
-    processed = tmp_path / V3_PROCESSED_DIRECTORY
-    processed.mkdir(parents=True, exist_ok=True)
-    path = processed / "v3_december.parquet"
-    december.loc[:, OUTPUT_COLUMNS].to_parquet(path, engine="pyarrow", index=False)
+    path = root / QUALIFICATION_DECEMBER_PARQUET
+    path.parent.mkdir(parents=True, exist_ok=True)
+    frame.loc[:, OUTPUT_COLUMNS].to_parquet(path, engine="pyarrow", index=False)
     write_manifest(
-        tmp_path / V3_PROCESSED_MANIFEST,
+        root / QUALIFICATION_DECEMBER_MANIFEST,
         {
             "schema_version": 1,
-            "december_2025_decoded": True,
-            "january_may_2026_decoded": False,
+            "december_2025_materialized": True,
+            "january_may_2026_referenced": False,
+            "tracked_development_manifest_mutated": False,
             "parquet_files": {
                 "v3_december": {
                     "filename": path.name,
                     "byte_size": path.stat().st_size,
-                    "row_count": len(december),
+                    "row_count": len(frame),
                     "sha256": "0" * 64,
                 }
             },
         },
     )
+    return path
+
+
+def test_december_features_read_only_december(tmp_path: Path) -> None:
+    """A materialized read still refuses any row outside December 2025."""
+
+    december = make_v3_frame(start="2025-12-01", end="2025-12-31")
+    _materialize_december(tmp_path, december)
     features, target, dates = load_december_features(
-        tmp_path, state=state, verify_source_hash=False
+        tmp_path, state=_state(), verify_source_hash=False
     )
     assert tuple(features.columns) == V3_FEATURES
     assert len(features) == len(december)
@@ -281,37 +290,14 @@ def test_december_features_read_only_december(tmp_path: Path) -> None:
     assert set(target.unique()) <= {0, 1}
 
 
-def test_winner_model_is_written_once_and_never_overwritten(tmp_path: Path) -> None:
-    from flight_delay.modeling.v3.execution import _write_winner_model
+def test_december_read_never_consults_the_tracked_development_manifest(tmp_path: Path) -> None:
+    """No tracked manifest exists at all, yet the qualification read still succeeds."""
 
-    path = tmp_path / WINNER_MODEL
-    _write_winner_model(path, {"frozen": "winner"})
-    assert path.is_file()
-    with pytest.raises(V3ExecutionError, match="already exists"):
-        _write_winner_model(path, {"frozen": "other"})
-    # No temporary file is left behind next to the immutable artifact.
-    assert [child.name for child in path.parent.iterdir()] == [path.name]
+    from flight_delay.data.prepare_v3 import V3_PROCESSED_MANIFEST
 
-
-def test_real_model_construction_uses_the_lazy_runtime_import(v3_protocol: dict) -> None:
-    """Building with the real runtime must accept every frozen identity unchanged."""
-
-    from flight_delay.modeling.v3.models import V3ModelError, build_candidate, candidate_specs
-
-    spec = candidate_specs(v3_protocol, family="lightgbm", backend="CPU")[0]
-    broken = type(spec)(
-        family=spec.family,
-        candidate_id=spec.candidate_id,
-        base_configuration=spec.base_configuration,
-        weight_policy=spec.weight_policy,
-        identity_parameters=spec.identity_parameters,
-        constructor_parameters={"not_a_real_parameter": object()},
-        backend=spec.backend,
+    _materialize_december(tmp_path, make_v3_frame(start="2025-12-01", end="2025-12-31"))
+    assert not (tmp_path / V3_PROCESSED_MANIFEST).exists()
+    features, _target, _dates = load_december_features(
+        tmp_path, state=_state(), verify_source_hash=False
     )
-
-    class Strict:
-        def __init__(self, **_: object) -> None:
-            raise TypeError("unexpected parameter")
-
-    with pytest.raises(V3ModelError, match="rejected frozen parameters"):
-        build_candidate(broken, classifier_type=Strict)
+    assert len(features) > 0

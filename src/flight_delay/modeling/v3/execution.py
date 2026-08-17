@@ -9,6 +9,7 @@ import subprocess
 import sys
 import tempfile
 import tomllib
+from collections.abc import Callable
 from dataclasses import asdict
 from datetime import UTC, datetime
 from pathlib import Path
@@ -19,7 +20,11 @@ import numpy as np
 from sklearn.metrics import f1_score, precision_score, recall_score
 
 from flight_delay.data.manifest import canonical_json_bytes, read_manifest
-from flight_delay.data.prepare_v3 import V3_PROCESSED_MANIFEST
+from flight_delay.data.prepare_v3 import (
+    DECEMBER_AUTHORIZATION,
+    V3_PROCESSED_MANIFEST,
+    materialize_december_qualification_data,
+)
 from flight_delay.modeling.calibration import calibration_audit
 from flight_delay.modeling.v1_selection import (
     GateEvidence,
@@ -434,15 +439,50 @@ def _common_metadata(
     }
 
 
-def _reconstruct_r3(train: Any, november: Any) -> dict[str, Any]:
-    """Lazily import the incumbent reconstruction only inside applied execution."""
+def reconstruct_r3_control(
+    repository_root: Path,
+    *,
+    loader: Callable[..., Any] | None = None,
+    reconstructor: Callable[..., dict[str, Any]] | None = None,
+) -> tuple[dict[str, Any], dict[str, Any]]:
+    """Reproduce the frozen R3 incumbent from the ORIGINAL canonical v1/v2 control dataset.
 
-    from flight_delay.modeling.v1_execution import (
-        reconstruct_governed_r3,
-        require_r3_reconstruction,
-    )
+    This is a control check on the incumbent, not a v3 challenger fit, so it must run on the exact
+    data that historically produced the frozen R3 metrics. Feeding it the v3 population — a
+    different year range at a different sampling density — would compare the incumbent against
+    numbers it was never measured on and silently invalidate the gate.
 
-    return require_r3_reconstruction(reconstruct_governed_r3(train, november))
+    The canonical v1 loader is used deliberately: it validates the v1 protocol, verifies
+    ``data/manifests/processed_manifest.json``, reads only ``train.parquet`` and
+    ``validation.parquet``, and refuses ``test.parquet`` outright.
+    """
+
+    if loader is None:  # pragma: no cover - exercised through the injected loader in tests
+        from flight_delay.modeling.v1_data import load_development_data as loader
+    if reconstructor is None:  # pragma: no cover - real reconstruction only in applied execution
+
+        def reconstructor(train: Any, november: Any) -> dict[str, Any]:
+            from flight_delay.modeling.v1_execution import (
+                reconstruct_governed_r3,
+                require_r3_reconstruction,
+            )
+
+            return require_r3_reconstruction(reconstruct_governed_r3(train, november))
+
+    control = loader(repository_root)
+    lineage = {
+        "r3_control_dataset_manifest_digest": control.manifest["manifest_digest"],
+        "r3_control_protocol_sha256": control.protocol_sha256,
+        "r3_control_sources": [
+            "data/processed/train.parquet",
+            "data/processed/validation.parquet",
+        ],
+        "r3_control_train_rows": len(control.train),
+        "r3_control_november_rows": len(control.november),
+        "r3_control_used_v3_population": False,
+        "historical_test_accessed": False,
+    }
+    return reconstructor(control.train, control.november), lineage
 
 
 def _write_winner_model(path: Path, model: Any) -> None:
@@ -547,8 +587,11 @@ def run_development_apply(repository_root: Path, *, tracking: str) -> dict[str, 
             protocol_sha=protocol_sha, code_sha=code_sha, lineage=prepared.lineage
         )
         tracker = _online_tracker()
-        stage = "r3_reconstruction"
-        r3 = _reconstruct_r3(prepared.raw_history, prepared.raw_november)
+        stage = "r3_control_reconstruction"
+        # The incumbent control runs on the canonical v1/v2 dataset, never on prepared.raw_history
+        # or prepared.raw_november, which belong to the v3 challenger population.
+        r3, r3_lineage = reconstruct_r3_control(root)
+        metadata["dataset_lineage"] = {**prepared.lineage, **r3_lineage}
         stage = "screening_and_cpu_confirmation"
         search = run_screening_and_cpu_confirmation(
             protocol=protocol,
@@ -571,7 +614,16 @@ def run_development_apply(repository_root: Path, *, tracking: str) -> dict[str, 
             "decision": november["decision"],
             "production_remains": "v0",
             "stopped_before_december": True,
-            "r3_reconstruction": r3["reproduction"],
+            "r3_control_reconstruction": r3["reproduction"],
+            "r3_control_lineage": r3_lineage,
+            "dataset_lineage_separation": {
+                "r3_control_dataset_manifest_digest": r3_lineage[
+                    "r3_control_dataset_manifest_digest"
+                ],
+                "v3_dataset_manifest_digest": prepared.lineage["v3_dataset_manifest_digest"],
+                "distinct": r3_lineage["r3_control_dataset_manifest_digest"]
+                != prepared.lineage["v3_dataset_manifest_digest"],
+            },
             "screening": search["screening"],
             "cpu_confirmation": search["cpu_confirmation"],
             "screening_cpu_differences": search["screening_cpu_differences"],
@@ -676,8 +728,14 @@ def run_december_apply(repository_root: Path, *, tracking: str) -> dict[str, Any
             "historical_test_accessed": False,
         },
     )
-    stage = "december_data_guard"
+    stage = "december_materialization"
     try:
+        # Only now, after the frozen winner and its lineage have been validated, is December
+        # decoded at all -- and only into the Git-ignored qualification workspace.
+        materialized = materialize_december_qualification_data(
+            root, december_authorization=DECEMBER_AUTHORIZATION
+        )
+        stage = "december_data_guard"
         features, target, _dates = load_december_features(root, state=state)
         stage = "frozen_winner_load"
         model = joblib.load(root / WINNER_MODEL)
@@ -733,6 +791,13 @@ def run_december_apply(repository_root: Path, *, tracking: str) -> dict[str, Any
             "same_frozen_november_model": True,
             "same_frozen_october_31_state": True,
             "retrospective_not_genuine_final_test": True,
+            "december_materialization": {
+                "parquet_path": str(materialized.parquet_path.relative_to(root)),
+                "manifest_path": str(materialized.manifest_path.relative_to(root)),
+                "manifest_digest": materialized.manifest["manifest_digest"],
+                "tracked_development_manifest_mutated": False,
+                "workspace_is_git_ignored": True,
+            },
             "production_remains": "v0",
         }
         _atomic_json(root / QUALIFICATION_RESULT, result, refuse_existing=True)

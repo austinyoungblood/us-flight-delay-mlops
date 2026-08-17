@@ -21,7 +21,7 @@ SHA256 `061be599fd84a4ddbf06229c300fe4670272d176b22899f1515332923376ecff`, seale
 | `modeling/v3/data.py` | Fail-closed split access and the search/refit/November matrices |
 | `modeling/v3/workflow.py` | Screening → CPU confirmation → refit → 15 finalists |
 | `modeling/v3/execution.py` | Preflight, runtime estimation, durable markers, December handoff |
-| `data/prepare_v3.py` | Uncapped v3 dataset preparation with December sealed |
+| `data/prepare_v3.py` | Uncapped development preparation plus December-only qualification materialization |
 
 ## Design decisions worth knowing
 
@@ -52,10 +52,30 @@ byte-identical constructors; only `sample_weight` differs. `UNIFORM` passes `Non
 equivalent to a vector of ones and keeps that path identical to an unweighted fit. Backend never
 enters identity.
 
-**December is never decoded during development.** Preparation routes 2025-12 to `None` unless given
-the exact string `december-2025-qualification-authorized`, so the development manifest describes 23
-months (2024-01 → 2025-11) and no December parquet exists. The data guard independently refuses any
-manifest that claims a December decode, and `require_allowed_v3_path` rejects both
+**The R3 control runs on the canonical v1/v2 dataset, never on the v3 population.** R3 is a
+control check on the frozen incumbent, so it must reproduce on the exact data that historically
+produced the frozen R3 metrics. `reconstruct_r3_control` calls the canonical v1 loader — which
+validates the v1 protocol, verifies `data/manifests/processed_manifest.json`, reads only
+`train.parquet` and `validation.parquet`, and refuses `test.parquet` — and the applied path passes
+it the repository root, never `prepared.raw_history` or `prepared.raw_november`. The decision record
+carries `r3_control_dataset_manifest_digest` and `v3_dataset_manifest_digest` side by side and
+asserts they differ.
+
+**December materializes only into the Git-ignored qualification workspace.** Requiring
+`data/manifests/v3_processed_manifest.json` to flip to `december_2025_decoded: true` would have
+dirtied the worktree that the clean-main guard depends on and invalidated the frozen winner's code
+lineage. Instead `materialize_december_qualification_data` writes
+`artifacts/v3/qualification/data/v3_december.parquet` and
+`artifacts/v3/qualification/december_manifest.json`, and runs only after the frozen winner, its
+lineage, and the October-31 state have all been validated. The tracked development manifest is
+byte-identical before and after qualification.
+
+**December is never decoded during development.** Development routing has no December branch at all
+— `split_for_month` returns `None` for 2025-12 and `prepare_v3_dataset` has no December parameter to
+pass — so the development manifest describes 23 months (2024-01 → 2025-11) and no December parquet
+exists. Only `materialize_december_qualification_data` can decode it, and only against the exact
+authorization string `december-2025-qualification-authorized`. The data guard independently refuses
+any manifest that claims a December decode, and `require_allowed_v3_path` rejects both
 `v3_december.parquet` and the sealed `test.parquet`. The v3 source manifest excludes every 2026
 archive outright, so v3 preparation cannot reach January–May 2026 at all.
 
@@ -110,8 +130,8 @@ under `artifacts/v3/`. December needs the separate `run_v3_december_qualificatio
 
 ## Verification
 
-- 647 tests pass; branch coverage 86.23% against the 86% gate.
-- `ruff check` and `ruff format --check` are clean across 155 files.
+- 680 tests pass; branch coverage 86.22% against the 86% gate.
+- `ruff check` and `ruff format --check` are clean across 157 files.
 - v1 and v2 suites are unchanged and still pass; the only shared edit is an additive extension of
   `ALLOWED_MODEL_FEATURES` for the 11 new feature names.
 - Runtime API/Traveler/Monitor images are untouched and gain no v3 modeling dependency; v3 reuses

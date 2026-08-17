@@ -16,6 +16,8 @@ from flight_delay.data.prepare_v3 import (
     DECEMBER_SPLIT,
     HISTORY_SPLIT,
     NOVEMBER_SPLIT,
+    QUALIFICATION_DECEMBER_MANIFEST,
+    QUALIFICATION_DECEMBER_PARQUET,
     V3_PROCESSED_DIRECTORY,
     V3_PROCESSED_MANIFEST,
 )
@@ -95,13 +97,11 @@ def _read_split(
     end_exclusive: str,
     reader: ParquetReader,
     verify_content_hash: bool,
-    allow_december: bool = False,
 ) -> pd.DataFrame:
     path = (root / V3_PROCESSED_DIRECTORY / f"{split}.parquet").resolve()
-    if not allow_december:
-        observed_split, path = require_allowed_v3_path(root, path)
-        if observed_split != split:
-            raise V3DataGuardError("requested split does not match its canonical path")
+    observed_split, path = require_allowed_v3_path(root, path)
+    if observed_split != split:
+        raise V3DataGuardError("requested split does not match its canonical path")
     if not path.is_file():
         raise V3DataGuardError(f"canonical {split} parquet is missing")
     specification = manifest["parquet_files"][split]
@@ -224,6 +224,7 @@ def prepare_development_data(
 
     lineage = {
         "protocol_sha256": protocol_sha,
+        "v3_dataset_manifest_digest": manifest["manifest_digest"],
         "v3_processed_manifest_digest": manifest["manifest_digest"],
         "v3_source_manifest_digest": manifest["source_manifest_digest"],
         "source_row_counts": {
@@ -279,25 +280,52 @@ def load_december_features(
     reader: ParquetReader = pd.read_parquet,
     verify_source_hash: bool = True,
 ) -> tuple[pd.DataFrame, pd.Series, pd.Series]:
-    """Read December only during authorized qualification and reuse the October-31 state."""
+    """Read December from the Git-ignored qualification workspace using the frozen state.
+
+    The tracked development manifest is never consulted or modified here: December lives only in
+    ``artifacts/v3/qualification``, so qualification leaves the worktree byte-identical.
+    """
 
     if state.as_of.isoformat() != "2025-10-31":
         raise V3DataGuardError("December must reuse the frozen October-31 feature state")
     root = repository_root.resolve()
-    manifest = read_manifest(root / V3_PROCESSED_MANIFEST)
-    if manifest.get("december_2025_decoded") is not True:
-        raise V3DataGuardError("December qualification requires an authorized December decode")
-    december = _read_split(
-        root=root,
-        split=DECEMBER_SPLIT,
-        manifest=manifest,
-        start="2025-12-01",
-        end_exclusive="2026-01-01",
-        reader=reader,
-        verify_content_hash=verify_source_hash,
-        allow_december=True,
-    )
+
+    development = root / V3_PROCESSED_MANIFEST
+    if development.is_file():
+        _require_no_december(read_manifest(development))
+
+    manifest_path = root / QUALIFICATION_DECEMBER_MANIFEST
+    if not manifest_path.is_file():
+        raise V3DataGuardError(
+            "December qualification requires materialized qualification-workspace data"
+        )
+    manifest = read_manifest(manifest_path)
+    if manifest.get("december_2025_materialized") is not True:
+        raise V3DataGuardError("qualification manifest does not declare December materialization")
+    if manifest.get("january_may_2026_referenced") is not False:
+        raise V3DataGuardError("January-May 2026 must never be referenced")
+    if manifest.get("tracked_development_manifest_mutated") is not False:
+        raise V3DataGuardError("qualification must not mutate the tracked development manifest")
+
+    path = (root / QUALIFICATION_DECEMBER_PARQUET).resolve()
+    if not path.is_file():
+        raise V3DataGuardError("materialized December parquet is missing")
+    specification = manifest["parquet_files"][DECEMBER_SPLIT]
+    if path.stat().st_size != specification["byte_size"]:
+        raise V3DataGuardError("materialized December parquet size mismatch")
+    if verify_source_hash and sha256_file(path) != specification["sha256"]:
+        raise V3DataGuardError("materialized December parquet SHA256 mismatch")
+
+    december = reader(path, filters=_filters("2025-12-01", "2026-01-01"))
+    if tuple(december.columns) != OUTPUT_COLUMNS:
+        raise V3DataGuardError("December parquet schema differs from the canonical contract")
     dates = pd.to_datetime(december["flight_date"], errors="coerce").dt.normalize()
     if december.empty or dates.isna().any():
         raise V3DataGuardError("December qualification rows are invalid")
+    if not (dates.ge("2025-12-01").all() and dates.lt("2026-01-01").all()):
+        raise V3DataGuardError("December read returned rows outside December 2025")
+    december = december.copy()
+    december["flight_date"] = dates
+    december = december.sort_values("flight_date", kind="stable").reset_index(drop=True)
+    dates = december["flight_date"]
     return transform_with_v3_state(december, state), december["target"].astype(int), dates

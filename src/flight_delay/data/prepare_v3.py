@@ -34,6 +34,15 @@ V3_PROCESSED_DIRECTORY = Path("data/processed_v3")
 V3_SOURCE_MANIFEST = Path("data/manifests/v3_source_manifest.json")
 V3_PROCESSED_MANIFEST = Path("data/manifests/v3_processed_manifest.json")
 
+# December is materialized only into the Git-ignored qualification workspace, never into the
+# tracked development manifest. Qualifying must not require mutating a tracked file, because that
+# would dirty the worktree the clean-main guard depends on and break the frozen winner's code
+# lineage.
+QUALIFICATION_WORKSPACE = Path("artifacts/v3/qualification")
+QUALIFICATION_DATA_DIRECTORY = QUALIFICATION_WORKSPACE / "data"
+QUALIFICATION_DECEMBER_PARQUET = QUALIFICATION_DATA_DIRECTORY / "v3_december.parquet"
+QUALIFICATION_DECEMBER_MANIFEST = QUALIFICATION_WORKSPACE / "december_manifest.json"
+
 HISTORY_SPLIT = "v3_history"
 NOVEMBER_SPLIT = "v3_november"
 DECEMBER_SPLIT = "v3_december"
@@ -59,15 +68,19 @@ class V3PreparationResult:
     december_decoded: bool
 
 
-def split_for_month(month: YearMonth, *, include_december: bool) -> str | None:
-    """Return the split a source month belongs to, or ``None`` when it must not be decoded."""
+def split_for_month(month: YearMonth) -> str | None:
+    """Return the development split a source month belongs to, or ``None`` if it must not decode.
+
+    Development preparation has no December branch at all: December 2025 is reachable only through
+    :func:`materialize_december_qualification_data`, which writes outside the tracked dataset.
+    """
 
     if month.year == 2024 or (month.year == 2025 and month.month <= 10):
         return HISTORY_SPLIT
     if month.year == 2025 and month.month == 11:
         return NOVEMBER_SPLIT
     if month.year == 2025 and month.month == 12:
-        return DECEMBER_SPLIT if include_december else None
+        return None
     raise V3PreparationError(
         f"month {month.iso()} lies outside the v3 window; January-May 2026 is prohibited"
     )
@@ -117,9 +130,8 @@ def prepare_v3_dataset(
     processed_manifest_path: Path | None = None,
     compression: str = "zstd",
     max_workers: int = 1,
-    december_authorization: str | None = None,
 ) -> V3PreparationResult:
-    """Decode the v3 archives into uncapped splits, leaving December sealed by default."""
+    """Decode the v3 archives into uncapped development splits. December is unreachable here."""
 
     validate_model_features(V3_FEATURES)
     root = repository_root.resolve()
@@ -127,10 +139,6 @@ def prepare_v3_dataset(
     raw_directory = raw_directory or root / "data/raw/bts_reporting_carrier"
     processed_directory = processed_directory or root / V3_PROCESSED_DIRECTORY
     processed_manifest_path = processed_manifest_path or root / V3_PROCESSED_MANIFEST
-
-    include_december = december_authorization == DECEMBER_AUTHORIZATION
-    if december_authorization is not None and not include_december:
-        raise V3PreparationError("December decoding requires the exact qualification authorization")
 
     source_manifest = read_manifest(source_manifest_path)
     records = source_manifest.get("files")
@@ -143,7 +151,7 @@ def prepare_v3_dataset(
     job_splits: list[str] = []
     for record in sorted(records, key=lambda row: (int(row["year"]), int(row["month"]))):
         month = YearMonth(int(record["year"]), int(record["month"]))
-        split = split_for_month(month, include_december=include_december)
+        split = split_for_month(month)
         if split is None:
             continue
         archive_path = raw_directory / str(record["archive_filename"])
@@ -210,7 +218,7 @@ def prepare_v3_dataset(
             for split, (start, end_exclusive) in SPLIT_BOUNDARIES.items()
             if split in split_paths
         },
-        "december_2025_decoded": include_december,
+        "december_2025_decoded": False,
         "january_may_2026_decoded": False,
         "v3_feature_schema": list(V3_FEATURES),
         "safe_model_feature_schema": list(OUTPUT_COLUMNS),
@@ -238,5 +246,116 @@ def prepare_v3_dataset(
         split_paths=split_paths,
         manifest=manifest,
         monthly_stats=tuple(monthly_stats),
-        december_decoded=include_december,
+        december_decoded=False,
+    )
+
+
+@dataclass(frozen=True)
+class DecemberQualificationData:
+    """Paths and provenance for December materialized inside the qualification workspace."""
+
+    parquet_path: Path
+    manifest_path: Path
+    manifest: dict[str, Any]
+    stats: MonthlyPreparationStats
+    tracked_development_manifest_mutated: bool
+
+
+def materialize_december_qualification_data(
+    repository_root: Path,
+    *,
+    december_authorization: str,
+    source_manifest_path: Path | None = None,
+    raw_directory: Path | None = None,
+    workspace: Path | None = None,
+    compression: str = "zstd",
+) -> DecemberQualificationData:
+    """Decode December 2025 once, into the Git-ignored qualification workspace only.
+
+    This never touches ``data/manifests/v3_processed_manifest.json`` or the development splits, so
+    the tracked worktree stays byte-identical and the clean-main guard plus the frozen winner's
+    code lineage both continue to hold through qualification.
+
+    Callers are responsible for having already validated a frozen November winner; this function
+    only enforces the data-side boundaries.
+    """
+
+    if december_authorization != DECEMBER_AUTHORIZATION:
+        raise V3PreparationError("December decoding requires the exact qualification authorization")
+
+    root = repository_root.resolve()
+    source_manifest_path = source_manifest_path or root / V3_SOURCE_MANIFEST
+    raw_directory = raw_directory or root / "data/raw/bts_reporting_carrier"
+    workspace = workspace or root / QUALIFICATION_WORKSPACE
+    parquet_path = workspace / "data" / QUALIFICATION_DECEMBER_PARQUET.name
+    manifest_path = workspace / QUALIFICATION_DECEMBER_MANIFEST.name
+
+    if parquet_path.exists() or manifest_path.exists():
+        raise V3PreparationError("December qualification data has already been materialized")
+
+    source_manifest = read_manifest(source_manifest_path)
+    records = source_manifest.get("files")
+    if not isinstance(records, list) or not records:
+        raise V3PreparationError("v3 source manifest must contain non-empty file records")
+    if any(int(record["year"]) >= 2026 for record in records):
+        raise V3PreparationError("the v3 source manifest must not reference any 2026 archive")
+
+    december = [
+        record
+        for record in records
+        if int(record["year"]) == 2025 and int(record["month"]) == 12
+    ]
+    if len(december) != 1:
+        raise V3PreparationError("exactly one manifested December 2025 archive is required")
+    record = december[0]
+
+    archive_path = raw_directory / str(record["archive_filename"])
+    if sha256_file(archive_path) != str(record["sha256"]):
+        raise V3PreparationError(f"archive checksum mismatch: {archive_path.name}")
+    inspection = inspect_zip(archive_path)
+    if inspection.selected_csv_member != record["selected_csv_member"]:
+        raise V3PreparationError(f"selected CSV member changed for {archive_path.name}")
+
+    month = YearMonth(2025, 12)
+    if split_for_month(month) is not None:
+        raise V3PreparationError("December must remain outside every development split")
+    frame, stats = process_month_archive(
+        archive_path, inspection.selected_csv_member, month, sample_cap=None, seed=42
+    )
+    start, end_exclusive = SPLIT_BOUNDARIES[DECEMBER_SPLIT]
+    dates = pd.to_datetime(frame["flight_date"])
+    if frame.empty or not (dates.ge(start).all() and dates.lt(end_exclusive).all()):
+        raise V3PreparationError("December materialization produced rows outside December 2025")
+
+    _write_parquet(frame.loc[:, OUTPUT_COLUMNS], parquet_path, compression=compression)
+    manifest = write_manifest(
+        manifest_path,
+        {
+            "schema_version": 1,
+            "scope": "december_2025_qualification_only",
+            "protocol_id": "us-flight-delay-v3-seasonal-temporal-generalization-v1",
+            "source_manifest_digest": source_manifest["manifest_digest"],
+            "source_archive_sha256": str(record["sha256"]),
+            "december_2025_materialized": True,
+            "january_may_2026_referenced": False,
+            "tracked_development_manifest_mutated": False,
+            "workspace_is_git_ignored": True,
+            "split_boundaries": {
+                DECEMBER_SPLIT: {"start": start, "end_exclusive": end_exclusive}
+            },
+            "monthly_counts": [asdict(stats)],
+            "parquet_files": {DECEMBER_SPLIT: _parquet_record(parquet_path, frame)},
+            "runtime_versions": {
+                "python": platform.python_version(),
+                "pandas": pd.__version__,
+                "pyarrow": pyarrow.__version__,
+            },
+        },
+    )
+    return DecemberQualificationData(
+        parquet_path=parquet_path,
+        manifest_path=manifest_path,
+        manifest=manifest,
+        stats=stats,
+        tracked_development_manifest_mutated=False,
     )
