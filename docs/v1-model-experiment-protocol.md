@@ -1,7 +1,12 @@
 # Governed v1 model experiment protocol
 
-Status: **precommitted before training**. No v1 model has been trained, no v1 performance result
-exists, and production remains the immutable Registry `production:v0` release.
+Protocol-lock status: **precommitted before training**.
+At protocol lock time, no v1 model had been trained and no v1 performance result existed. The
+contract below remains frozen and unchanged.
+
+Execution status: development later completed with a governed stop; see the
+[v1 result report](v1-model-experiment-result.md). Production remains the immutable Registry
+`production:v0` release.
 
 The machine-readable source of truth is
 [`configs/v1_experiment_protocol.yaml`](../configs/v1_experiment_protocol.yaml). Its byte-level

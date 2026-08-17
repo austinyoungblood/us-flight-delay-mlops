@@ -1,7 +1,8 @@
 # Implementation status
 
-This record summarizes the repository's completed implementation stages before live AWS deployment.
-It does not itself constitute cloud-deployment evidence.
+This record summarizes the repository's completed stages from foundation through the validated AWS
+demonstration and the governed v1/v2 challenger experiments. It is a navigation record; the
+evidence manifest, curated captures, and experiment result reports provide the underlying evidence.
 
 ## Repository foundation
 
@@ -158,6 +159,9 @@ It does not itself constitute cloud-deployment evidence.
   instance profiles, DynamoDB, API documentation, Traveler prediction/feedback, and Monitor views
 - Preserved the immutable image digests and deployment manifest that describe the validated live
   deployment; subsequent source-only changes are not represented as deployed
+- Published provenance-enabled application images and later verified the controlled provenance path
+  through an API-only August 15, 2026 monitoring batch: 150 planned, 150 successful, zero failed,
+  `traffic_source=synthetic_load_test`, with audit and persistence validation passed
 
 ## Historical model-development stop points
 
@@ -201,7 +205,7 @@ It does not itself constitute cloud-deployment evidence.
 
 ## Current repository validation
 
-- 453 tests pass with 86.84% branch coverage; CI enforces an 86% minimum
+- 454 tests pass with 86.87% branch-inclusive coverage; CI enforces an 86% minimum
 - Coverage includes failure and edge behavior for API clients/contracts, persistence, monitoring,
   deployment/evidence validation, promotion policy/metadata, governed monitoring traffic, and
   persisted prediction-source provenance, plus v1/v2 protocol drift, temporal-state parity, and
@@ -224,5 +228,17 @@ It does not itself constitute cloud-deployment evidence.
 - Both model packages remain optional and absent from the API, Traveler, and Monitor images. Both
   runners default to offline preflight and applied development is locked until reviewed code is on
   clean `main`.
-- No v2 BTS model has been fit. December and January-May 2026 were not opened, v1 evidence remains
-  immutable, and Registry `production:v0` is unchanged.
+- Completed the one-time governed v2 development execution at implementation SHA
+  `6966562dcc2a7959f27e662e97cfeec8a4aa43a6`. The durable marker records `status=complete` and
+  `decision=governed_stop` after 68 hours 50 minutes 4.353 seconds.
+- CPU confirmation advanced `LGBM12`, `LGBM10`, `CB07`, and `CB04` to full refit. Their three
+  calibration variants produced 12 November finalists, all with `status=no_eligible_threshold`.
+- V2 materially improved rolling-origin ranking over v1, with CPU-confirmed high-recall precision
+  averaging roughly 0.336-0.338, but the improvement did not persist in late November. The best
+  high-recall precision was 0.278481, only modestly above v1's approximately 0.276 ceiling.
+- Threshold eligibility short-circuited the workflow, so no pass/fail claim is made for downstream
+  November gates. No winner lock exists; December remained unopened; the consumed January-May 2026
+  historical test remained untouched; and Registry `production:v0` remains unchanged.
+- The complete interpretation and W&B run references are recorded in the
+  [governed v2 result report](v2-model-experiment-result.md), with compact machine-readable evidence
+  in [`experiments/v2/development_result.json`](../experiments/v2/development_result.json).

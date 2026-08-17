@@ -96,17 +96,19 @@ Immutable public images:
 - Traveler: `ghcr.io/austinyoungblood/us-flight-delay-mlops-traveler@sha256:9afd05f6697609fbda7b130ff6e61afa29cab936981ae6f990fe5914fb71fb47`
 - Monitor: `ghcr.io/austinyoungblood/us-flight-delay-mlops-monitor@sha256:7b038768c7474d7702909a747014e2725b77654d83aeb0fac1f1dac4db41ef62`
 
-The image set above is the previously validated live AWS deployment. A provenance-enabled
-application release is published and pending deployment; it has not yet been run or validated on
-AWS. Its application/image source is `ce10f1a123bbe21eb75ca31b2681caf90ccda731`:
+The image set above is the previously validated live AWS deployment. A later provenance-enabled
+application release was published from source `ce10f1a123bbe21eb75ca31b2681caf90ccda731`:
 
 - API: `ghcr.io/austinyoungblood/us-flight-delay-mlops-api@sha256:8c70e59c1cd24be98be5e47fd318464d7bae95aaf1be44608af3b33adacbca0e`
 - Traveler: `ghcr.io/austinyoungblood/us-flight-delay-mlops-traveler@sha256:06d36b32304b9f7711d0b224fa9d7f049a8875b761dffd907c17a73f3eebef94`
 - Monitor: `ghcr.io/austinyoungblood/us-flight-delay-mlops-monitor@sha256:97a4e6bb99358e8cfe6885581713fd2731f64ea97164ad6a4d64f6efb1c7277c`
 
-The deployment manifest records the application source SHA rather than the later
-deployment-package commit. The governed model remains the unchanged `production:v0` identity
-shown above.
+An API-only scheduled monitoring batch on August 15, 2026 subsequently proved the provenance path
+end to end: 150 of 150 requests succeeded, all were labeled `synthetic_load_test`, and persistence
+validation passed. The batch record does not independently attest which immutable image digest was
+active, so the references above remain identified as the published provenance release rather than
+as a second frozen deployment manifest. The governed model remains the unchanged `production:v0`
+identity shown above.
 
 The non-root API container used `MODEL_DOWNLOAD_DIR=/tmp/flight-delay-model` and `HOME=/tmp` for W&B
 runtime compatibility. These accommodations did not change model identity or bypass Registry,
@@ -209,7 +211,7 @@ python -m pip install -c requirements.lock ".[dev]"
 
 ruff check .
 ruff format --check .
-pytest --cov=flight_delay --cov-branch --cov-report=term-missing --cov-fail-under=82
+pytest --cov=flight_delay --cov-branch --cov-report=term-missing --cov-fail-under=86
 ```
 
 For a local application rehearsal, copy `.env.example` to ignored `.env` and supply only the W&B
@@ -256,18 +258,25 @@ AWS SDK, mutate W&B, or depend on final-test data. Its implementation lives in t
 
 ## Data and experiment lineage
 
-### Precommitted v1 experiment protocol
+### Governed release and challenger outcomes
 
-One governed nonlinear model iteration is precommitted in the
-[v1 model experiment protocol](docs/v1-model-experiment-protocol.md), with its machine-readable
-contract in [`configs/v1_experiment_protocol.yaml`](configs/v1_experiment_protocol.yaml). The
-primary challenger is CatBoost, and the design, candidate grid, temporal folds, calibration,
-threshold rules, acceptance gates, and future untouched holdout rule were frozen before training.
+| Version | Role | Outcome |
+| --- | --- | --- |
+| v0 | Deployed governed incumbent | Registry `production:v0`; unchanged serving identity |
+| v1 | CatBoost challenger | [Governed stop](docs/v1-model-experiment-result.md): all six November finalists had no eligible threshold |
+| v2 | Historical propensity + LightGBM/CatBoost challenger | [Governed stop](docs/v2-model-experiment-result.md): rolling ranking improved, but all 12 November finalists had no eligible threshold |
 
-V1 has **not** been trained and has no performance results. The consumed January-May 2026 test data
-remains prohibited from v1 development, and the deployed model remains immutable
-Registry `production:v0`. The older W&B artifact version named `flight-delay-model:v1` below
-predates this governed iteration and is not a result or candidate produced by this protocol.
+Both challenger protocols were frozen before their applied executions. V1's strongest high-recall
+November precision was approximately `0.276`. V2 CPU-confirmed candidates averaged approximately
+`0.336`–`0.338` precision at recall >= 0.60 on rolling-origin folds, but that improvement did not
+generalize to late November: the best high-recall precision was `0.278481`. No finalist
+simultaneously met recall >= 0.60, precision >= 0.30, and predicted-positive rate <= 0.50.
+
+Eligibility short-circuited both workflows before downstream November gates, so neither report
+claims that those gates passed or failed. Neither experiment opened December, accessed the consumed
+January–May 2026 historical test, created a winner lock, mutated the Registry, or changed the
+deployed `production:v0` model. The older W&B artifact version named `flight-delay-model:v1` below
+predates the governed v1 iteration and is not one of its candidates.
 
 Experiment runs, model and dataset artifacts, and release lineage are available in the public
 [Weights & Biases project](https://wandb.ai/austin-youngblood-university-of-denver/us-flight-delay-mlops/overview).
@@ -310,7 +319,9 @@ and
 └── tests/                   # Unit and integration coverage
 ```
 
-The [evidence manifest](evidence/evidence_manifest.json) identifies each required criterion, its
+The [submission-readiness checklist](docs/submission-readiness.md) provides a current, concise route
+through architecture, deployment, model identity, experiments, CI/CD, monitoring, governance, and
+known limitations. The [evidence manifest](evidence/evidence_manifest.json) identifies each required criterion, its
 verification mode (`public_url` or `screenshot`), and its availability without substituting local
 output for AWS proof. Non-required supplemental captures are labeled separately. Detailed
 implementation history remains available in
