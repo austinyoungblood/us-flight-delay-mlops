@@ -1,16 +1,17 @@
 # Governed v1 model experiment implementation
 
-## Current state
+## Implementation and execution status
 
 - **PROTOCOL MERGED** — the immutable protocol is
   `us-flight-delay-v1-catboost-rolling-origin-v1`, SHA-256
   `a6b1de9de550d1bd94eae0e56f8d88d65801ec488b6c539fc64afbafa4ccfffb`.
-- **IMPLEMENTATION UNDER REVIEW** — the guarded development and qualification runners are
-  implemented but have not been applied.
-- **REAL v1 TRAINING NOT YET RUN** — there are no v1 BTS results, winner, qualification result, or
-  v1 W&B run.
-- **PRODUCTION STILL v0** — this implementation has no Registry, alias, image-publication, AWS, or
-  deployment mutation path.
+- **DEVELOPMENT EXECUTION COMPLETE** — the one-time governed execution completed at implementation
+  SHA `1923658881a0c5cbc9c7c03595671a6aced71dc6` with `decision=governed_stop` because all six
+  November finalists had `status=no_eligible_threshold`.
+- **DECEMBER NOT OPENED** — no winner or qualification result exists, and the consumed January-May
+  2026 historical test remained untouched.
+- **PRODUCTION STILL v0** — the execution had no Registry, alias, image-publication, AWS, or
+  deployment mutation path. See the [governed v1 result](v1-model-experiment-result.md).
 
 The governed lifecycle is intentionally split:
 

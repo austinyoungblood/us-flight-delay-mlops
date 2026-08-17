@@ -1,14 +1,14 @@
 # Architecture
 
-## Final pre-AWS deployment boundary
+## Validated system boundary
 
-The production-shaped backend is implemented. FastAPI resolves the immutable W&B Registry alias
+FastAPI resolves the immutable W&B Registry alias
 declared by the committed release decision, verifies all locked bytes, loads the model and route asset
 once during lifespan, and requires DynamoDB persistence for every successful prediction. The traveler
 application calls FastAPI only. The monitoring application reads DynamoDB only and never imports or
-loads the model. DynamoDB Local was the sole persistence runtime used for local validation. That
-validation did not activate an AWS Academy session, call an AWS service, or deploy EC2. The `production`
-alias is course deployment metadata, not internal production-quality certification.
+loads the model. DynamoDB Local supports credential-free local validation; the same table contract was
+later validated in a time-bounded three-host AWS Academy deployment. The `production` alias is
+academic-deployment metadata, not internal production-quality certification.
 
 ```mermaid
 flowchart LR
@@ -24,7 +24,7 @@ flowchart LR
     GH["GitHub pull request"] --> CI["Ruff, pytest, branch coverage,<br/>three Python 3.11 images"]
 ```
 
-## Final live topology (documented, not executed)
+## Validated live topology
 
 ```mermaid
 flowchart LR
@@ -40,6 +40,10 @@ The API ingress source is the traveler security group (private `/32` only as a d
 fallback). Public Streamlit ingress is limited to the grader/demo range when known. All three images
 are selected from `deployment_manifest.json` by registry content digest, and no temporary AWS
 credentials enter an image or host environment file.
+
+The live topology was validated during a bounded Academy session and is documented through the
+curated evidence set. It is not represented as a continuously available public service, and no
+ephemeral host address is committed.
 
 ## Runtime sequence
 

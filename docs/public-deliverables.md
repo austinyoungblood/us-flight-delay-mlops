@@ -37,7 +37,7 @@ Packages API reported each package `public`. After `docker logout ghcr.io`, anon
 three exact references succeeded and returned the expected digests; no publisher credential was
 available to those pulls.
 
-## Pending provenance application release
+## Provenance application release and operational evidence
 
 On 2026-08-14, three provenance-enabled application images were built from exact source revision
 `ce10f1a123bbe21eb75ca31b2681caf90ccda731` and published at these immutable references:
@@ -47,5 +47,12 @@ On 2026-08-14, three provenance-enabled application images were built from exact
 - `ghcr.io/austinyoungblood/us-flight-delay-mlops-monitor@sha256:97a4e6bb99358e8cfe6885581713fd2731f64ea97164ad6a4d64f6efb1c7277c`
 
 Each digest passed an anonymous pull using an isolated Docker configuration with no credentials.
-This is a pending application deployment release, not evidence that AWS is already running these
-images. The governed Registry `production:v0` model and its immutable digests are unchanged.
+The later August 15, 2026 scheduled API-only monitoring batch recorded 150 planned requests, 150
+successful responses, zero failures, `traffic_source=synthetic_load_test`, and passed audit and
+persistence validation. That record proves the provenance-capable API/persistence path, but does not
+independently attest which immutable image digest was active. The governed Registry `production:v0`
+model and its immutable digests are unchanged.
+
+Governed challenger outcomes are published in the [v1 result report](v1-model-experiment-result.md)
+and [v2 result report](v2-model-experiment-result.md), with their W&B run links and compact sanitized
+JSON companions.
