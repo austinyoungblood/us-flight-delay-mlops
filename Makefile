@@ -1,4 +1,4 @@
-.PHONY: build download-data format-check install lint log-dataset prepare-data test train-candidate-a train-dummy validate
+.PHONY: build download-data format-check install lint log-dataset prepare-data prepare-v3-data test train-candidate-a train-dummy validate validate-v3 v3-dry-run
 
 install:
 	python -m pip install -c requirements.lock -c requirements-v1.lock ".[dev,v1]"
@@ -33,3 +33,12 @@ train-dummy:
 
 train-candidate-a:
 	python scripts/train.py --experiment configs/experiments/candidate_a.yaml --wandb-mode online
+
+prepare-v3-data:
+	python scripts/prepare_v3_data.py --max-workers 8
+
+validate-v3:
+	python scripts/validate_v3_protocol.py
+
+v3-dry-run:
+	python scripts/run_v3_development.py

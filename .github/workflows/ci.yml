@@ -39,6 +39,9 @@ jobs:
           python scripts/validate_v2_runtime.py
           python scripts/run_v2_development.py
           python scripts/run_v2_december_qualification.py
+          python scripts/validate_v3_protocol.py
+          python scripts/run_v3_development.py
+          python scripts/run_v3_december_qualification.py
           python scripts/validate_deployment_manifest.py
           python scripts/validate_evidence_manifest.py --require-files
           bash -n deploy/*.sh deploy/lib/*.sh

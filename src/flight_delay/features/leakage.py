@@ -43,6 +43,17 @@ ALLOWED_MODEL_FEATURES: frozenset[str] = frozenset(
         "recent_origin_delay_rate_3m",
         "recent_destination_delay_rate_3m",
         "recent_route_delay_rate_3m",
+        "day_of_year_sin",
+        "day_of_year_cos",
+        "days_to_thanksgiving",
+        "is_thanksgiving_window",
+        "days_to_christmas",
+        "is_christmas_window",
+        "prior_same_calendar_month_global_delay_rate",
+        "prior_same_calendar_month_carrier_delay_rate",
+        "prior_same_calendar_month_origin_delay_rate",
+        "prior_same_calendar_month_destination_delay_rate",
+        "prior_same_calendar_month_route_delay_rate",
     }
 )
 

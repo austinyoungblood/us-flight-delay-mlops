@@ -23,6 +23,7 @@ build/
 data/raw/
 data/interim/
 data/processed/
+data/processed_v3/
 models/
 artifacts/
 wandb/

@@ -1,0 +1,209 @@
+{
+  "base_configurations": [
+    {
+      "cat_l2": 20,
+      "cat_smooth": 50,
+      "colsample_bytree": 1.0,
+      "family": "lightgbm",
+      "id": "LGBM12",
+      "learning_rate": 0.02,
+      "max_depth": -1,
+      "min_child_samples": 200,
+      "n_estimators": 500,
+      "num_leaves": 31,
+      "reg_alpha": 0.0,
+      "reg_lambda": 10.0,
+      "scale_pos_weight": 1.0,
+      "subsample": 0.8
+    },
+    {
+      "cat_l2": 10,
+      "cat_smooth": 50,
+      "colsample_bytree": 0.8,
+      "family": "lightgbm",
+      "id": "LGBM10",
+      "learning_rate": 0.05,
+      "max_depth": 12,
+      "min_child_samples": 50,
+      "n_estimators": 500,
+      "num_leaves": 31,
+      "reg_alpha": 1.0,
+      "reg_lambda": 10.0,
+      "scale_pos_weight": 1.0,
+      "subsample": 0.8
+    },
+    {
+      "bagging_temperature": 3.0,
+      "border_count": 128,
+      "depth": 10,
+      "family": "catboost",
+      "id": "CB07",
+      "iterations": 500,
+      "l2_leaf_reg": 7,
+      "learning_rate": 0.02,
+      "max_ctr_complexity": 2,
+      "positive_class_weight": 1.0,
+      "random_strength": 2.0
+    },
+    {
+      "bagging_temperature": 0.0,
+      "border_count": 254,
+      "depth": 6,
+      "family": "catboost",
+      "id": "CB04",
+      "iterations": 800,
+      "l2_leaf_reg": 12,
+      "learning_rate": 0.02,
+      "max_ctr_complexity": 2,
+      "positive_class_weight": 1.0,
+      "random_strength": 0.5
+    }
+  ],
+  "base_configurations_sha256": "915244a2e994b8d3ef6ed18c2735b75f8cee2c45507e000723d22c0189c2da6b",
+  "base_git_sha": "6966562dcc2a7959f27e662e97cfeec8a4aa43a6",
+  "candidate_identities": [
+    {
+      "base_configuration": "LGBM12",
+      "family": "lightgbm",
+      "id": "LGBM12-UNIFORM",
+      "weight_policy": "UNIFORM"
+    },
+    {
+      "base_configuration": "LGBM12",
+      "family": "lightgbm",
+      "id": "LGBM12-EXP120",
+      "weight_policy": "EXPONENTIAL_120D"
+    },
+    {
+      "base_configuration": "LGBM10",
+      "family": "lightgbm",
+      "id": "LGBM10-UNIFORM",
+      "weight_policy": "UNIFORM"
+    },
+    {
+      "base_configuration": "LGBM10",
+      "family": "lightgbm",
+      "id": "LGBM10-EXP120",
+      "weight_policy": "EXPONENTIAL_120D"
+    },
+    {
+      "base_configuration": "CB07",
+      "family": "catboost",
+      "id": "CB07-UNIFORM",
+      "weight_policy": "UNIFORM"
+    },
+    {
+      "base_configuration": "CB07",
+      "family": "catboost",
+      "id": "CB07-EXP120",
+      "weight_policy": "EXPONENTIAL_120D"
+    },
+    {
+      "base_configuration": "CB04",
+      "family": "catboost",
+      "id": "CB04-UNIFORM",
+      "weight_policy": "UNIFORM"
+    },
+    {
+      "base_configuration": "CB04",
+      "family": "catboost",
+      "id": "CB04-EXP120",
+      "weight_policy": "EXPONENTIAL_120D"
+    }
+  ],
+  "candidate_identities_sha256": "d52f3fd794592e34c7232e021c1921303a64338e8d4992b21832a63fb5995580",
+  "december_opened": false,
+  "ensembles": [
+    {
+      "catboost_weight": 0.75,
+      "id": "ENS25",
+      "lightgbm_weight": 0.25
+    },
+    {
+      "catboost_weight": 0.5,
+      "id": "ENS50",
+      "lightgbm_weight": 0.5
+    },
+    {
+      "catboost_weight": 0.25,
+      "id": "ENS75",
+      "lightgbm_weight": 0.75
+    }
+  ],
+  "feature_schema": [
+    "Month",
+    "DayofMonth",
+    "DayOfWeek",
+    "Reporting_Airline",
+    "Origin",
+    "Dest",
+    "CRSDepTime",
+    "CRSArrTime",
+    "CRSElapsedTime",
+    "Distance",
+    "route",
+    "scheduled_departure_hour",
+    "scheduled_arrival_hour",
+    "scheduled_departure_minute_bucket",
+    "scheduled_arrival_minute_bucket",
+    "is_weekend",
+    "scheduled_departure_sin",
+    "scheduled_departure_cos",
+    "scheduled_arrival_sin",
+    "scheduled_arrival_cos",
+    "day_of_year_sin",
+    "day_of_year_cos",
+    "days_to_thanksgiving",
+    "is_thanksgiving_window",
+    "days_to_christmas",
+    "is_christmas_window",
+    "prior_global_delay_rate",
+    "prior_carrier_delay_rate",
+    "prior_origin_delay_rate",
+    "prior_destination_delay_rate",
+    "prior_route_delay_rate",
+    "prior_carrier_route_delay_rate",
+    "prior_carrier_origin_delay_rate",
+    "prior_carrier_destination_delay_rate",
+    "prior_origin_departure_hour_delay_rate",
+    "prior_destination_arrival_hour_delay_rate",
+    "log_route_support",
+    "log_carrier_route_support",
+    "recent_global_delay_rate_3m",
+    "recent_carrier_delay_rate_3m",
+    "recent_origin_delay_rate_3m",
+    "recent_destination_delay_rate_3m",
+    "recent_route_delay_rate_3m",
+    "prior_same_calendar_month_global_delay_rate",
+    "prior_same_calendar_month_carrier_delay_rate",
+    "prior_same_calendar_month_origin_delay_rate",
+    "prior_same_calendar_month_destination_delay_rate",
+    "prior_same_calendar_month_route_delay_rate"
+  ],
+  "feature_schema_sha256": "d5a91cfca310ce12dee4c3e15536975f04d0b8c7b70159cfe2bb3afbcd4bbf93",
+  "historical_test_accessed": false,
+  "production_registry_version": "v0",
+  "protocol_id": "us-flight-delay-v3-seasonal-temporal-generalization-v1",
+  "protocol_sha256": "061be599fd84a4ddbf06229c300fe4670272d176b22899f1515332923376ecff",
+  "results_exist": false,
+  "training_started": false,
+  "v2_protocol_sha256": "8e57b0f63656003c9981b3b5e44623e0b7c556f6e0c7222352ac38dd5119420a",
+  "v3_source_manifest_digest": "673cac214739e8c0d2991a1bdbd1591a90e8907d7cf5bdbc34caddd72015b6af",
+  "v3_source_manifest_sha256": "b454c92289cc8cd7fe4c48c5e60dfb9baa6180e646331203cab53fc5c7ce13b1",
+  "wandb_runs_created": false,
+  "weight_policies": [
+    {
+      "id": "UNIFORM",
+      "normalization": "none",
+      "weight": 1.0
+    },
+    {
+      "age_days_definition": "(fit_cutoff_date - scheduled_flight_date).days",
+      "age_days_measured_backward_from_fit_cutoff": true,
+      "formula": "0.5 ** (age_days / 120)",
+      "half_life_days": 120,
+      "id": "EXPONENTIAL_120D",
+      "normalization": "mean_1_within_fit_partition"
+    }
+  ]
+}

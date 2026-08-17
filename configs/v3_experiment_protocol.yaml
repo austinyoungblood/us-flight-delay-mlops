@@ -1,0 +1,705 @@
+schema_version: 1
+protocol_id: us-flight-delay-v3-seasonal-temporal-generalization-v1
+
+state:
+  phase: pretraining_protocol_locked
+  protocol_precedes_training: true
+  training_started: false
+  results_exist: false
+  wandb_runs_created: false
+  december_opened: false
+  historical_test_accessed: false
+  v3_processed_data_prepared_in_this_commit: false
+
+motivation:
+  finding: v2_completed_with_governed_stop
+  v2_cpu_confirmed_mean_operating_precision_range: [0.336, 0.338]
+  v2_november_degradation: true
+  v2_best_november_finalist: CB04-none/sigmoid
+  v2_best_november_precision: 0.278481
+  v2_best_november_recall: 0.600840
+  v2_best_november_predicted_positive_rate: 0.426617
+  v3_objective: temporal_generalization_and_seasonality
+  gates_weakened: false
+  additional_model_families_added: false
+  broad_hyperparameter_campaign: false
+
+dependencies:
+  base_git_sha: 6966562dcc2a7959f27e662e97cfeec8a4aa43a6
+  immutable_v1:
+    protocol:
+      path: configs/v1_experiment_protocol.yaml
+      sha256: a6b1de9de550d1bd94eae0e56f8d88d65801ec488b6c539fc64afbafa4ccfffb
+    protocol_lock:
+      path: experiments/v1/protocol_lock.json
+      sha256: e5373df1c8d11e75132769283f4c784420637f73f9cb11a87d61895462d29b38
+    development_result:
+      path: experiments/v1/development_result.json
+      sha256: de8dd8221e72187dad82bcd1f81f633eae7d908d9a09e82da4480c184536ce5c
+    result_report:
+      path: docs/v1-model-experiment-result.md
+      sha256: 3b6f24e0613cc6693e344b0e455a30406182c1372876a43954f018622f9657a2
+  immutable_v2:
+    protocol:
+      path: configs/v2_experiment_protocol.yaml
+      sha256: 8e57b0f63656003c9981b3b5e44623e0b7c556f6e0c7222352ac38dd5119420a
+    protocol_lock:
+      path: experiments/v2/protocol_lock.json
+      sha256: fdf1318e0222e6a9effca0e7bc381be11dc800ea45546782d8d20d0385be5073
+  incumbent_selection_lock:
+    path: release/selection_lock.json
+    sha256: a730a25c34a9f259b3ca02eb92c4ad44c1e75f50fd52ce270a940e4a60142340
+  incumbent_release_decision:
+    path: release/release_decision.json
+    sha256: de1e39d69b08d72b8b4c81d0836d2d0261167fbd9176b196973571b14dbed276
+  deployment_manifest:
+    path: deploy/deployment_manifest.json
+    sha256: c7879091603db3a510c62236cfe35cb2f84e70980bc4a8b183dfcc2f19e2d8ed
+  immutable_v0_v1_v2_processed_manifest:
+    path: data/manifests/processed_manifest.json
+    sha256: fa328e92048dededdcbdb4b61ce8c74b67b2d0ef64872dfb25949334cf22dee4
+    manifest_digest: c8aa583cbfe7ad8ee4bdcedaa8d479e2056541c71296f222ae0e0a410a48cdaf
+    mutation_prohibited: true
+  immutable_v0_v1_v2_source_manifest:
+    path: data/manifests/source_manifest.json
+    sha256: 996b1172a725bbf733f6647d436ebc30eecd1b14b2d6a3099ebeb1cd78ac9e83
+    manifest_digest: 0a2e8ef929dee6bc1d5a8cdcf8f0161ce0f11bb54c3809dbea1040f09624b561
+    mutation_prohibited: true
+  v3_source_manifest:
+    path: data/manifests/v3_source_manifest.json
+    sha256: b454c92289cc8cd7fe4c48c5e60dfb9baa6180e646331203cab53fc5c7ce13b1
+    manifest_digest: 673cac214739e8c0d2991a1bdbd1591a90e8907d7cf5bdbc34caddd72015b6af
+
+incumbent:
+  registry_collection: wandb-registry-Model/us-flight-arrival-delay-15m
+  serving_alias: production
+  registry_version: v0
+  registry_digest: 865ddd18f6debd44f24a79fc71739f2a
+  bundle_sha256: 2677b7093d66637852705d33bca006c3b78d8119f4d7268801453aa18c22f572
+  threshold: 0.1840285229739868
+  production_mutation_prohibited: true
+
+data_expansion:
+  added_calendar_year: 2024
+  added_archive_count: 12
+  reused_2025_archive_count: 12
+  v3_source_manifest: data/manifests/v3_source_manifest.json
+  v3_processed_manifest: data/manifests/v3_processed_manifest.json
+  v0_v1_v2_manifests_mutated: false
+  reused_2025_archives_byte_identical_to_v0: true
+  raw_and_generated_data_git_ignored: true
+  monthly_sample_cap: null
+  monthly_sample_cap_rationale: >-
+    v3 requires full eligible prior history for historical state and full eligible model rows for
+    the authoritative refit, so the v3 processed dataset is uncapped. Runtime is controlled by the
+    50,000-row-per-month deterministic candidate-search cap instead of by dataset preparation.
+  random_seed: 42
+  parquet_compression: zstd
+  archives_downloaded_without_fitting_models: true
+
+development_data:
+  start: "2024-01-01"
+  end_exclusive: "2025-12-01"
+  burn_in:
+    start: "2024-01-01"
+    end_exclusive: "2024-02-01"
+    contributes_model_rows: false
+    contributes_historical_state: true
+  model_period:
+    start: "2024-02-01"
+    end_exclusive: "2025-12-01"
+  allowed_sources:
+    - data/processed_v3/v3_history.parquet
+    - data/processed_v3/v3_november.parquet
+  forbidden_sources:
+    - data/processed_v3/v3_december.parquet
+    - data/processed/test.parquet
+  december_2025_read_during_development: false
+  december_2025_decoded_during_development: false
+
+prohibited_periods:
+  december_2025:
+    period: 2025-12-01/2025-12-31
+    development_access_prohibited: true
+    qualification_only: true
+  historical_test_2026:
+    period: 2026-01-01/2026-05-31
+    access_prohibited: true
+    permanently_consumed: true
+    excluded_from_v3_source_manifest: true
+  genuine_final_test:
+    earliest_eligible_date_strictly_after: "2026-05-31"
+    first_complete_untouched_bts_month_required: true
+    access_in_v3_prohibited: true
+    access_count_during_protocol_and_implementation: 0
+
+feature_contract:
+  base_feature_source: flight_delay.data.prepare.PROCESSED_FEATURES
+  retained_v2_feature_count: 37
+  v2_features_retained_without_modification: true
+  base_features:
+    - Month
+    - DayofMonth
+    - DayOfWeek
+    - Reporting_Airline
+    - Origin
+    - Dest
+    - CRSDepTime
+    - CRSArrTime
+    - CRSElapsedTime
+    - Distance
+    - route
+    - scheduled_departure_hour
+    - scheduled_arrival_hour
+    - scheduled_departure_minute_bucket
+    - scheduled_arrival_minute_bucket
+    - is_weekend
+    - scheduled_departure_sin
+    - scheduled_departure_cos
+    - scheduled_arrival_sin
+    - scheduled_arrival_cos
+  deterministic_seasonal_features:
+    - day_of_year_sin
+    - day_of_year_cos
+    - days_to_thanksgiving
+    - is_thanksgiving_window
+    - days_to_christmas
+    - is_christmas_window
+  historical_features:
+    - prior_global_delay_rate
+    - prior_carrier_delay_rate
+    - prior_origin_delay_rate
+    - prior_destination_delay_rate
+    - prior_route_delay_rate
+    - prior_carrier_route_delay_rate
+    - prior_carrier_origin_delay_rate
+    - prior_carrier_destination_delay_rate
+    - prior_origin_departure_hour_delay_rate
+    - prior_destination_arrival_hour_delay_rate
+    - log_route_support
+    - log_carrier_route_support
+    - recent_global_delay_rate_3m
+    - recent_carrier_delay_rate_3m
+    - recent_origin_delay_rate_3m
+    - recent_destination_delay_rate_3m
+    - recent_route_delay_rate_3m
+  seasonal_historical_features:
+    - prior_same_calendar_month_global_delay_rate
+    - prior_same_calendar_month_carrier_delay_rate
+    - prior_same_calendar_month_origin_delay_rate
+    - prior_same_calendar_month_destination_delay_rate
+    - prior_same_calendar_month_route_delay_rate
+  total_feature_count: 48
+  feature_order: base_20_then_deterministic_seasonal_6_then_historical_17_then_seasonal_historical_5
+  categorical_features:
+    - Reporting_Airline
+    - Origin
+    - Dest
+    - route
+    - Month
+    - DayOfWeek
+    - scheduled_departure_hour
+    - scheduled_arrival_hour
+  native_categorical_count: 8
+  numeric_historical_features: 22
+  ordering_only:
+    - flight_date
+  label_only:
+    - target
+  request_available_inputs_only: true
+  postdeparture_features_permitted: false
+  target_derived_information_duplicated: false
+
+deterministic_seasonal_semantics:
+  computed_solely_from_scheduled_flight_date: true
+  no_target_or_label_input: true
+  identical_in_training_and_serving: true
+  day_of_year:
+    ordinal: iso_day_of_year_1_through_366
+    days_in_year: 366_if_gregorian_leap_year_else_365
+    angle_radians: 2 * pi * (day_of_year - 1) / days_in_year
+    day_of_year_sin: sin(angle_radians)
+    day_of_year_cos: cos(angle_radians)
+  thanksgiving:
+    definition: fourth_Thursday_of_November
+    algorithm: november_1 + ((3 - november_1.weekday()) mod 7) + 21_days
+    anchor_candidates: [flight_year_minus_1, flight_year, flight_year_plus_1]
+    anchor_selection: minimum_absolute_signed_delta
+    anchor_tie_break: earlier_anchor_date
+  christmas:
+    definition: december_25
+    anchor_candidates: [flight_year_minus_1, flight_year, flight_year_plus_1]
+    anchor_selection: minimum_absolute_signed_delta
+    anchor_tie_break: earlier_anchor_date
+  signed_delta_definition: (anchor_date - scheduled_flight_date).days
+  signed_delta_sign_convention: positive_means_anchor_is_in_the_future
+  bounded_distance:
+    clip_lower: -30
+    clip_upper: 30
+    dtype: int
+    rationale: >-
+      Bounded distance keeps the feature finite, monotone near the holiday, and constant far away,
+      so a single anchor-selection rule yields identical values in batch training and single-row
+      serving without any dependence on the surrounding data.
+  windows:
+    is_thanksgiving_window:
+      raw_signed_delta_inclusive_range: [-4, 2]
+      description: Tuesday before Thanksgiving through the Monday after; 7 calendar days
+    is_christmas_window:
+      raw_signed_delta_inclusive_range: [-10, 4]
+      description: December 21 through January 4; 15 calendar days
+    window_flags_use_raw_signed_delta: true
+    clipping_does_not_affect_window_flags: true
+    dtype: int_0_or_1
+
+historical_feature_state:
+  schema: flight-delay-historical-state-v3
+  prior_strength: 50
+  smoothing_formula: (positive_count + prior_strength * historical_global_rate) / (count + prior_strength)
+  unseen_category_fallback: historical_global_rate
+  support_transform: log1p_count
+  same_month_labels_permitted: false
+  future_labels_permitted: false
+  state_cutoff_rule: labels_strictly_before_model_row_month
+  trailing_window_months: 3
+  full_eligible_prior_history_required: true
+  historical_state_sampling_permitted: false
+  seasonal_tables:
+    same_calendar_month_global:
+      key: [calendar_month]
+    same_calendar_month_carrier:
+      key: [calendar_month, Reporting_Airline]
+    same_calendar_month_origin:
+      key: [calendar_month, Origin]
+    same_calendar_month_destination:
+      key: [calendar_month, Dest]
+    same_calendar_month_route:
+      key: [calendar_month, route]
+  seasonal_prior_year_rule:
+    prior_or_previous_occurrences_only: true
+    same_month_same_year_contribution_prohibited: true
+    enforcement: >-
+      Every state cutoff is strictly before the first day of the model row month, so any
+      same-calendar-month entry present in the state necessarily originates in a strictly earlier
+      year. The implementation asserts this invariant when the state is built.
+    november_2025_features_may_use_november_2024: true
+    november_2025_targets_contribute_to_november_2025_features: false
+  deterministic_serialization:
+    format: canonical_json_utf8
+    sort_keys: true
+    compact_separators: true
+    reject_nan: true
+    digest: sha256
+    lookup_entries_sorted_lexically: true
+  bundle_reference:
+    artifact_required: true
+    exact_state_digest_required: true
+    schema_digest_required: true
+  november_and_december_state:
+    as_of_inclusive: "2025-10-31"
+    november_labels_update_state: false
+    december_labels_update_state: false
+  parity_requirement: batch_training_equals_single_row_serving
+
+weight_policies:
+  precommitted_count: 2
+  post_result_policies_prohibited: true
+  policies:
+    - id: UNIFORM
+      weight: 1.0
+      normalization: none
+    - id: EXPONENTIAL_120D
+      half_life_days: 120
+      formula: 0.5 ** (age_days / 120)
+      age_days_definition: (fit_cutoff_date - scheduled_flight_date).days
+      age_days_measured_backward_from_fit_cutoff: true
+      normalization: mean_1_within_fit_partition
+  evaluation_rows_weighted: false
+  calibration_rows_weighted: false
+  selection_rows_weighted: false
+  weight_policy_is_part_of_candidate_identity: true
+  weight_policy_is_not_a_hyperparameter: true
+  backend_excluded_from_candidate_identity: true
+
+sampling:
+  search_rows_per_month_max: 50000
+  sample_seed: 42
+  model_row_sampling: deterministic_class_stratified_without_replacement
+  sampled_period:
+    start: "2024-02-01"
+    end_exclusive: "2025-12-01"
+  historical_lookup_inputs: full_eligible_prior_history
+  final_refit_inputs: full_eligible_model_rows
+  calibration_and_selection_inputs: full_eligible_november_rows
+  record_source_eligible_model_counts_and_hashes: true
+
+model_families:
+  lightgbm:
+    estimator: LGBMClassifier
+    package: lightgbm
+    version: 4.7.0
+    dependency_scope: modeling_optional
+    native_categorical_features: true
+  catboost:
+    estimator: CatBoostClassifier
+    package: catboost
+    version: 1.2.10
+    dependency_scope: modeling_optional
+    native_categorical_features: true
+  runtime_images_exclude_modeling_dependencies: true
+  additional_families_prohibited: true
+
+carried_forward_configurations:
+  source_protocol: configs/v2_experiment_protocol.yaml
+  source_protocol_sha256: 8e57b0f63656003c9981b3b5e44623e0b7c556f6e0c7222352ac38dd5119420a
+  hyperparameters_unchanged_from_v2: true
+  new_hyperparameter_search_performed: false
+  lightgbm_common_parameters:
+    objective: binary
+    random_state: 42
+    verbosity: -1
+    deterministic: true
+    force_col_wise: true
+    subsample_freq: 1
+  catboost_common_parameters:
+    loss_function: Logloss
+    eval_metric: Logloss
+    random_seed: 42
+    has_time: true
+    allow_writing_files: false
+    verbose: false
+  base_configurations:
+    - {id: LGBM12, family: lightgbm, num_leaves: 31, max_depth: -1, learning_rate: 0.02, n_estimators: 500, min_child_samples: 200, subsample: 0.8, colsample_bytree: 1.0, reg_lambda: 10.0, reg_alpha: 0.0, cat_smooth: 50, cat_l2: 20, scale_pos_weight: 1.0}
+    - {id: LGBM10, family: lightgbm, num_leaves: 31, max_depth: 12, learning_rate: 0.05, n_estimators: 500, min_child_samples: 50, subsample: 0.8, colsample_bytree: 0.8, reg_lambda: 10.0, reg_alpha: 1.0, cat_smooth: 50, cat_l2: 10, scale_pos_weight: 1.0}
+    - {id: CB07, family: catboost, depth: 10, iterations: 500, learning_rate: 0.02, l2_leaf_reg: 7, random_strength: 2.0, bagging_temperature: 3.0, border_count: 128, max_ctr_complexity: 2, positive_class_weight: 1.0}
+    - {id: CB04, family: catboost, depth: 6, iterations: 800, learning_rate: 0.02, l2_leaf_reg: 12, random_strength: 0.5, bagging_temperature: 0.0, border_count: 254, max_ctr_complexity: 2, positive_class_weight: 1.0}
+
+candidate_identities:
+  total: 8
+  construction: exactly_one_identity_per_base_configuration_and_weight_policy
+  post_result_candidates_prohibited: true
+  identities:
+    - {id: LGBM12-UNIFORM, family: lightgbm, base_configuration: LGBM12, weight_policy: UNIFORM}
+    - {id: LGBM12-EXP120, family: lightgbm, base_configuration: LGBM12, weight_policy: EXPONENTIAL_120D}
+    - {id: LGBM10-UNIFORM, family: lightgbm, base_configuration: LGBM10, weight_policy: UNIFORM}
+    - {id: LGBM10-EXP120, family: lightgbm, base_configuration: LGBM10, weight_policy: EXPONENTIAL_120D}
+    - {id: CB07-UNIFORM, family: catboost, base_configuration: CB07, weight_policy: UNIFORM}
+    - {id: CB07-EXP120, family: catboost, base_configuration: CB07, weight_policy: EXPONENTIAL_120D}
+    - {id: CB04-UNIFORM, family: catboost, base_configuration: CB04, weight_policy: UNIFORM}
+    - {id: CB04-EXP120, family: catboost, base_configuration: CB04, weight_policy: EXPONENTIAL_120D}
+
+execution_policy:
+  sequential_candidate_execution: true
+  lightgbm_screening:
+    backend: CPU
+    n_jobs: 20
+  catboost_screening:
+    backend: GPU
+    task_type: GPU
+    devices: "0"
+    screening_only: true
+    concurrent_gpu_fits: false
+  cpu_confirmation:
+    authoritative_for_advancement: true
+    backend: CPU
+    lightgbm_n_jobs: 20
+    catboost_task_type: CPU
+    candidate_hyperparameters_unchanged: true
+    weight_policy_unchanged: true
+  backend_excluded_from_candidate_identity: true
+  full_data_refit_backend: CPU
+  stage_runtime_logging_required: true
+  dry_run_estimate_required_before_apply: true
+  clean_governed_stop_supported: true
+
+rolling_origin:
+  fold_count: 4
+  fit_start: "2024-02-01"
+  november_is_development_evidence: true
+  november_already_consumed_by_v1_and_v2: true
+  folds:
+    - id: FOLD_1
+      fit_start: "2024-02-01"
+      fit_end_exclusive: "2025-08-01"
+      fit_cutoff_inclusive: "2025-07-31"
+      evaluation_start: "2025-08-01"
+      evaluation_end_exclusive: "2025-09-01"
+      evaluation_state_as_of: "2025-07-31"
+    - id: FOLD_2
+      fit_start: "2024-02-01"
+      fit_end_exclusive: "2025-09-01"
+      fit_cutoff_inclusive: "2025-08-31"
+      evaluation_start: "2025-09-01"
+      evaluation_end_exclusive: "2025-10-01"
+      evaluation_state_as_of: "2025-08-31"
+    - id: FOLD_3
+      fit_start: "2024-02-01"
+      fit_end_exclusive: "2025-10-01"
+      fit_cutoff_inclusive: "2025-09-30"
+      evaluation_start: "2025-10-01"
+      evaluation_end_exclusive: "2025-11-01"
+      evaluation_state_as_of: "2025-09-30"
+    - id: FOLD_4
+      fit_start: "2024-02-01"
+      fit_end_exclusive: "2025-11-01"
+      fit_cutoff_inclusive: "2025-10-31"
+      evaluation_start: "2025-11-01"
+      evaluation_end_exclusive: "2025-12-01"
+      evaluation_state_as_of: "2025-10-31"
+  outer_evaluation_used_for_early_stopping: false
+
+search_metric:
+  primary: max_precision_at_operating_recall
+  threshold_constraints:
+    recall_min: 0.60
+    predicted_positive_rate_max: 0.50
+  no_qualifying_threshold_score: 0.0
+  threshold_tie_break_order:
+    - precision_desc
+    - recall_desc
+    - predicted_positive_rate_asc
+    - distance_from_0_50_asc
+    - threshold_desc
+  recorded_metrics:
+    - average_precision
+    - roc_auc
+    - brier_score
+    - log_loss
+    - best_f1_under_ppr_max
+    - max_precision_at_operating_recall
+    - operating_threshold
+    - operating_recall
+    - operating_ppr
+    - prevalence
+  candidate_ranking:
+    - worst_fold_operating_precision_desc
+    - fold_4_november_operating_precision_desc
+    - mean_fold_2_through_fold_4_operating_precision_desc
+    - mean_all_fold_operating_precision_desc
+    - mean_average_precision_desc
+    - mean_roc_auc_desc
+    - mean_log_loss_asc
+    - mean_brier_score_asc
+    - candidate_id_lexical_asc
+  ranking_rationale: >-
+    v3 intentionally prioritizes temporal robustness over strong summer performance, so the worst
+    fold and the November fold outrank every aggregate mean.
+
+advancement:
+  screening:
+    total_identities: 8
+    lightgbm_identities: 4
+    catboost_identities: 4
+    top_per_family_to_cpu_confirmation: 2
+  cpu_confirmation:
+    total_identities: 4
+    folds_per_identity: 4
+    top_per_family_to_full_refit: 1
+    authoritative_for_advancement: true
+  full_refit:
+    total_bases: 2
+    lightgbm_bases: 1
+    catboost_bases: 1
+    start: "2024-02-01"
+    end_exclusive: "2025-11-01"
+    full_eligible_rows: true
+    backend: CPU
+  search_broadening_after_observing_results_prohibited: true
+
+calibration:
+  base_period:
+    start: "2024-02-01"
+    end_exclusive: "2025-11-01"
+  november_feature_state_frozen_at: "2025-10-31"
+  period:
+    start: "2025-11-01"
+    end_exclusive: "2025-11-16"
+  variants:
+    - none
+    - sigmoid
+    - isotonic
+  bases: 2
+  base_variant_count: 6
+  base_frozen_before_calibration: true
+  november_selection_rows_permitted: false
+
+ensembles:
+  precommitted: true
+  post_result_definitions_prohibited: true
+  inputs: two_uncalibrated_authoritative_cpu_base_scores
+  additional_base_model_fits_required: 0
+  formula: lightgbm_weight * p_lightgbm + (1 - lightgbm_weight) * p_catboost
+  weights:
+    - {id: ENS25, lightgbm_weight: 0.25, catboost_weight: 0.75}
+    - {id: ENS50, lightgbm_weight: 0.50, catboost_weight: 0.50}
+    - {id: ENS75, lightgbm_weight: 0.75, catboost_weight: 0.25}
+  variants:
+    - none
+    - sigmoid
+    - isotonic
+  ensemble_variant_count: 9
+  calibration_fit_on_ensemble_score: true
+
+finalists:
+  total: 15
+  base_variants: 6
+  ensemble_variants: 9
+
+november_selection:
+  period:
+    start: "2025-11-16"
+    end_exclusive: "2025-12-01"
+  development_evidence_not_pristine_qualification: true
+  threshold_objective:
+    eligibility:
+      recall_min: 0.60
+      precision_min: 0.30
+      predicted_positive_rate_max: 0.50
+    objective: maximize_f1
+    tie_break_order:
+      - f1_desc
+      - precision_desc
+      - recall_desc
+      - predicted_positive_rate_asc
+      - distance_from_0_50_asc
+      - threshold_desc
+    no_eligible_threshold_outcome: finalist_fails
+  acceptance_gates:
+    gates_relaxed_from_v2: false
+    operating_point:
+      recall_min: 0.60
+      precision_min: 0.30
+      f1_min: 0.38
+      predicted_positive_rate_max: 0.50
+    probability:
+      brier_skill_score_vs_prior_strictly_positive: true
+      brier_score_below_prior: true
+      log_loss_below_prior: true
+      absolute_probability_prevalence_gap_max: 0.03
+      equal_frequency_ece_15_max: 0.03
+    discrimination:
+      frozen_r3_average_precision: 0.2823880567429311
+      average_precision_margin_min: 0.01
+      average_precision_absolute_min: 0.2923880567429311
+      frozen_r3_roc_auc: 0.6281178113133866
+      roc_auc_margin_min: 0.005
+      roc_auc_absolute_min: 0.6331178113133866
+    operational:
+      single_row_inference_p95_ms_strict_max: 25
+      serialized_bundle_bytes_strict_max: 10485760
+    governance:
+      lineage_verified: true
+      schema_check_passed: true
+      leakage_check_passed: true
+      historical_state_integrity_passed: true
+      training_serving_parity_passed: true
+      seasonal_prior_year_check_passed: true
+      weight_policy_check_passed: true
+      r3_reconstruction_passed: true
+      serialization_load_inference_passed: true
+      no_prohibited_test_access: true
+      no_december_access_during_development: true
+      no_training_convergence_or_runtime_failure: true
+  every_gate_mandatory: true
+  zero_pass_outcome: governed_stop_retain_production_v0
+  winner_order:
+    - max_precision_at_operating_recall_desc
+    - average_precision_desc
+    - roc_auc_desc
+    - log_loss_asc
+    - brier_score_asc
+    - f1_desc
+    - predicted_positive_rate_asc
+    - finalist_id_lexical_asc
+  improvement_claim_requires_all_gates: true
+  v1_cb4_precision_at_recall_min_0_60: 0.276101388050694
+  v2_cb04_november_precision_at_recall_min_0_60: 0.278481
+
+december_qualification:
+  development_may_open: false
+  separate_cli_required: true
+  one_time_only: true
+  authorization_requires_frozen_november_winner: true
+  historical_state_as_of_inclusive: "2025-10-31"
+  evaluation_count: 1
+  retrospective_not_genuine_final_test: true
+  frozen_before_authorization:
+    - base_models
+    - ensemble_weights_if_applicable
+    - calibration
+    - threshold
+    - historical_state
+    - feature_schema
+    - hashes
+  prohibited_actions:
+    - retraining
+    - refitting
+    - recalibration
+    - threshold_change
+    - historical_state_update
+    - candidate_switching
+    - gate_change
+  gates:
+    brier_skill_score_vs_prior_strictly_positive: true
+    log_loss_below_prior: true
+    absolute_probability_prevalence_gap_max: 0.05
+    equal_frequency_ece_15_max: 0.05
+    average_precision_lift_over_prevalence_min: 1.25
+    roc_auc_min: 0.60
+    recall_min: 0.55
+    precision_min: 0.25
+    f1_min: 0.36
+    predicted_positive_rate_max: 0.60
+    single_row_inference_p95_ms_strict_max: 25
+    serialized_bundle_bytes_strict_max: 10485760
+    historical_state_integrity_passed: true
+    lineage_schema_leakage_serialization_checks_pass: true
+
+fresh_final:
+  access_in_v3_development_prohibited: true
+  earliest_eligible_date_strictly_after: "2026-05-31"
+  first_complete_untouched_bts_month_required: true
+  access_count_during_protocol_and_implementation: 0
+
+tracking:
+  provider: weights_and_biases
+  group_template: v3-<protocol-sha>-<implementation-sha>
+  registry_mutation_permitted: false
+  candidate_run_contains_all_four_fold_metrics: true
+  required_metadata:
+    - hardware_identity
+    - screening_backend
+    - cpu_confirmation_backend
+    - cuda_visibility
+    - catboost_version
+    - lightgbm_version
+    - weight_policy
+    - feature_state_digest
+    - dataset_lineage
+    - protocol_sha256
+    - implementation_git_sha
+    - stage_runtime_seconds
+
+durable_execution:
+  applied_development_one_time: true
+  fail_closed: true
+  v3_marker_path: artifacts/v3/development/execution_marker.json
+  v3_winner_lock_path: artifacts/v3/development/winner_lock.json
+  v3_decision_path: artifacts/v3/development/decision.json
+  v3_historical_state_path: artifacts/v3/development/historical_state.json
+  v3_qualification_marker_path: artifacts/v3/qualification/execution_marker.json
+  v1_marker_mutation_prohibited: true
+  v2_marker_mutation_prohibited: true
+  dry_run_default: true
+  explicit_apply_required: true
+  governed_stop_supported: true
+
+release:
+  registry_action: none
+  aws_action: none
+  deployment_action: none
+  production_alias_mutation: false
+  production_version_after_v3_development: v0
+  runtime_images_unchanged: true
+  runtime_images_gain_v3_modeling_dependencies: false
+  submission_safe_main_branch_priority: true

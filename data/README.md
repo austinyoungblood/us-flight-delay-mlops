@@ -36,3 +36,32 @@ January–October only for four
 rolling-origin base folds and final refit, November 1–15 for calibration, and November 16–30 for
 selection. No finalist passed the November gate, so December and the final test were not read by the
 remediation evaluators.
+
+## V3 seasonality dataset (separate lineage)
+
+The governed v3 experiment adds calendar year 2024 without touching any v0/v1/v2 artifact. Its
+provenance lives in `v3_source_manifest.json` (24 archives, 2024-01 through 2025-12, 709,735,704
+bytes, digest `673cac214739e8c0d2991a1bdbd1591a90e8907d7cf5bdbc34caddd72015b6af`). The twelve 2025
+archives are reused byte-identically from `source_manifest.json`; the downloader verified each
+against its existing record and skipped it, so v0/v1/v2 lineage hashes are unchanged. No 2026
+archive appears in the v3 manifest at all.
+
+V3 preparation is **uncapped**: it retains every model-eligible row rather than sampling 75,000 per
+month, because v3 requires full eligible prior history for its seasonal state and all eligible model
+rows for its authoritative refit. Runtime is controlled instead by a 50,000-row-per-month
+deterministic search cap applied at candidate-selection time. The v3 splits are written to
+`data/processed_v3/` and remain Git-ignored.
+
+| Split | Half-open interval | Rows | Target prevalence |
+| --- | --- | ---: | ---: |
+| `v3_history` | `[2024-01-01, 2025-11-01)` | 12,717,511 | 0.2136677 |
+| `v3_november` | `[2025-11-01, 2025-12-01)` | 555,295 | 0.2056006 |
+
+The stable `v3_processed_manifest.json` digest is
+`4f8f6744b593ee89b32bc9cb9de4c0e848093df3657e2e9441cbc684d567d66f`. It describes 23 decoded months
+(2024-01 through 2025-11). **December 2025 is not decoded**: preparation refuses that month unless
+given the exact qualification authorization, so no `v3_december.parquet` exists and the manifest
+records `december_2025_decoded: false`. January–May 2026 remains sealed, unread, and excluded from
+the v3 source manifest entirely.
+
+Run `make prepare-v3-data` from the repository root.
