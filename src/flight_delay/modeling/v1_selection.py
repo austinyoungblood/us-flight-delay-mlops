@@ -9,10 +9,7 @@ import numpy as np
 from sklearn.metrics import (
     average_precision_score,
     brier_score_loss,
-    f1_score,
     log_loss,
-    precision_score,
-    recall_score,
     roc_auc_score,
 )
 
@@ -108,20 +105,37 @@ def select_v1_threshold(
     """Select a threshold using every unique score and the exact protocol ordering."""
 
     target, scores = _binary_inputs(labels, probabilities)
+    # Stable descending ordering preserves the first observed representation for tied scores
+    # (including signed zero), matching the former set-based unique-threshold semantics.
+    order = np.argsort(-scores, kind="stable")
+    sorted_scores = scores[order]
+    sorted_target = target[order]
+    cumulative_true_positives = np.cumsum(sorted_target, dtype=np.int64)
+    group_ends = np.append(
+        np.flatnonzero(sorted_scores[1:] != sorted_scores[:-1]) + 1,
+        len(sorted_scores),
+    )
+    total_positives = int(target.sum())
+    total_rows = len(target)
     rows: list[ThresholdRow] = []
-    for threshold in sorted(set(map(float, scores)), reverse=True):
-        predicted = (scores >= threshold).astype(int)
-        precision = float(precision_score(target, predicted, zero_division=0))
-        recall = float(recall_score(target, predicted, zero_division=0))
-        f1 = float(f1_score(target, predicted, zero_division=0))
-        positive_rate = float(predicted.mean())
+    group_start = 0
+    for group_end_value in group_ends:
+        group_end = int(group_end_value)
+        predicted_positives = group_end
+        true_positives = int(cumulative_true_positives[group_end - 1])
+        precision = true_positives / predicted_positives if predicted_positives else 0.0
+        recall = true_positives / total_positives if total_positives else 0.0
+        # sklearn's binary F1 reduces to 2*TP / (true positives total + predicted positives).
+        f1_denominator = total_positives + predicted_positives
+        f1 = 2 * true_positives / f1_denominator if f1_denominator else 0.0
+        positive_rate = predicted_positives / total_rows
         rows.append(
             ThresholdRow(
-                threshold=threshold,
-                precision=precision,
-                recall=recall,
-                f1=f1,
-                predicted_positive_rate=positive_rate,
+                threshold=float(sorted_scores[group_start]),
+                precision=float(precision),
+                recall=float(recall),
+                f1=float(f1),
+                predicted_positive_rate=float(positive_rate),
                 eligible=(
                     recall >= recall_min
                     and precision >= precision_min
@@ -129,6 +143,7 @@ def select_v1_threshold(
                 ),
             )
         )
+        group_start = group_end
     selected = choose_threshold_row(rows)
     if selected is None:
         return V1ThresholdSelection(None, None, tuple(rows))
