@@ -671,7 +671,16 @@ def run_development_apply(repository_root: Path, *, tracking: str) -> dict[str, 
 def validate_december_handoff(root: Path) -> tuple[dict[str, Any], V3HistoricalState]:
     marker = _read_json(root / DEVELOPMENT_MARKER)
     if marker.get("status") != "complete" or marker.get("decision") != "winner":
-        raise V3ExecutionError("December requires a completed frozen November winner")
+        # A recovery adoption never rewrites the historical source marker. Its independently
+        # hashed adoption record is the only supported bridge to the canonical handoff paths.
+        try:
+            from flight_delay.modeling.v3.recovery import validate_recovery_adoption_for_december
+
+            validate_recovery_adoption_for_december(root, marker)
+        except Exception as error:
+            raise V3ExecutionError(
+                "December requires a completed frozen November winner"
+            ) from error
     winner = _read_json(root / WINNER_LOCK)
     if winner.get("december_evaluated") is not False:
         raise V3ExecutionError("December has already been evaluated")

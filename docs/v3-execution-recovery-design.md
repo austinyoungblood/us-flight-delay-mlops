@@ -1,12 +1,72 @@
 # Governed v3 interrupted-execution recovery design
 
-Status: **design only; not implemented or executed**.
+Status: **implemented and synthetically tested; not executed**.
 
-This proposal addresses an execution that completed screening, CPU confirmation, and both
+This recovery path addresses an execution that completed screening, CPU confirmation, and both
 authoritative full refits, then entered its first November finalist while the original exhaustive
 threshold algorithm was still running. The original marker remains `status=started`, and no
-`decision.json` exists. This document does not authorize signaling or inspecting the live process,
-opening December, reading the historical test, fitting a model, or contacting W&B/AWS/Registry.
+`decision.json` exists. The implementation does not authorize signaling or inspecting the live
+process, opening December, reading the historical test, fitting a model, or contacting
+W&B/AWS/Registry. Those actions remain prohibited until a separate operator handoff and explicit
+authorization are complete.
+
+## Implemented command surface
+
+Every command is dry-run by default. The `--apply` examples below document a future operator
+sequence; they were not run while implementing this mechanism.
+
+```bash
+# Static recovery preflight: no data rows, model runtime, tracking, or network.
+PYTHONPATH=src python scripts/run_v3_recovery.py --recovery-id <recovery-id>
+
+# After the original process has been terminated externally, freeze the handoff record.
+PYTHONPATH=src python scripts/create_v3_recovery_termination_record.py \
+  --recovery-id <recovery-id> \
+  --source-root <original-worktree> \
+  --source-log <original-log> \
+  --original-pid <pid> \
+  --wrapper-exit-status <status> \
+  --termination-mechanism '<operator-supplied mechanism>' \
+  --termination-reason threshold_sweep_performance_defect \
+  --confirm-original-terminated \
+  --apply
+
+# Export completed screening/CPU evidence through the read-only W&B API.
+PYTHONPATH=src python scripts/export_v3_recovery_evidence.py \
+  --recovery-id <recovery-id> \
+  --apply
+
+# Freeze the explicit authorization after both prior records exist.
+PYTHONPATH=src python scripts/create_v3_recovery_authorization.py \
+  --recovery-id <recovery-id> \
+  --selector-test-command '<exact command>' \
+  --selector-test-result '<exact result>' \
+  --benchmark-command '<exact command>' \
+  --benchmark-result '<exact result>' \
+  --apply
+
+# Run the authorized two-base refit and all 15 November finalists.
+PYTHONPATH=src python scripts/run_v3_recovery.py \
+  --recovery-id <recovery-id> \
+  --tracking online \
+  --apply
+
+# Separately adopt a completed recovery without rewriting the source marker.
+PYTHONPATH=src python scripts/adopt_v3_recovery.py \
+  --recovery-id <recovery-id> \
+  --apply
+```
+
+The source evidence exporter ignores the partial original November finalist and requires exactly
+eight completed screening runs plus four completed CPU-confirmation runs. It validates run IDs,
+URLs, timestamps, group, protocol and implementation lineage, family, backend, candidate identity,
+configuration, weight policy, feature-state lineage, and four complete fold summaries. Existing v3
+ranking functions then recompute top-two and top-one advancement. The immutable evidence JSON,
+termination record, and authorization cross-reference each other by SHA-256.
+
+Recovery outputs live only under `artifacts/v3/recovery/<recovery-id>/`. A separate adoption record
+copies completed recovery artifacts into previously absent canonical paths while preserving the
+original `status=started` marker byte-for-byte. Adoption refuses an existing canonical decision.
 
 ## Current durability boundary
 
