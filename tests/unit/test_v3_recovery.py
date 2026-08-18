@@ -109,7 +109,7 @@ def _raw_run(
         "name": f"v3-{candidate_id}-{backend.lower()}",
         "state": "finished",
         "created_at": "2026-08-17T01:00:00+00:00",
-        "updated_at": "2026-08-17T01:05:00+00:00",
+        "heartbeat_at": "2026-08-17T01:05:00+00:00",
         "group": SOURCE_GROUP,
         "config": {
             "group": SOURCE_GROUP,
@@ -279,7 +279,8 @@ def test_source_group_and_lineage_must_be_exact(v3_protocol: dict) -> None:
     [
         (lambda run: run.__setitem__("run_url", ""), "run ID and run URL"),
         (lambda run: run.__setitem__("state", "running"), "not finished"),
-        (lambda run: run.__setitem__("created_at", ""), "timestamps"),
+        (lambda run: run.__setitem__("created_at", ""), "created_at or heartbeat_at"),
+        (lambda run: run.__setitem__("heartbeat_at", ""), "created_at or heartbeat_at"),
         (lambda run: run.__setitem__("group", "wrong"), "group provenance"),
         (lambda run: run["config"].__setitem__("stage", "november_finalist"), "unexpected"),
         (
@@ -319,7 +320,7 @@ class FakeRun:
         self.name = payload["name"]
         self.state = payload["state"]
         self.created_at = payload["created_at"]
-        self.updated_at = payload["updated_at"]
+        self.heartbeat_at = payload["heartbeat_at"]
         self.group = payload["group"]
         self.config = payload["config"]
         self.summary = FakeSummary(payload["summary"])
@@ -346,6 +347,24 @@ def test_wandb_export_is_read_only_and_ignores_partial_finalist(v3_protocol: dic
         wandb_source_runs(
             entity="entity", project="project", source_group="wrong", api_factory=lambda: FakeApi()
         )
+
+
+def test_wandb_0281_public_run_timestamp_contract(v3_protocol: dict) -> None:
+    public_run = FakeRun(raw_tracking_runs(v3_protocol)[0])
+    assert public_run.created_at
+    assert public_run.heartbeat_at
+    assert not hasattr(public_run, "updated_at")
+
+    class FakeApi:
+        def runs(self, path: str, *, filters: dict[str, Any]) -> list[FakeRun]:
+            assert path == "entity/project"
+            assert filters == {"group": SOURCE_GROUP}
+            return [public_run]
+
+    exported = wandb_source_runs(entity="entity", project="project", api_factory=lambda: FakeApi())
+    assert exported[0]["created_at"] == public_run.created_at
+    assert exported[0]["heartbeat_at"] == public_run.heartbeat_at
+    assert "updated_at" not in exported[0]
 
 
 def _write_json(path: Path, payload: dict[str, Any]) -> None:

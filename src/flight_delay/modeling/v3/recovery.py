@@ -187,8 +187,8 @@ def _validated_tracking_run(
         raise V3RecoveryError("tracking evidence requires run ID and run URL")
     if run.get("state") != "finished":
         raise V3RecoveryError(f"source tracking run is not finished: {run_id}")
-    if not str(run.get("created_at", "")).strip() or not str(run.get("updated_at", "")).strip():
-        raise V3RecoveryError(f"tracking run lacks relevant timestamps: {run_id}")
+    if not str(run.get("created_at", "")).strip() or not str(run.get("heartbeat_at", "")).strip():
+        raise V3RecoveryError(f"tracking run lacks created_at or heartbeat_at: {run_id}")
     if run.get("group") != source_group:
         raise V3RecoveryError(f"source execution/group provenance mismatch: {run_id}")
 
@@ -239,7 +239,7 @@ def _validated_tracking_run(
         "name": str(run.get("name", "")),
         "state": "finished",
         "created_at": str(run["created_at"]),
-        "updated_at": str(run["updated_at"]),
+        "heartbeat_at": str(run["heartbeat_at"]),
         "group": source_group,
         "config": config,
         "summary": summary,
@@ -395,7 +395,7 @@ def wandb_source_runs(
                 "name": str(run.name),
                 "state": str(run.state),
                 "created_at": str(run.created_at),
-                "updated_at": str(run.updated_at),
+                "heartbeat_at": str(run.heartbeat_at),
                 "group": str(run.group),
                 "config": config,
                 "summary": dict(summary),
