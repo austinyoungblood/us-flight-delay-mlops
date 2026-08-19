@@ -1,7 +1,7 @@
 # Implementation status
 
 This record summarizes the repository's completed stages from foundation through the validated AWS
-demonstration and the governed v1/v2 challenger experiments. It is a navigation record; the
+demonstration and the governed v1/v2/v3 challenger experiments. It is a navigation record; the
 evidence manifest, curated captures, and experiment result reports provide the underlying evidence.
 
 ## Repository foundation
@@ -205,12 +205,12 @@ evidence manifest, curated captures, and experiment result reports provide the u
 
 ## Current repository validation
 
-- 454 tests pass with 86.87% branch-inclusive coverage; CI enforces an 86% minimum
+- 802 tests pass with 86.65% branch-inclusive coverage; CI enforces an 86% minimum
 - Coverage includes failure and edge behavior for API clients/contracts, persistence, monitoring,
   deployment/evidence validation, promotion policy/metadata, governed monitoring traffic, and
-  persisted prediction-source provenance, plus v1/v2 protocol drift, temporal-state parity, and
+  persisted prediction-source provenance, plus v1/v2/v3 protocol drift, temporal-state parity, and
   offline-isolation enforcement
-- Ruff lint and formatting checks, v1/v2/deployment/evidence manifest validation, and deployment
+- Ruff lint and formatting checks, v1/v2/v3/deployment/evidence manifest validation, and deployment
   shell syntax checks pass without contacting W&B or AWS
 
 ## Governed v2 model-improvement track
@@ -242,3 +242,25 @@ evidence manifest, curated captures, and experiment result reports provide the u
 - The complete interpretation and W&B run references are recorded in the
   [governed v2 result report](v2-model-experiment-result.md), with compact machine-readable evidence
   in [`experiments/v2/development_result.json`](../experiments/v2/development_result.json).
+
+## Governed v3 seasonal/temporal track
+
+- Froze an expanded 2024–2025 protocol with seasonal and holiday features, leakage-safe
+  same-calendar-month propensity, `UNIFORM` and `EXPONENTIAL_120D` weighting, LightGBM/CatBoost
+  temporal-robustness ranking, calibration variants, and ensemble finalists.
+- The original execution completed screening, CPU confirmation, and both full refits before an
+  exact threshold-sweep performance defect interrupted the first November finalist. The partial
+  finalist was excluded, and the original `status=started` marker was preserved byte-for-byte.
+- Completed an explicitly authorized recovery after freezing the incident evidence and applying a
+  mathematically equivalent `O(N log N)` selector correction. The recovery reconstructed frozen
+  advancement without repeating screening or CPU confirmation, repeated only the two unrecoverable
+  base refits, and evaluated all 15 finalists from scratch.
+- Reconstructed `LGBM12-UNIFORM` and `CB04-UNIFORM` as the advanced bases. All 15 raw, calibrated,
+  and ensemble finalists returned `no_eligible_threshold`, so downstream gates were not evaluated,
+  no winner or winner lock was created, and December qualification did not occur.
+- Canonically adopted the byte-identical recovery decision as `governed_stop`. The consumed
+  January–May 2026 historical final test and Registry `production:v0` remained untouched.
+- The complete incident, near-miss interpretation, governance boundaries, and W&B finalist
+  references are recorded in the [governed v3 result report](v3-model-experiment-result.md), with
+  compact machine-readable evidence in
+  [`experiments/v3/development_result.json`](../experiments/v3/development_result.json).

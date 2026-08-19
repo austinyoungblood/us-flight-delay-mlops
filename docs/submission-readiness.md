@@ -2,7 +2,7 @@
 
 This checklist is a current navigation layer for the repository's implementation, governance, and
 evidence. Historical stage reports preserve the state that existed when each stage was reviewed;
-the README, this checklist, and the v1/v2 result reports describe the final project state.
+the README, this checklist, and the v1/v2/v3 result reports describe the final project state.
 
 ## Architecture
 
@@ -33,8 +33,8 @@ the README, this checklist, and the v1/v2 result reports describe the final proj
 - [x] Runtime metadata discloses `deployment_purpose=academic_demo` and
   `internal_production_gate_passed=false`; the alias is not a claim of enterprise production
   readiness.
-- [x] V0 remains deployed because neither v1 nor v2 crossed the locked November eligibility
-  frontier required to create a winner.
+- [x] V0 remains deployed because v1, v2, and v3 all stopped at the locked November threshold
+  eligibility frontier without creating a winner.
 
 ## Governed experiments
 
@@ -43,18 +43,27 @@ the README, this checklist, and the v1/v2 result reports describe the final proj
 - [x] [V2 result](v2-model-experiment-result.md): prior-month historical propensity features plus
   LightGBM/CatBoost improved rolling ranking, but all 12 November finalists returned
   `no_eligible_threshold`; December remained unopened.
+- [x] [V3 result](v3-model-experiment-result.md): expanded 2024–2025 history, seasonal/temporal
+  features, two boosting families, calibration, and ensembles produced 15 finalists; all returned
+  `no_eligible_threshold`, so downstream gates were not evaluated and v0 was retained.
+- [x] The governed v3 recovery preserved the original `status=started` marker, froze and hashed the
+  incident evidence, applied a mathematically equivalent exact-selector correction, reconstructed
+  completed advancement from immutable tracking evidence, reevaluated all finalists from scratch,
+  and adopted the byte-identical `governed_stop` decision.
 - [x] Compact public evidence is committed at
   [`experiments/v1/development_result.json`](../experiments/v1/development_result.json) and
-  [`experiments/v2/development_result.json`](../experiments/v2/development_result.json).
+  [`experiments/v2/development_result.json`](../experiments/v2/development_result.json), plus the
+  v3 recovery result at
+  [`experiments/v3/development_result.json`](../experiments/v3/development_result.json).
 - [x] Raw decisions, model files, historical-state payloads, threshold tables, Parquet data, and
   W&B local files remain excluded from Git.
 
 ## CI/CD
 
 - [x] Pull requests run Ruff lint, Ruff format verification, branch-inclusive pytest coverage,
-  v1/v2/deployment/evidence validators, deployment-shell syntax checks, and all three container
+  v1/v2/v3/deployment/evidence validators, deployment-shell syntax checks, and all three container
   builds.
-- [x] Container checks prove the optional v1/v2 modeling packages are absent from the runtime
+- [x] Container checks prove the optional v1/v2/v3 modeling packages are absent from the runtime
   images.
 - [x] Promotion is a separate manual, policy-checked workflow; experiment completion cannot mutate
   the Registry or deploy a model.
@@ -77,7 +86,7 @@ the README, this checklist, and the v1/v2 result reports describe the final proj
 
 ## Testing and coverage
 
-- [x] The complete hermetic suite contains 454 tests, passes at 86.87% branch-inclusive coverage,
+- [x] The complete hermetic suite contains 802 tests, passes at 86.65% branch-inclusive coverage,
   and enforces an 86% minimum.
 - [x] Tests cover feature leakage, data contracts, modeling governance, API/UI contracts,
   persistence, monitoring, deployment validation, protocol drift, offline isolation, and failure
@@ -96,7 +105,12 @@ the README, this checklist, and the v1/v2 result reports describe the final proj
 - [x] Evidence manifest redaction instructions cover account identifiers, addresses, DNS values,
   operator CIDRs, and secrets before public submission.
 - [x] V1/v2 development did not reopen the consumed January–May 2026 test, open December, alter the
-  threshold, mutate `production:v0`, deploy, or contact AWS.
+  threshold, mutate `production:v0`, deploy, or contact AWS. The actual governed v3 execution and
+  recovery likewise left the historical test, Registry, deployment, AWS, and production v0
+  untouched and stopped before December qualification.
+- [x] V3 discloses its separate pre-run boundary precisely: December 2025 was transiently
+  materialized once during implementation testing, no model was scored against it and no decision
+  used it, and the test was replaced with synthetic data before governed execution.
 
 ## Known limitations
 
@@ -106,9 +120,10 @@ the README, this checklist, and the v1/v2 result reports describe the final proj
   feedback values prove system wiring, not statistical production performance.
 - The August 15 batch is explicitly synthetic load, not organic traveler behavior, and contains no
   fabricated feedback.
-- V1 and v2 both stopped at November threshold eligibility. V2's rolling-origin improvement did not
-  remain strong enough in late November, so temporal robustness and seasonality remain open modeling
-  problems.
+- V1, v2, and v3 all stopped at November threshold eligibility. V3's additional history,
+  seasonality, weighting, calibration, and ensembles still could not produce a simultaneous
+  `P >= .30 / R >= .60 / PPR <= .50` operating point, so precision/recall generalization remains an
+  open modeling problem.
 - The W&B project and artifact page shells were checked for public reachability, but nested views may
   still depend on W&B's current anonymous-access behavior.
 
@@ -127,3 +142,4 @@ the README, this checklist, and the v1/v2 result reports describe the final proj
 | W&B/GitHub visibility audit | [`docs/public-deliverables.md`](public-deliverables.md) |
 | V1 report / compact JSON | [`docs/v1-model-experiment-result.md`](v1-model-experiment-result.md) / [`experiments/v1/development_result.json`](../experiments/v1/development_result.json) |
 | V2 report / compact JSON | [`docs/v2-model-experiment-result.md`](v2-model-experiment-result.md) / [`experiments/v2/development_result.json`](../experiments/v2/development_result.json) |
+| V3 report / compact JSON | [`docs/v3-model-experiment-result.md`](v3-model-experiment-result.md) / [`experiments/v3/development_result.json`](../experiments/v3/development_result.json) |
