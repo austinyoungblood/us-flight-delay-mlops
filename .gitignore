@@ -1,9 +1,21 @@
 # Secrets and local configuration
 .env
 .env.*
-!.env.example
+.netrc
+.aws/
+.ssh/
+id_rsa
+id_rsa.*
+id_ed25519
+id_ed25519.*
 *.pem
 *.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+.credentials/
+credentials.local.*
 
 # Python and tooling
 __pycache__/
@@ -13,6 +25,7 @@ __pycache__/
 .coverage
 htmlcov/
 .mypy_cache/
+.cache/
 .venv/
 venv/
 dist/
@@ -27,6 +40,7 @@ data/processed_v3/
 models/
 artifacts/
 wandb/
+.wandb/
 *.csv
 *.parquet
 *.pkl

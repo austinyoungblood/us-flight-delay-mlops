@@ -13,7 +13,6 @@ from flight_delay.promotion import (
     AliasState,
     CandidateMetadataError,
     CandidateRecord,
-    InMemoryRegistryAdapter,
     PolicyError,
     RegistryAdapterError,
     WandbRegistryAdapter,
@@ -88,6 +87,54 @@ def state(item: CandidateRecord, alias: str = "production") -> AliasState:
         digest=item.registry_digest,
         source_digest=item.source_artifact_digest,
     )
+
+
+class InMemoryRegistryAdapter:
+    """Deterministic Registry fake kept entirely within test support."""
+
+    def __init__(
+        self,
+        candidates: list[CandidateRecord],
+        aliases: dict[tuple[str, str], AliasState] | None = None,
+        *,
+        verification_failure: bool = False,
+    ) -> None:
+        self._candidates = list(candidates)
+        self.aliases = dict(aliases or {})
+        self.verification_failure = verification_failure
+        self.mutations = 0
+
+    def list_candidates(self, _policy: object) -> list[CandidateRecord]:
+        return list(self._candidates)
+
+    def resolve_alias(self, registry_path: str, alias: str) -> AliasState | None:
+        return self.aliases.get((registry_path, alias))
+
+    def promote(
+        self,
+        item: CandidateRecord,
+        *,
+        alias: str,
+        expected_before: AliasState | None,
+    ) -> AliasState:
+        key = (item.registry_path, alias)
+        current = self.aliases.get(key)
+        if current is not None and current.immutable_identity == item.immutable_identity:
+            return current
+        if current != expected_before:
+            raise RegistryAdapterError("Registry alias precondition changed concurrently")
+        self.mutations += 1
+        updated = AliasState(
+            registry_path=item.registry_path,
+            alias=alias,
+            version=item.registry_version,
+            digest=("wrong" if self.verification_failure else item.registry_digest),
+            source_digest=item.source_artifact_digest,
+        )
+        self.aliases[key] = updated
+        if updated.immutable_identity != item.immutable_identity:
+            raise RegistryAdapterError("Registry alias post-promotion verification failed")
+        return updated
 
 
 def test_policy_is_versioned_and_prohibits_final_test_ranking(tmp_path: Path) -> None:

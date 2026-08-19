@@ -28,7 +28,6 @@ jobs:
   promotion:
     runs-on: ubuntu-latest
     env:
-      WANDB_API_KEY: ${{ secrets.WANDB_API_KEY }}
       WANDB_ENTITY: austin-youngblood-university-of-denver
       WANDB_PROJECT: us-flight-delay-mlops
     steps:
@@ -36,6 +35,8 @@ jobs:
         with:
           fetch-depth: 0
       - name: Require W&B API key
+        env:
+          WANDB_API_KEY: ${{ secrets.WANDB_API_KEY }}
         shell: bash
         run: |
           if [[ -z "${WANDB_API_KEY:-}" ]]; then
@@ -55,13 +56,16 @@ jobs:
           pytest tests/unit/test_promotion.py tests/integration/test_promotion_workflow.py
       - name: Select candidate and emit audit
         id: promotion
+        env:
+          CANDIDATE_VERSION: ${{ inputs.candidate_version }}
+          WANDB_API_KEY: ${{ secrets.WANDB_API_KEY }}
         shell: bash
         run: |
           MODE="apply"
           if [[ "${{ inputs.dry_run }}" == "true" ]]; then MODE="dry-run"; fi
           ARGS=(run --mode "$MODE" --target-alias "${{ inputs.target_alias }}" --output promotion_decision.json --log-wandb-run)
-          if [[ -n "${{ inputs.candidate_version }}" ]]; then
-            ARGS+=(--candidate-version "${{ inputs.candidate_version }}")
+          if [[ -n "${CANDIDATE_VERSION}" ]]; then
+            ARGS+=(--candidate-version "${CANDIDATE_VERSION}")
           fi
           rm -f promotion_decision.json
           PYTHONPATH=src python scripts/promote_model.py "${ARGS[@]}"

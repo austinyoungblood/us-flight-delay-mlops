@@ -3,7 +3,7 @@
 The canonical post-session mapping is `evidence/evidence_manifest.json`. It records whether each
 criterion is required, whether it is verified by `public_url`, `screenshot`, or `supplemental`
 evidence, and whether that evidence is available. It supports multiple files for one screenshot
-criterion and flags captures that still require redaction before public release. Run:
+criterion and records publication-safety notes where applicable. Run:
 
 ```bash
 python scripts/validate_evidence_manifest.py --require-files
@@ -42,9 +42,10 @@ screenshots are not rubric-required:
   academic-demo/internal-gate notice.
 
 Dedicated `14_app_health.png` and `15_app_model_info.png` captures are documented as non-required
-supplemental evidence. They were not captured and are not reported as rubric failures. The local
-`21_live_smoke_summary.json` is also supplemental and must not substitute for required AWS or live
-application screenshots.
+supplemental evidence. They were not captured and are not reported as rubric failures. The compact
+[`final_live_smoke_summary.json`](../evidence/final_live_smoke_summary.json) is also supplemental and
+must not substitute for required AWS or live application screenshots. It records the final passed
+three-service smoke without endpoints, payloads, credentials, or local paths.
 
 Screenshots must never display the W&B token, AWS credentials, `.env` content, SSH keys, or terminal
 history containing secrets. Apply every `redaction-required` instruction in the evidence manifest

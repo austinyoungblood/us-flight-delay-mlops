@@ -1,10 +1,11 @@
-# R3 sigmoid model card — governed release decision
+# R3 sigmoid model card — governed `production:v0` release
 
 ## Intended use
 
 Estimate, before departure, whether a scheduled U.S. domestic flight will arrive at least 15
-minutes late. The candidate is suitable for a controlled serving environment
-under the W&B Registry `staging` alias. It is not approved as a real-world production model.
+minutes late. The frozen release is served as W&B Registry `production:v0` for a controlled
+academic demonstration. Its metadata reports `deployment_purpose=academic_demo` and
+`internal_production_gate_passed=false`; the alias is not approval for real-world operational use.
 
 ## Model and data
 
@@ -23,8 +24,12 @@ inference-contract gates. It failed calibration and proper-scoring gates: Brier 
 `-0.013549`, log loss `0.520272` versus prior `0.517856`, probability gap `0.079739`, and ECE15
 `0.079739`.
 
-Release status is therefore `staging`; `production` is absent. See `docs/final-test-report.md` and
-`release/release_decision.json` for immutable evidence.
+At the one-time final-test decision checkpoint, the model retained only `staging` because it failed
+the internal production-quality gate. A later governed deployment assigned the same immutable `v0`
+release the `production` alias for the academic demonstration without changing the model, threshold,
+bundle, test decision, or failed gate. See [`final-test-report.md`](final-test-report.md) for the
+historical decision and [`release/release_decision.json`](../release/release_decision.json) for the
+current frozen serving identity.
 
 ## Limitations
 

@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "mode": "live",
+  "status": "passed",
+  "model": {
+    "alias": "production",
+    "version": "v0",
+    "registry_digest": "865ddd18f6debd44f24a79fc71739f2a",
+    "bundle_sha256": "2677b7093d66637852705d33bca006c3b78d8119f4d7268801453aa18c22f572",
+    "deployment_purpose": "academic_demo",
+    "internal_production_gate_passed": false
+  },
+  "predictions": {
+    "count": 2,
+    "unique_ids": true,
+    "retrieved": 2,
+    "second_cache_hit": true
+  },
+  "feedback_persisted": true,
+  "interfaces": {
+    "api": "ready",
+    "traveler": "ready",
+    "monitor": "ready"
+  },
+  "raw_ignored_smoke_evidence_sha256": "6a6af69da3b5b930fa6127387e7abf0de020f3095dc728f7ce8ab2d6ad988b54"
+}

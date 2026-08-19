@@ -1,11 +1,17 @@
 # One-time final-test report
 
+> **Historical decision record:** This report preserves the state at the one-time final-test
+> checkpoint. The unchanged Registry `v0` was later assigned the `production` alias for an
+> `academic_demo` deployment while `internal_production_gate_passed=false` remained unchanged. The
+> later alias did not reopen the test, retrain or recalibrate the model, change its threshold, or
+> reverse any gate below.
+
 ## Decision
 
 The immutable R3 sigmoid candidate did not pass every precommitted final-test production gate.
-Registry version `wandb-registry-Model/us-flight-arrival-delay-15m:v0` therefore retains `staging`
-and did not receive `production`. The serving runtime must consume `serving_alias=staging`
-from `release/release_decision.json`; no post-test retraining or threshold adjustment is authorized.
+At this historical checkpoint, Registry version
+`wandb-registry-Model/us-flight-arrival-delay-15m:v0` therefore retained `staging` and did not receive
+`production`. No post-test retraining or threshold adjustment was authorized.
 
 ## Locked candidate and lineage
 
@@ -66,10 +72,21 @@ Reported non-gating threshold metrics:
 
 The model retained useful ranking lift and high recall, but its probabilities were systematically
 high relative to 2026 prevalence and did not beat the contemporaneous constant-prior predictor on
-proper scores. The result is a governed `staging` release, not production qualification. The final
-test is consumed and must never be used for retraining, recalibration, or threshold selection.
+proper scores. At that checkpoint, the result was a governed `staging` release, not production
+qualification. The final test is consumed and must never be used for retraining, recalibration, or
+threshold selection.
 
-## Final validation
+## Subsequent serving state
+
+The same immutable release is now served as `production:v0` solely for the controlled academic
+demonstration. The current frozen identity remains registry digest
+`865ddd18f6debd44f24a79fc71739f2a`, bundle SHA-256
+`2677b7093d66637852705d33bca006c3b78d8119f4d7268801453aa18c22f572`, and threshold
+`0.1840285229739868`, with the internal production gate still false. See the
+[`release decision`](../release/release_decision.json) and
+[`deployment manifest`](../deploy/deployment_manifest.json).
+
+## Historical checkpoint validation
 
 - Python 3.11.14
 - Ruff check and formatting: pass; 48 files formatted
@@ -77,7 +94,7 @@ test is consumed and must never be used for retraining, recalibration, or thresh
 - Branch coverage: 80.29% with an enforced 80% minimum
 - Marker rerun audit: refused before test access with `final-test marker already exists`
 - W&B audit: exactly one finished final-test run with locked data and bundle lineage
-- Registry audit: `v0` has `latest` and `staging`; `production` is absent
-- API image: `sha256:532f260988b78ffbcaa039dabf8cf6734fd9caa99877bdb4c8ecfa5d7c210de8`
-- User UI image: `sha256:0fc962b14ee704da034498e0137a7b19475917808ad1804fac20c37ab203fb6f`
-- Monitor UI image: `sha256:3e50b103f21b27e32dfbc10864397eca0b566c60cc632b74caf170494e2c8dbf`
+- Registry audit at that time: `v0` had `latest` and `staging`; `production` was absent
+- Historical API image: `sha256:532f260988b78ffbcaa039dabf8cf6734fd9caa99877bdb4c8ecfa5d7c210de8`
+- Historical User UI image: `sha256:0fc962b14ee704da034498e0137a7b19475917808ad1804fac20c37ab203fb6f`
+- Historical Monitor UI image: `sha256:3e50b103f21b27e32dfbc10864397eca0b566c60cc632b74caf170494e2c8dbf`

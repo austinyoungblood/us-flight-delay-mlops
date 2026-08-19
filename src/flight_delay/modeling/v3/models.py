@@ -14,7 +14,6 @@ from sklearn.linear_model import LogisticRegression
 
 from flight_delay.modeling.v2.models import require_versions
 from flight_delay.modeling.v3.protocol import (
-    CALIBRATION_VARIANTS,
     CANDIDATE_IDENTITY_IDS,
     CATEGORICAL_FEATURES,
     INTEGER_CATEGORICAL_FEATURES,
@@ -355,7 +354,3 @@ def validate_constructor_contract(
     if len(observed) != 12:
         raise V3ModelError("constructor contract must cover eight identities across backends")
     return observed
-
-
-def calibration_variant_ids() -> tuple[str, ...]:
-    return CALIBRATION_VARIANTS

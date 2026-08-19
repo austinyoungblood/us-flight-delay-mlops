@@ -1,58 +1,87 @@
-# Public deliverable visibility audit
+# Public deliverables and visibility status
 
-Audit date: 2026-08-12. The W&B checks used unauthenticated HTTP requests and did not load the local
-W&B API key. Each URL returned HTTP 200 without a redirect:
+This page separates the final repository state from time-bounded public-access checks. It does not
+claim that external endpoints or nested W&B views remain continuously available.
+
+## Public project surfaces
+
+The public source repository is
+[`austinyoungblood/us-flight-delay-mlops`](https://github.com/austinyoungblood/us-flight-delay-mlops).
+The final hermetic baseline contains 809 passing tests at 86.69% branch-inclusive coverage, with an
+86% minimum enforced by pull-request CI. CI also runs Ruff, formatting, all v1/v2/v3 offline
+validators, deployment/evidence validation, shell syntax checks, three service-image builds, and
+runtime dependency-isolation probes.
+
+An unauthenticated visibility audit on 2026-08-12 returned HTTP 200 for these public W&B page shells:
 
 - [W&B project](https://wandb.ai/austin-youngblood-university-of-denver/us-flight-delay-mlops)
 - [dataset artifact v0](https://wandb.ai/austin-youngblood-university-of-denver/us-flight-delay-mlops/artifacts/dataset/flight-delay-bts-sampled/v0)
 - [one-time final-test run](https://wandb.ai/austin-youngblood-university-of-denver/us-flight-delay-mlops/runs/w4te9tla)
 - [Registry collection](https://wandb.ai/austin-youngblood-university-of-denver/registry/model?selectionPath=austin-youngblood-university-of-denver/wandb-registry-Model/us-flight-arrival-delay-15m)
 
-The final pre-AWS Registry identity is `wandb-registry-Model/us-flight-arrival-delay-15m`, aliases
-`production` and `staging`, version `v0`, digest `865ddd18f6debd44f24a79fc71739f2a`.
-`production` is the course-required academic deployment alias; it does not supersede the recorded
-failed internal production-quality gate. HTTP 200 proves that the
-unauthenticated page shell is reachable; it does not prove every nested artifact panel renders to a
-logged-out viewer. A fresh private-browser visual check of project, artifact, run, and Registry
-content remains a pre-activation go/no-go capture. Any login wall or restricted nested panel must be
-recorded as the precise visibility limitation rather than represented as public proof.
+That historical check proved page-shell reachability at the time, not perpetual availability or
+anonymous rendering of every nested panel. The final scrub did not contact W&B or revalidate the
+network claims.
 
-The full audited reachable Git history is published at the public
-[GitHub repository](https://github.com/austinyoungblood/us-flight-delay-mlops). `main` contains the
-accepted deployment-preflight merge (`521bb39bad46fbde328e9b386b39aebb3eb7a622`), and the
-serving-alias/promotion work is documented in
-[PR #2](https://github.com/austinyoungblood/us-flight-delay-mlops/pull/2). Its
-GitHub Actions `validate` job proves Ruff, format, 179 tests with 80.21% branch coverage, both strict
-manifest validators, shell syntax, and all three container builds. Branch protection requires that
-context, one approval, and resolved conversations before merge.
+## Frozen model and application identity
 
-The three frozen GHCR artifacts are:
+The Registry collection is `wandb-registry-Model/us-flight-arrival-delay-15m`. The served release is
+alias `production`, version `v0`, digest `865ddd18f6debd44f24a79fc71739f2a`, with bundle SHA-256
+`2677b7093d66637852705d33bca006c3b78d8119f4d7268801453aa18c22f572` and threshold
+`0.1840285229739868`. The alias is scoped to `deployment_purpose=academic_demo`; the immutable
+metadata still reports `internal_production_gate_passed=false`.
 
-- `ghcr.io/austinyoungblood/us-flight-delay-mlops-api@sha256:7175844d53a46ed96c5cd3198e8fb6defbdf67bd0c640999914272b26e9433d4`
-- `ghcr.io/austinyoungblood/us-flight-delay-mlops-traveler@sha256:9afd05f6697609fbda7b130ff6e61afa29cab936981ae6f990fe5914fb71fb47`
-- `ghcr.io/austinyoungblood/us-flight-delay-mlops-monitor@sha256:7b038768c7474d7702909a747014e2725b77654d83aeb0fac1f1dac4db41ef62`
+The latest provenance-enabled application release was published from source revision
+`ce10f1a123bbe21eb75ca31b2681caf90ccda731`:
 
-All three carry source revision `355d99226883ebae1705d9f5a12eaffbe7bc6c8a`. On 2026-08-12 the GitHub
-Packages API reported each package `public`. After `docker logout ghcr.io`, anonymous pulls of all
-three exact references succeeded and returned the expected digests; no publisher credential was
-available to those pulls.
+- API: `ghcr.io/austinyoungblood/us-flight-delay-mlops-api@sha256:8c70e59c1cd24be98be5e47fd318464d7bae95aaf1be44608af3b33adacbca0e`
+- Traveler: `ghcr.io/austinyoungblood/us-flight-delay-mlops-traveler@sha256:06d36b32304b9f7711d0b224fa9d7f049a8875b761dffd907c17a73f3eebef94`
+- Monitor: `ghcr.io/austinyoungblood/us-flight-delay-mlops-monitor@sha256:97a4e6bb99358e8cfe6885581713fd2731f64ea97164ad6a4d64f6efb1c7277c`
 
-## Provenance application release and operational evidence
+Each digest passed an anonymous pull with an isolated Docker configuration at publication time. This
+same source revision and image set is the single identity frozen in the
+[deployment manifest](../deploy/deployment_manifest.json) and directly validated during the
+time-bounded AWS deployment. Later monitoring audits prove application behavior and persistence;
+they do not imply continuous endpoint availability. The [evidence index](../evidence/evidence_manifest.json)
+records the corresponding time-bounded proof.
 
-On 2026-08-14, three provenance-enabled application images were built from exact source revision
-`ce10f1a123bbe21eb75ca31b2681caf90ccda731` and published at these immutable references:
+## Governed challenger evidence
 
-- `ghcr.io/austinyoungblood/us-flight-delay-mlops-api@sha256:8c70e59c1cd24be98be5e47fd318464d7bae95aaf1be44608af3b33adacbca0e`
-- `ghcr.io/austinyoungblood/us-flight-delay-mlops-traveler@sha256:06d36b32304b9f7711d0b224fa9d7f049a8875b761dffd907c17a73f3eebef94`
-- `ghcr.io/austinyoungblood/us-flight-delay-mlops-monitor@sha256:97a4e6bb99358e8cfe6885581713fd2731f64ea97164ad6a4d64f6efb1c7277c`
+All applied challenger tracks retained `production:v0`:
 
-Each digest passed an anonymous pull using an isolated Docker configuration with no credentials.
-The later August 15, 2026 scheduled API-only monitoring batch recorded 150 planned requests, 150
-successful responses, zero failures, `traffic_source=synthetic_load_test`, and passed audit and
-persistence validation. That record proves the provenance-capable API/persistence path, but does not
-independently attest which immutable image digest was active. The governed Registry `production:v0`
-model and its immutable digests are unchanged.
+- [v1 result](v1-model-experiment-result.md): six November finalists, no eligible threshold.
+- [v2 result](v2-model-experiment-result.md): 12 November finalists, no eligible threshold.
+- [v3 result and recovery](v3-model-experiment-result.md): 15 November finalists, no eligible
+  threshold after governed recovery.
 
-Governed challenger outcomes are published in the [v1 result report](v1-model-experiment-result.md)
-and [v2 result report](v2-model-experiment-result.md), with their W&B run links and compact sanitized
-JSON companions.
+Threshold ineligibility short-circuited each workflow before downstream gates. The reports do not
+represent unexecuted downstream gates as failures. No challenger reopened the consumed historical
+final test, advanced to December qualification, changed the threshold, or mutated the Registry.
+
+## Final smoke and monitoring evidence
+
+The sanitized final smoke summary records `status=passed`, two unique predictions, two application
+retrievals, a cache hit on the second prediction, persisted feedback, and ready API, Traveler, and
+Monitor services. It intentionally omits endpoints, account information, payloads, credentials, and
+local paths. See [`final_live_smoke_summary.json`](../evidence/final_live_smoke_summary.json).
+
+For UTC 2026-08-14 through 2026-08-19 with demo data excluded, the Monitor recorded 461 requests,
+461 successes, zero errors, 34 cache hits (`7.4%`), and `28.353 ms` p95 latency. Source attribution
+was 305 `synthetic_load_test`, 155 `legacy_unattributed`, and one `traveler_ui`.
+
+The August 15 scheduled API-only batch and August 19 operator-invoked batch each completed 150/150
+with zero failures and passed persistence validation. The synthetic total also includes five
+provenance canaries; it is not 305 scheduled events or organic traveler behavior. The scheduled
+August 16 and 17 attempts timed out before generation and remain documented availability failures.
+See the [monitoring evidence report](monitoring-evidence.md) for audit hashes and interpretation.
+
+## Evidence navigation
+
+- [Submission readiness](submission-readiness.md)
+- [Architecture](architecture.md)
+- [Model card](model-card.md)
+- [Final-test historical decision](final-test-report.md)
+- [Deployment manifest](../deploy/deployment_manifest.json)
+- [Evidence manifest](../evidence/evidence_manifest.json)
+- [Final evidence checklist](final-evidence-checklist.md)
+- [Curated screenshots](../aws/screenshots)

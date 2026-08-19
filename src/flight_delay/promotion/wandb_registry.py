@@ -1,4 +1,4 @@
-"""Narrow W&B Registry adapter plus an in-memory test implementation."""
+"""Narrow W&B Registry adapter."""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ import json
 from dataclasses import dataclass
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Any, Protocol
+from typing import Any
 
 import joblib
 import wandb
@@ -32,20 +32,6 @@ class AliasState:
     @property
     def immutable_identity(self) -> str:
         return f"{self.registry_path}:{self.version}@{self.digest}"
-
-
-class RegistryAdapter(Protocol):
-    def list_candidates(self, policy: PromotionPolicy) -> list[CandidateRecord]: ...
-
-    def resolve_alias(self, registry_path: str, alias: str) -> AliasState | None: ...
-
-    def promote(
-        self,
-        candidate: CandidateRecord,
-        *,
-        alias: str,
-        expected_before: AliasState | None,
-    ) -> AliasState: ...
 
 
 def _state(artifact: Any, registry_path: str, alias: str) -> AliasState:
@@ -197,51 +183,3 @@ class WandbRegistryAdapter:
         if verified is None or verified.immutable_identity != candidate.immutable_identity:
             raise RegistryAdapterError("Registry alias post-promotion verification failed")
         return verified
-
-
-class InMemoryRegistryAdapter:
-    """Deterministic fake adapter for dry-run, idempotency, and precondition tests."""
-
-    def __init__(
-        self,
-        candidates: list[CandidateRecord],
-        aliases: dict[tuple[str, str], AliasState] | None = None,
-        *,
-        verification_failure: bool = False,
-    ) -> None:
-        self._candidates = list(candidates)
-        self.aliases = dict(aliases or {})
-        self.verification_failure = verification_failure
-        self.mutations = 0
-
-    def list_candidates(self, policy: PromotionPolicy) -> list[CandidateRecord]:
-        return list(self._candidates)
-
-    def resolve_alias(self, registry_path: str, alias: str) -> AliasState | None:
-        return self.aliases.get((registry_path, alias))
-
-    def promote(
-        self,
-        candidate: CandidateRecord,
-        *,
-        alias: str,
-        expected_before: AliasState | None,
-    ) -> AliasState:
-        key = (candidate.registry_path, alias)
-        current = self.aliases.get(key)
-        if current is not None and current.immutable_identity == candidate.immutable_identity:
-            return current
-        if current != expected_before:
-            raise RegistryAdapterError("Registry alias precondition changed concurrently")
-        self.mutations += 1
-        state = AliasState(
-            registry_path=candidate.registry_path,
-            alias=alias,
-            version=candidate.registry_version,
-            digest=("wrong" if self.verification_failure else candidate.registry_digest),
-            source_digest=candidate.source_artifact_digest,
-        )
-        self.aliases[key] = state
-        if state.immutable_identity != candidate.immutable_identity:
-            raise RegistryAdapterError("Registry alias post-promotion verification failed")
-        return state

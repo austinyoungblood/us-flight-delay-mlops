@@ -6,7 +6,6 @@ from flight_delay.promotion.policy import PolicyError, PromotionPolicy, load_pol
 from flight_delay.promotion.selector import SelectionResult, select_candidates
 from flight_delay.promotion.wandb_registry import (
     AliasState,
-    InMemoryRegistryAdapter,
     RegistryAdapterError,
     WandbRegistryAdapter,
 )
@@ -15,7 +14,6 @@ __all__ = [
     "AliasState",
     "CandidateMetadataError",
     "CandidateRecord",
-    "InMemoryRegistryAdapter",
     "PolicyError",
     "PromotionPolicy",
     "RegistryAdapterError",

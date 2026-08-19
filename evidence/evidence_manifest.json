@@ -1,7 +1,8 @@
 {
   "schema_version": 2,
   "artifact_directories": [
-    "aws/screenshots"
+    "aws/screenshots",
+    "evidence"
   ],
   "captures": [
     {
@@ -73,8 +74,8 @@
       "status": "captured",
       "source_url": "https://console.aws.amazon.com/ec2/home?region=us-east-1",
       "instance": "three-host-list",
-      "publication_status": "redaction-required",
-      "redaction_notes": "Redact public IPv4 address and public DNS values before a public commit; preserve instance names, t3.small types, running state, and passed status checks.",
+      "publication_status": "public-ready",
+      "redaction_notes": "Removed the public IPv4 address and public DNS columns and masked instance IDs with opaque pixels; preserved instance names, t3.small types, running state, Availability Zone, and passed status checks.",
       "verification": "The capture shows the three named project instances running as t3.small with all status checks passed."
     },
     {
@@ -90,8 +91,8 @@
       "status": "captured",
       "source_url": "https://console.aws.amazon.com/ec2/home?region=us-east-1#SecurityGroups:",
       "instance": "three-security-groups",
-      "publication_status": "redaction-required",
-      "redaction_notes": "Redact the AWS account owner ID and operator /32 source IP before a public commit; preserve ports, group names, and the Traveler-group-to-API rule.",
+      "publication_status": "public-ready",
+      "redaction_notes": "Opaque masks removed AWS owner/account, resource IDs, and operator addresses while retaining security-group names, ports, REDACTED /32 semantics, and the Traveler-group-to-API relationship.",
       "verification": "Together the captures prove separate API, Traveler, and Monitor inbound rules and the security-group-to-security-group Traveler-to-API path."
     },
     {
@@ -107,8 +108,8 @@
       "status": "captured",
       "source_url": "https://console.aws.amazon.com/ec2/home?region=us-east-1",
       "instance": "api-traveler-monitor",
-      "publication_status": "redaction-required",
-      "redaction_notes": "Redact the AWS account ID embedded in instance ARNs and the public/private IP and DNS values before a public commit; preserve instance names and IAM role fields.",
+      "publication_status": "public-ready",
+      "redaction_notes": "Opaque masks removed instance/resource IDs, account-bearing ARNs, and all public/private IP and DNS values; preserved instance names, running state, t3.small type, IAM-role presence or absence, and IMDSv2 Required.",
       "verification": "Together the captures show LabRole on API and Monitor, no IAM role on Traveler, and IMDSv2 required."
     },
     {
@@ -159,8 +160,8 @@
       "status": "captured",
       "source_url": "live-session://flight-api/docs",
       "instance": "flight-api",
-      "publication_status": "redaction-required",
-      "redaction_notes": "Redact the API public IPv4 address from the browser address bar before a public commit; preserve the six endpoint rows.",
+      "publication_status": "public-ready",
+      "redaction_notes": "Cropped the complete browser toolbar, removing the public address, browser profile/avatar, and browser chrome while preserving the API title and all six endpoint rows.",
       "verification": "The capture shows the live FastAPI Swagger UI and all six required endpoints."
     },
     {
@@ -184,6 +185,18 @@
       "source_url": "live-session://flight-api/model-info",
       "instance": "flight-api",
       "verification": "No dedicated model-info screenshot was required or captured; immutable identity remains documented in the release decision and deployment evidence."
+    },
+    {
+      "criterion": "app.final_live_smoke",
+      "evidence_mode": "supplemental",
+      "required": false,
+      "filename": "final_live_smoke_summary.json",
+      "source": "application",
+      "status": "captured",
+      "source_url": "live-session://flight-api/final-smoke",
+      "instance": "three-service-live-smoke",
+      "publication_status": "public-ready",
+      "verification": "Inspect the sanitized summary for the frozen production:v0 identity, two unique and retrieved predictions, second-request cache hit, persisted feedback, three ready interfaces, and the SHA-256 of the ignored raw smoke output."
     },
     {
       "criterion": "app.traveler_prediction",

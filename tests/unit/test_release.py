@@ -1,5 +1,6 @@
 import hashlib
 import json
+from io import BytesIO
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -7,6 +8,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
+import flight_delay.modeling.release as release_module
 from flight_delay.modeling.release import (
     DATASET_ARTIFACT,
     DATASET_DIGEST,
@@ -61,6 +63,83 @@ def test_policy_locks_candidate_and_forbids_search() -> None:
     with pytest.raises(ReleaseGuardError, match="unauthorized search"):
         validate_release_policy(changed)
     assert LOCKED_THRESHOLD == 0.1840285229739868
+
+
+def test_serialization_round_trip_executes_dump_load_and_prediction_comparison(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    events: list[str] = []
+    features = pd.DataFrame({"probability": [0.1, 0.9]})
+    expected = np.array([0.1, 0.9])
+
+    class RestoredModel:
+        def predict_proba(self, observed: pd.DataFrame) -> np.ndarray:
+            events.append("predict")
+            pd.testing.assert_frame_equal(observed, features)
+            return np.column_stack((1 - expected, expected))
+
+    def fake_dump(model: object, buffer: BytesIO) -> None:
+        assert isinstance(model, _Model)
+        events.append("dump")
+        buffer.write(b"serialized")
+
+    def fake_load(buffer: BytesIO) -> RestoredModel:
+        events.append("load")
+        assert buffer.read() == b"serialized"
+        return RestoredModel()
+
+    monkeypatch.setattr(release_module.joblib, "dump", fake_dump)
+    monkeypatch.setattr(release_module.joblib, "load", fake_load)
+    release_module._verify_serialization_round_trip(_Model(), features, expected)
+    assert events == ["dump", "load", "predict"]
+
+
+def test_serialization_round_trip_propagates_dump_failure(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def fail_dump(_model: object, _buffer: object) -> None:
+        raise OSError("serialization failed")
+
+    monkeypatch.setattr(release_module.joblib, "dump", fail_dump)
+    monkeypatch.setattr(
+        release_module.joblib,
+        "load",
+        lambda _buffer: pytest.fail("load must not run after serialization fails"),
+    )
+    with pytest.raises(OSError, match="serialization failed"):
+        release_module._verify_serialization_round_trip(
+            _Model(), pd.DataFrame({"probability": [0.1]}), np.array([0.1])
+        )
+
+
+def test_serialization_round_trip_propagates_load_failure(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        release_module.joblib, "dump", lambda _model, buffer: buffer.write(b"invalid")
+    )
+
+    def fail_load(_buffer: object) -> object:
+        raise EOFError("restore failed")
+
+    monkeypatch.setattr(release_module.joblib, "load", fail_load)
+    with pytest.raises(EOFError, match="restore failed"):
+        release_module._verify_serialization_round_trip(
+            _Model(), pd.DataFrame({"probability": [0.1]}), np.array([0.1])
+        )
+
+
+def test_serialization_round_trip_rejects_prediction_mismatch(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        release_module.joblib, "dump", lambda _model, buffer: buffer.write(b"serialized")
+    )
+    monkeypatch.setattr(release_module.joblib, "load", lambda _buffer: _Model())
+    with pytest.raises(ReleaseGuardError, match="in-memory serialization check failed"):
+        release_module._verify_serialization_round_trip(
+            _Model(), pd.DataFrame({"probability": [0.1, 0.9]}), np.array([0.2, 0.8])
+        )
 
 
 def test_locked_hash_verification_detects_tampering(tmp_path: Path) -> None:
@@ -233,12 +312,26 @@ def test_reconstructs_only_locked_candidate_without_test_access(
         "flight_delay.modeling.release.fit_calibrator",
         lambda model, *_args, **_kwargs: model,
     )
+    development_metrics = dict(REFERENCE_DEVELOPMENT_METRICS)
     monkeypatch.setattr(
         "flight_delay.modeling.release._development_metrics",
-        lambda *_args, **_kwargs: dict(REFERENCE_DEVELOPMENT_METRICS),
+        lambda *_args, **_kwargs: development_metrics,
     )
+    actual_round_trip = release_module._verify_serialization_round_trip
+    round_trip_completed: list[bool] = []
+
+    def verify_before_flag(
+        model: object, features: pd.DataFrame, probabilities: np.ndarray
+    ) -> None:
+        assert "serialization_check_passed" not in development_metrics
+        actual_round_trip(model, features, probabilities)
+        round_trip_completed.append(True)
+
+    monkeypatch.setattr(release_module, "_verify_serialization_round_trip", verify_before_flag)
     result = reconstruct_r3(tmp_path)
+    assert round_trip_completed == [True]
     assert result.reproduction["all_metrics_reproduced"] is True
+    assert result.metrics["serialization_check_passed"] is True
     assert opened == ["train.parquet", "validation.parquet"]
     assert "test.parquet" not in opened
 
