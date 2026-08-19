@@ -68,10 +68,12 @@ Representative end-to-end smoke-test record:
 | Risk band | `Medium` |
 | Feedback revision | `1` |
 
-This record proves the deployed workflow, not real-world flight performance. The captured live AWS
-evidence contains one prediction (`n=1`), so PSI, Jensen-Shannon divergence, prevalence delta,
-feedback accuracy, and similar values show that the monitoring pipeline operates end to end; they
-are not statistically meaningful production-monitoring estimates.
+This record proves the deployed workflow, not real-world flight performance. That original
+deployment capture contains one prediction (`n=1`), so its PSI, Jensen-Shannon divergence,
+prevalence delta, feedback accuracy, and similar values show that the monitoring pipeline operates
+end to end; they are not statistically meaningful production-monitoring estimates. The later
+multi-day operational evidence below validates aggregation and source filtering at larger volume,
+but likewise does not represent organic traffic or model-performance evidence.
 
 ## Governed release identity
 
@@ -103,12 +105,26 @@ application release was published from source `ce10f1a123bbe21eb75ca31b2681caf90
 - Traveler: `ghcr.io/austinyoungblood/us-flight-delay-mlops-traveler@sha256:06d36b32304b9f7711d0b224fa9d7f049a8875b761dffd907c17a73f3eebef94`
 - Monitor: `ghcr.io/austinyoungblood/us-flight-delay-mlops-monitor@sha256:97a4e6bb99358e8cfe6885581713fd2731f64ea97164ad6a4d64f6efb1c7277c`
 
-An API-only scheduled monitoring batch on August 15, 2026 subsequently proved the provenance path
-end to end: 150 of 150 requests succeeded, all were labeled `synthetic_load_test`, and persistence
-validation passed. The batch record does not independently attest which immutable image digest was
-active, so the references above remain identified as the published provenance release rather than
-as a second frozen deployment manifest. The governed model remains the unchanged `production:v0`
-identity shown above.
+An API-only scheduled monitoring batch on August 15 and an operator-invoked monitoring batch
+on August 19, 2026 subsequently proved the provenance path end to end. Each batch completed 150 of 150 requests with zero failures,
+`traffic_source=synthetic_load_test`, and passed persistence validation. The August 19 audit also
+records 150 unique prediction IDs and the unchanged model `v0` digest
+`865ddd18f6debd44f24a79fc71739f2a`.
+
+For UTC August 14 through August 19 with demo data excluded, the live Monitor reported 461 requests,
+461 successes, zero errors, 34 cache hits (`7.4%`), and `28.353 ms` p95 latency. Source attribution
+was 305 `synthetic_load_test`, 155 `legacy_unattributed`, and one `traveler_ui`; a fresh Streamlit
+session filtered to `synthetic_load_test` correctly reduced the population from 461 to 305. Those
+305 synthetic events comprise five provenance-canary events plus the two 150-request batches; they
+are not all scheduled-batch events and do not represent organic traveler traffic. The August 16
+and 17 scheduled attempts timed out before generation and remain documented availability failures.
+Hash-addressed audit details are retained in the
+[monitoring status](docs/ui-monitoring-status.md).
+
+The batch records do not independently attest which immutable image digest was active, so the
+references above remain identified as the published provenance release rather than as a second
+frozen deployment manifest. The governed model remains the unchanged `production:v0` identity
+shown above.
 
 The non-root API container used `MODEL_DOWNLOAD_DIR=/tmp/flight-delay-model` and `HOME=/tmp` for W&B
 runtime compatibility. These accommodations did not change model identity or bypass Registry,

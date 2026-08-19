@@ -75,6 +75,41 @@ required captures and redaction status are indexed in the
 [final evidence checklist](final-evidence-checklist.md) and
 [`evidence/evidence_manifest.json`](../evidence/evidence_manifest.json).
 
-A provenance-enabled API path was also verified by the August 15, 2026 scheduled batch: 150 planned,
-150 successful, zero failed, `traffic_source=synthetic_load_test`, and persistence validation passed.
-That batch is synthetic operational evidence, not organic traffic or model-performance evidence.
+## Final multi-day monitoring evidence
+
+The provenance-enabled API path was verified by the successful August 15 scheduled batch and
+a successful operator-invoked August 19 batch. Both audits and
+success sentinels remain ignored local evidence rather than committed runtime artifacts.
+
+| UTC batch date | Planned | Successful | Failed | Persistence validation | Audit SHA-256 | Success-sentinel SHA-256 |
+| --- | ---: | ---: | ---: | --- | --- | --- |
+| 2026-08-15 | 150 | 150 | 0 | passed | `30adc1841ea31dc263407eea6e96f347cfb41964d8ae8b816e035b8350ac9bb3` | `303d8558dee360c33c6d4fe44e74ec66ecf9ab81a86365220c6f16381a0cc6aa` |
+| 2026-08-19 | 150 | 150 | 0 | passed | `4369f05df2eb816440a5bf18de9800ad388038fdfa0b0706a24e1d195b4433fd` | `1664dbe1ead21b78ded234a7b826e4a3afdbcc06dd12222b2cca1b407d604328` |
+
+Both batches used `traffic_source=synthetic_load_test`. The August 19 evidence additionally records
+150 unique prediction IDs, `model_version=v0`, model digest
+`865ddd18f6debd44f24a79fc71739f2a`, load-generator source Git SHA
+`aa681b2ecdf3ac09b58c97556d5fa44dabb55748`, and first prediction ID
+`bf1835cd-ecd7-41c2-9a9a-3e0b059dd6f3`.
+
+For UTC 2026-08-14 through 2026-08-19 with demo data excluded, the live Monitor showed:
+
+| Metric | Evidence |
+| --- | ---: |
+| Total requests | 461 |
+| Successful requests | 461 (`100%`) |
+| Errors | 0 |
+| Cache hits | 34 (`7.4%`) |
+| Latency p95 | `28.353 ms` |
+| `synthetic_load_test` | 305 |
+| `legacy_unattributed` | 155 |
+| `traveler_ui` | 1 |
+
+A fresh Streamlit session filtered to `traffic_source=synthetic_load_test` returned 305 requests,
+correctly reducing the monitored population from 461 to 305. The 305 synthetic events comprise
+five provenance-canary events plus the August 15 and August 19 batches of 150. They are not all
+scheduled-batch events, do not represent organic traveler activity, and are not model-performance
+evidence.
+
+The scheduled August 16 and August 17 attempts timed out before traffic generation. Those records
+remain documented as availability failures; no successful batch is claimed for either date.
