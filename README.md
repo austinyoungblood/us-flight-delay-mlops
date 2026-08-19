@@ -265,18 +265,28 @@ AWS SDK, mutate W&B, or depend on final-test data. Its implementation lives in t
 | v0 | Deployed governed incumbent | Registry `production:v0`; unchanged serving identity |
 | v1 | CatBoost challenger | [Governed stop](docs/v1-model-experiment-result.md): all six November finalists had no eligible threshold |
 | v2 | Historical propensity + LightGBM/CatBoost challenger | [Governed stop](docs/v2-model-experiment-result.md): rolling ranking improved, but all 12 November finalists had no eligible threshold |
+| v3 | Expanded seasonal/temporal LightGBM, CatBoost, calibration, and ensemble challenger | [Governed stop](docs/v3-model-experiment-result.md): governed recovery completed after an exact-selector performance defect; all 15 November finalists had no eligible threshold and v0 was retained |
 
-Both challenger protocols were frozen before their applied executions. V1's strongest high-recall
+All three challenger protocols were frozen before their applied executions. V1's strongest high-recall
 November precision was approximately `0.276`. V2 CPU-confirmed candidates averaged approximately
 `0.336`–`0.338` precision at recall >= 0.60 on rolling-origin folds, but that improvement did not
 generalize to late November: the best high-recall precision was `0.278481`. No finalist
 simultaneously met recall >= 0.60, precision >= 0.30, and predicted-positive rate <= 0.50.
 
-Eligibility short-circuited both workflows before downstream November gates, so neither report
-claims that those gates passed or failed. Neither experiment opened December, accessed the consumed
-January–May 2026 historical test, created a winner lock, mutated the Registry, or changed the
-deployed `production:v0` model. The older W&B artifact version named `flight-delay-model:v1` below
-predates the governed v1 iteration and is not one of its candidates.
+V3 expanded to 2024–2025 history, seasonal and holiday features, leakage-safe same-calendar-month
+propensity, `UNIFORM` versus `EXPONENTIAL_120D` weighting, temporal-robustness ranking, calibration,
+and ensembles. Its best high-recall point reached precision `0.281099` at recall `0.600028` and PPR
+`0.425727`; requiring precision >= `0.30` reduced the frontier to recall `0.479384`. None of its 15
+finalists simultaneously reached `P >= .30 / R >= .60 / PPR <= .50`.
+
+Eligibility short-circuited all three workflows before downstream November gates, so the result
+reports do not claim those gates passed or failed. V1 and v2 did not open December; the actual v3
+execution and recovery did not open or evaluate December, with its pre-run implementation-testing
+caveat documented in the [full v3 recovery and governance report](docs/v3-model-experiment-result.md).
+None of the three accessed the consumed January–May 2026 historical test, created a winner lock,
+mutated the Registry, or changed the deployed `production:v0` model. The older W&B artifact version
+named `flight-delay-model:v1` below predates the governed v1 iteration and is not one of its
+candidates.
 
 Experiment runs, model and dataset artifacts, and release lineage are available in the public
 [Weights & Biases project](https://wandb.ai/austin-youngblood-university-of-denver/us-flight-delay-mlops/overview).

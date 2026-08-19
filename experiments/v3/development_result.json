@@ -1,0 +1,305 @@
+{
+  "schema_version": 1,
+  "result_type": "governed_v3_seasonal_temporal_development",
+  "protocol": {
+    "id": "us-flight-delay-v3-seasonal-temporal-generalization-v1",
+    "sha256": "061be599fd84a4ddbf06229c300fe4670272d176b22899f1515332923376ecff"
+  },
+  "implementation": {
+    "source_git_sha": "3dea562f06365df166c89af6e851a817a2db00fc",
+    "recovery_git_sha": "3b8ccbbe03f6973f10df15c43f6a6d4367dcb483",
+    "corrective_commit_sha": "d5cf5da6e01787aca7838265e5bfd28818f37d5d"
+  },
+  "execution": {
+    "decision": "governed_stop",
+    "winner": null,
+    "production_remains": "v0",
+    "original": {
+      "status": "started",
+      "started_at": "2026-08-18T02:55:42.938310+00:00",
+      "terminated": true,
+      "termination_reason": "threshold_sweep_performance_defect",
+      "partial_november_finalist_used": false,
+      "marker_preserved": true
+    },
+    "recovery": {
+      "id": "v3-threshold-recovery-20260818-01",
+      "reason": "threshold_sweep_performance_defect",
+      "status": "complete",
+      "started_at": "2026-08-18T21:59:25.034401+00:00",
+      "completed_at": "2026-08-18T23:20:30.681899+00:00",
+      "exit_status": 0,
+      "screening_repeated": false,
+      "cpu_confirmation_repeated": false,
+      "all_finalists_evaluated_from_scratch": true,
+      "optimized_threshold_sweep_mathematically_equivalent": true,
+      "scientific_protocol_changed": false
+    }
+  },
+  "reconstructed_advancement": [
+    {
+      "candidate_id": "LGBM12-UNIFORM",
+      "family": "lightgbm"
+    },
+    {
+      "candidate_id": "CB04-UNIFORM",
+      "family": "catboost"
+    }
+  ],
+  "lineage": {
+    "historical_state_sha256": "08d98a0bad462091897e91e8dad16d8882ea49a5a685abc5b08e2f1bed3f31b4",
+    "historical_state_as_of_inclusive": "2025-10-31",
+    "dataset_manifest_digest": "4f8f6744b593ee89b32bc9cb9de4c0e848093df3657e2e9441cbc684d567d66f",
+    "source_manifest_digest": "673cac214739e8c0d2991a1bdbd1591a90e8907d7cf5bdbc34caddd72015b6af",
+    "source_row_counts": {
+      "history_2024_01_to_2025_10": 12717511,
+      "november_2025": 555295
+    },
+    "model_row_counts": {
+      "search": 1100000,
+      "full_refit": 12192141,
+      "november_calibration": 271108,
+      "november_selection": 284187
+    }
+  },
+  "base_refits": [
+    {
+      "candidate_id": "LGBM12-UNIFORM",
+      "family": "lightgbm",
+      "weight_policy": "UNIFORM",
+      "full_refit_rows": 12192141,
+      "runtime_seconds": 255.34690258197952
+    },
+    {
+      "candidate_id": "CB04-UNIFORM",
+      "family": "catboost",
+      "weight_policy": "UNIFORM",
+      "full_refit_rows": 12192141,
+      "runtime_seconds": 3617.745091171935
+    }
+  ],
+  "november": {
+    "eligibility": {
+      "precision_min": 0.3,
+      "recall_min": 0.6,
+      "predicted_positive_rate_max": 0.5
+    },
+    "finalist_count": 15,
+    "status_counts": {
+      "no_eligible_threshold": 15
+    },
+    "passing_finalist_count": 0,
+    "downstream_gates_evaluated": false,
+    "downstream_gate_disposition": "not_evaluated_because_threshold_eligibility_short_circuited",
+    "winner": null,
+    "finalists": [
+      {
+        "id": "LGBM12-UNIFORM-none",
+        "status": "no_eligible_threshold",
+        "wandb_run_id": "22tmyhb2",
+        "wandb_run_url": "https://wandb.ai/austin-youngblood-university-of-denver/us-flight-delay-mlops/runs/22tmyhb2"
+      },
+      {
+        "id": "LGBM12-UNIFORM-sigmoid",
+        "status": "no_eligible_threshold",
+        "wandb_run_id": "4s38i7qs",
+        "wandb_run_url": "https://wandb.ai/austin-youngblood-university-of-denver/us-flight-delay-mlops/runs/4s38i7qs"
+      },
+      {
+        "id": "LGBM12-UNIFORM-isotonic",
+        "status": "no_eligible_threshold",
+        "wandb_run_id": "7t0qfyzx",
+        "wandb_run_url": "https://wandb.ai/austin-youngblood-university-of-denver/us-flight-delay-mlops/runs/7t0qfyzx"
+      },
+      {
+        "id": "CB04-UNIFORM-none",
+        "status": "no_eligible_threshold",
+        "wandb_run_id": "hp8ujo13",
+        "wandb_run_url": "https://wandb.ai/austin-youngblood-university-of-denver/us-flight-delay-mlops/runs/hp8ujo13"
+      },
+      {
+        "id": "CB04-UNIFORM-sigmoid",
+        "status": "no_eligible_threshold",
+        "wandb_run_id": "nil3cr08",
+        "wandb_run_url": "https://wandb.ai/austin-youngblood-university-of-denver/us-flight-delay-mlops/runs/nil3cr08"
+      },
+      {
+        "id": "CB04-UNIFORM-isotonic",
+        "status": "no_eligible_threshold",
+        "wandb_run_id": "gehktinj",
+        "wandb_run_url": "https://wandb.ai/austin-youngblood-university-of-denver/us-flight-delay-mlops/runs/gehktinj"
+      },
+      {
+        "id": "ENS25-none",
+        "status": "no_eligible_threshold",
+        "wandb_run_id": "k9eue97s",
+        "wandb_run_url": "https://wandb.ai/austin-youngblood-university-of-denver/us-flight-delay-mlops/runs/k9eue97s"
+      },
+      {
+        "id": "ENS25-sigmoid",
+        "status": "no_eligible_threshold",
+        "wandb_run_id": "amdrvqf4",
+        "wandb_run_url": "https://wandb.ai/austin-youngblood-university-of-denver/us-flight-delay-mlops/runs/amdrvqf4"
+      },
+      {
+        "id": "ENS25-isotonic",
+        "status": "no_eligible_threshold",
+        "wandb_run_id": "7irechyf",
+        "wandb_run_url": "https://wandb.ai/austin-youngblood-university-of-denver/us-flight-delay-mlops/runs/7irechyf"
+      },
+      {
+        "id": "ENS50-none",
+        "status": "no_eligible_threshold",
+        "wandb_run_id": "9su8cyup",
+        "wandb_run_url": "https://wandb.ai/austin-youngblood-university-of-denver/us-flight-delay-mlops/runs/9su8cyup"
+      },
+      {
+        "id": "ENS50-sigmoid",
+        "status": "no_eligible_threshold",
+        "wandb_run_id": "0dwcljdd",
+        "wandb_run_url": "https://wandb.ai/austin-youngblood-university-of-denver/us-flight-delay-mlops/runs/0dwcljdd"
+      },
+      {
+        "id": "ENS50-isotonic",
+        "status": "no_eligible_threshold",
+        "wandb_run_id": "pidoavcc",
+        "wandb_run_url": "https://wandb.ai/austin-youngblood-university-of-denver/us-flight-delay-mlops/runs/pidoavcc"
+      },
+      {
+        "id": "ENS75-none",
+        "status": "no_eligible_threshold",
+        "wandb_run_id": "pm8er060",
+        "wandb_run_url": "https://wandb.ai/austin-youngblood-university-of-denver/us-flight-delay-mlops/runs/pm8er060"
+      },
+      {
+        "id": "ENS75-sigmoid",
+        "status": "no_eligible_threshold",
+        "wandb_run_id": "81rvr08s",
+        "wandb_run_url": "https://wandb.ai/austin-youngblood-university-of-denver/us-flight-delay-mlops/runs/81rvr08s"
+      },
+      {
+        "id": "ENS75-isotonic",
+        "status": "no_eligible_threshold",
+        "wandb_run_id": "tjlrtc1l",
+        "wandb_run_url": "https://wandb.ai/austin-youngblood-university-of-denver/us-flight-delay-mlops/runs/tjlrtc1l"
+      }
+    ],
+    "operating_frontier_evidence": {
+      "best_high_recall_near_miss": {
+        "finalist_ids": [
+          "ENS25-none",
+          "ENS25-sigmoid"
+        ],
+        "precision": 0.281099,
+        "recall": 0.600028,
+        "f1": 0.382844,
+        "predicted_positive_rate": 0.425727,
+        "precision_shortfall_absolute": 0.018901,
+        "precision_shortfall_percentage_points": 1.8901
+      },
+      "precision_floor_frontier": {
+        "finalist_ids": [
+          "ENS25-none",
+          "ENS25-sigmoid"
+        ],
+        "precision": 0.30002,
+        "recall": 0.479384,
+        "f1": 0.369063,
+        "predicted_positive_rate": 0.318677
+      },
+      "best_f1_among_listed_operating_region_examples": {
+        "finalist_id": "CB04-UNIFORM-none",
+        "precision": 0.273576,
+        "recall": 0.6465,
+        "f1": 0.384461,
+        "predicted_positive_rate": 0.471313
+      }
+    }
+  },
+  "adoption": {
+    "status": "adopted",
+    "adopted_at": "2026-08-18T23:51:49.840674+00:00",
+    "decision": "governed_stop",
+    "adoption_payload_sha256": "6b74788f6d6be97b900afbba7f765280d5a203f850bb3586a9ce750b8dc5b937",
+    "recovery_decision_sha256": "3ee90070d06026a8502a417eca6e87d734d21db71dec438d6bfdec55dca61cc8",
+    "canonical_decision_sha256": "3ee90070d06026a8502a417eca6e87d734d21db71dec438d6bfdec55dca61cc8",
+    "recovery_and_canonical_decision_bytes_identical": true,
+    "original_marker_rewritten": false,
+    "winner_lock_created": false,
+    "winner_model_created": false
+  },
+  "source_evidence_hashes": {
+    "source_execution_marker_sha256": "90ae06f5bc81a3b86393d077866a2a2d65e3478d5920802dc4bee285a7fe9c1d",
+    "source_tracking_evidence_sha256": "84811e6a32227da3f99214142c584e2dba38aa8b13754c36cae14ae5dad6b9fa",
+    "termination_record_sha256": "c84c0d4752e30284197bf0674607c629ec34690460c8e594901d64091f76b588",
+    "authorization_sha256": "19d1e161f8f83144e5bd4e8c1d39a35cfd58c8b3176273adbe332cd18bab4949",
+    "recovery_marker_sha256": "0a35d12ba2928ec592ed29736def29e03900726072f4d312b9241ac794941180"
+  },
+  "governance": {
+    "stopped_before_december": true,
+    "december_qualification_performed": false,
+    "historical_test_accessed": false,
+    "january_may_2026_historical_test_accessed": false,
+    "production_v0_mutated": false,
+    "registry_mutated": false,
+    "deployment_mutated": false,
+    "december_disclosure": "December 2025 was transiently materialized once during pre-run implementation testing, but no model was scored against it, no threshold/calibration/model-selection decision used it, and the test was replaced with synthetic data before governed v3 execution."
+  },
+  "authoritative_local_evidence": [
+    {
+      "path": "artifacts/v3/development/execution_marker.json",
+      "bytes": 276,
+      "sha256": "90ae06f5bc81a3b86393d077866a2a2d65e3478d5920802dc4bee285a7fe9c1d"
+    },
+    {
+      "path": "artifacts/v3/development/decision.json",
+      "bytes": 510702885,
+      "sha256": "3ee90070d06026a8502a417eca6e87d734d21db71dec438d6bfdec55dca61cc8"
+    },
+    {
+      "path": "artifacts/v3/development/historical_state.json",
+      "bytes": 6673834,
+      "sha256": "08d98a0bad462091897e91e8dad16d8882ea49a5a685abc5b08e2f1bed3f31b4"
+    },
+    {
+      "path": "artifacts/v3/development/recovery_adoption.json",
+      "bytes": 793,
+      "sha256": "ceb2f5e2663bf37bbca09dbc7e303fe432487badf05f28d04fd8839fe301f0e2"
+    },
+    {
+      "path": "artifacts/v3/recovery/v3-threshold-recovery-20260818-01/authorization.json",
+      "bytes": 1905,
+      "sha256": "19d1e161f8f83144e5bd4e8c1d39a35cfd58c8b3176273adbe332cd18bab4949"
+    },
+    {
+      "path": "artifacts/v3/recovery/v3-threshold-recovery-20260818-01/decision.json",
+      "bytes": 510702885,
+      "sha256": "3ee90070d06026a8502a417eca6e87d734d21db71dec438d6bfdec55dca61cc8"
+    },
+    {
+      "path": "artifacts/v3/recovery/v3-threshold-recovery-20260818-01/development_result.json",
+      "bytes": 510696710,
+      "sha256": "f3e1878a8640abd78f5554dc4f3b8d06a54a2064dbe2728271a3941d28fc1595"
+    },
+    {
+      "path": "artifacts/v3/recovery/v3-threshold-recovery-20260818-01/historical_state.json",
+      "bytes": 6673834,
+      "sha256": "08d98a0bad462091897e91e8dad16d8882ea49a5a685abc5b08e2f1bed3f31b4"
+    },
+    {
+      "path": "artifacts/v3/recovery/v3-threshold-recovery-20260818-01/recovery_marker.json",
+      "bytes": 1001,
+      "sha256": "0a35d12ba2928ec592ed29736def29e03900726072f4d312b9241ac794941180"
+    },
+    {
+      "path": "artifacts/v3/recovery/v3-threshold-recovery-20260818-01/source_evidence.json",
+      "bytes": 187124,
+      "sha256": "84811e6a32227da3f99214142c584e2dba38aa8b13754c36cae14ae5dad6b9fa"
+    },
+    {
+      "path": "artifacts/v3/recovery/v3-threshold-recovery-20260818-01/termination_record.json",
+      "bytes": 1209,
+      "sha256": "c84c0d4752e30284197bf0674607c629ec34690460c8e594901d64091f76b588"
+    }
+  ]
+}
