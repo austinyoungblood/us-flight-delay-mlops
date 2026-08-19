@@ -77,7 +77,8 @@ required captures and redaction status are indexed in the
 
 ## Final multi-day monitoring evidence
 
-The provenance-enabled API path was verified by two successful scheduled batches. Both audits and
+The provenance-enabled API path was verified by the successful August 15 scheduled batch and
+a successful operator-invoked August 19 batch. Both audits and
 success sentinels remain ignored local evidence rather than committed runtime artifacts.
 
 | UTC batch date | Planned | Successful | Failed | Persistence validation | Audit SHA-256 | Success-sentinel SHA-256 |

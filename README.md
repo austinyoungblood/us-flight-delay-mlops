@@ -105,8 +105,8 @@ application release was published from source `ce10f1a123bbe21eb75ca31b2681caf90
 - Traveler: `ghcr.io/austinyoungblood/us-flight-delay-mlops-traveler@sha256:06d36b32304b9f7711d0b224fa9d7f049a8875b761dffd907c17a73f3eebef94`
 - Monitor: `ghcr.io/austinyoungblood/us-flight-delay-mlops-monitor@sha256:97a4e6bb99358e8cfe6885581713fd2731f64ea97164ad6a4d64f6efb1c7277c`
 
-API-only scheduled monitoring batches on August 15 and August 19, 2026 subsequently proved the
-provenance path end to end. Each batch completed 150 of 150 requests with zero failures,
+An API-only scheduled monitoring batch on August 15 and an operator-invoked monitoring batch
+on August 19, 2026 subsequently proved the provenance path end to end. Each batch completed 150 of 150 requests with zero failures,
 `traffic_source=synthetic_load_test`, and passed persistence validation. The August 19 audit also
 records 150 unique prediction IDs and the unchanged model `v0` digest
 `865ddd18f6debd44f24a79fc71739f2a`.
