@@ -20,6 +20,12 @@ the README, this checklist, and the v1/v2/v3 result reports describe the final p
   `flight-monitor` `t3.small` hosts in `us-east-1`.
 - [x] The deployment exercised API readiness/model identity, Traveler prediction and feedback,
   DynamoDB persistence, and direct Monitor queries.
+- [x] The final live smoke passed with API, Traveler, and Monitor ready, two unique predictions,
+  both retrieved through the application contract, a cache hit on the second, and persisted
+  feedback. The sanitized record is
+  [`evidence/final_live_smoke_summary.json`](../evidence/final_live_smoke_summary.json). Application
+  persistence/retrieval was verified; no separate workstation-side DynamoDB SDK inspection is
+  claimed for this smoke.
 - [x] Evidence describes a time-bounded academic demonstration, not a continuously available public
   endpoint; no public IP or ephemeral hostname is committed.
 
@@ -85,8 +91,7 @@ the README, this checklist, and the v1/v2/v3 result reports describe the final p
   prediction IDs, `traffic_source=synthetic_load_test`, and
   `persistence_validation_passed=true`. It identifies model `v0`, digest
   `865ddd18f6debd44f24a79fc71739f2a`, load-generator source Git SHA
-  `aa681b2ecdf3ac09b58c97556d5fa44dabb55748`, and first prediction ID
-  `bf1835cd-ecd7-41c2-9a9a-3e0b059dd6f3`. The local audit SHA-256 is
+  `aa681b2ecdf3ac09b58c97556d5fa44dabb55748`. The local audit SHA-256 is
   `4369f05df2eb816440a5bf18de9800ad388038fdfa0b0706a24e1d195b4433fd`; its success-sentinel
   SHA-256 is `1664dbe1ead21b78ded234a7b826e4a3afdbcc06dd12222b2cca1b407d604328`.
   The ignored files are `artifacts/monitoring-load/2026-08-19-batch-150.json` and
@@ -100,10 +105,9 @@ the README, this checklist, and the v1/v2/v3 result reports describe the final p
   scheduled-batch events and are not organic traveler traffic.
 - [x] The August 16 and 17 scheduled attempts timed out before generation. Their availability
   failures remain documented; no successful batch is claimed for either date.
-
 ## Testing and coverage
 
-- [x] The complete hermetic suite contains 802 tests, passes at 86.65% branch-inclusive coverage,
+- [x] The complete hermetic suite contains 809 tests, passes at 86.69% branch-inclusive coverage,
   and enforces an 86% minimum.
 - [x] Tests cover feature leakage, data contracts, modeling governance, API/UI contracts,
   persistence, monitoring, deployment validation, protocol drift, offline isolation, and failure
@@ -113,14 +117,15 @@ the README, this checklist, and the v1/v2/v3 result reports describe the final p
 
 ## Security and governance
 
-- [x] `.env`, credentials, keys, raw/processed data, models, experiment artifacts, and W&B state are
-  ignored.
+- [x] `.env`, credential stores, keys, raw/processed data, models, experiment artifacts, local W&B
+  state, and generated artifacts are ignored. The tracked
+  [`local-compose.env.template`](../deploy/env/local-compose.env.template) contains placeholders and
+  non-secret defaults only.
 - [x] Traveler has no AWS role; API and Monitor use the Academy `LabRole` only for their bounded
   DynamoDB responsibilities.
 - [x] Security-group evidence preserves the Traveler-to-API private path and limits public UI/SSH
   access; the API is not intentionally exposed to the world.
-- [x] Evidence manifest redaction instructions cover account identifiers, addresses, DNS values,
-  operator CIDRs, and secrets before public submission.
+- [x] Every curated screenshot indexed by the evidence manifest is public-ready.
 - [x] V1/v2 development did not reopen the consumed January–May 2026 test, open December, alter the
   threshold, mutate `production:v0`, deploy, or contact AWS. The actual governed v3 execution and
   recovery likewise left the historical test, Registry, deployment, AWS, and production v0
@@ -156,6 +161,8 @@ the README, this checklist, and the v1/v2/v3 result reports describe the final p
 | Deployment manifest | [`deploy/deployment_manifest.json`](../deploy/deployment_manifest.json) |
 | Evidence manifest | [`evidence/evidence_manifest.json`](../evidence/evidence_manifest.json) |
 | Evidence checklist | [`docs/final-evidence-checklist.md`](final-evidence-checklist.md) |
+| Final live smoke summary | [`evidence/final_live_smoke_summary.json`](../evidence/final_live_smoke_summary.json) |
+| Monitoring evidence | [`docs/monitoring-evidence.md`](monitoring-evidence.md) |
 | Curated AWS/application captures | [`aws/screenshots/`](../aws/screenshots) |
 | W&B/GitHub visibility audit | [`docs/public-deliverables.md`](public-deliverables.md) |
 | V1 report / compact JSON | [`docs/v1-model-experiment-result.md`](v1-model-experiment-result.md) / [`experiments/v1/development_result.json`](../experiments/v1/development_result.json) |

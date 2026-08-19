@@ -25,11 +25,17 @@ digest `2ecdb5a6a60b23ed1ee1d603fb976516`.
 
 Run `make download-data` and `make prepare-data` from the repository root. Raw ZIPs, processed
 Parquet files, models, W&B cache, `.env`, and credentials are ignored and must never be committed.
-Only the small canonical JSON manifests are versioned. Model selection subdivides the development data into
-January–August base fit (600,000 rows), September tuning (75,000), January–September refit
-(675,000), October calibration (75,000), and November–December validation (150,000). Both calibrated
-candidates failed at least one mandatory validation gate, so the January–May 2026 test split remains
-unread, unscored, and sealed.
+Only the small canonical JSON manifests are versioned.
+
+### Historical pre-release selection boundary
+
+The original model-selection stage subdivided development data into January–August base fit
+(600,000 rows), September tuning (75,000), January–September refit (675,000), October calibration
+(75,000), and November–December validation (150,000). Both calibrated candidates failed at least one
+mandatory validation gate, so the January–May 2026 test was unread at that historical checkpoint.
+It was later consumed exactly once under the frozen final-test protocol. It remains prohibited for
+retraining, recalibration, threshold selection, or challenger evaluation and was not reopened by
+v1, v2, or v3.
 
 The remediation evaluation reused the same immutable artifact and source hashes. It used
 January–October only for four
@@ -61,7 +67,8 @@ The stable `v3_processed_manifest.json` digest is
 `4f8f6744b593ee89b32bc9cb9de4c0e848093df3657e2e9441cbc684d567d66f`. It describes 23 decoded months
 (2024-01 through 2025-11). **December 2025 is not decoded**: preparation refuses that month unless
 given the exact qualification authorization, so no `v3_december.parquet` exists and the manifest
-records `december_2025_decoded: false`. January–May 2026 remains sealed, unread, and excluded from
-the v3 source manifest entirely.
+records `december_2025_decoded: false`. January–May 2026 is excluded from the v3 source manifest
+entirely and remained unread by v3. The historical final test had already been consumed once under
+its separate frozen protocol; v3 neither included nor reopened it.
 
 Run `make prepare-v3-data` from the repository root.

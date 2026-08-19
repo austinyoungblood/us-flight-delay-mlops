@@ -9,6 +9,7 @@ import platform
 import subprocess
 import warnings
 from dataclasses import dataclass
+from io import BytesIO
 from pathlib import Path
 from shutil import copyfile
 from typing import Any
@@ -204,6 +205,22 @@ def compare_development_metrics(metrics: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _verify_serialization_round_trip(
+    model: Any, features: pd.DataFrame, expected_probabilities: np.ndarray
+) -> None:
+    """Fail closed unless an in-memory joblib round trip preserves predictions."""
+
+    buffer = BytesIO()
+    joblib.dump(model, buffer)
+    buffer.seek(0)
+    restored = joblib.load(buffer)
+    restored_probabilities = restored.predict_proba(features)[:, 1]
+    if restored_probabilities.shape != expected_probabilities.shape or not np.allclose(
+        expected_probabilities, restored_probabilities
+    ):
+        raise ReleaseGuardError("R3 in-memory serialization check failed")
+
+
 def reconstruct_r3(dataset_root: Path) -> ReconstructionResult:
     """Rebuild only locked R3 sigmoid without reading the final-test file."""
 
@@ -234,15 +251,7 @@ def reconstruct_r3(dataset_root: Path) -> ReconstructionResult:
     selection_features = partitions.selection.loc[:, schema]
     probabilities = calibrated.predict_proba(selection_features)[:, 1]
     metrics = _development_metrics(partitions.selection["target"], probabilities)
-    restored_path = Path(os.devnull)
-    del restored_path
-    serialized = joblib.dumps(calibrated) if hasattr(joblib, "dumps") else None
-    if serialized is not None:
-        restored = joblib.loads(serialized)
-        if not np.allclose(
-            probabilities[:100], restored.predict_proba(selection_features.iloc[:100])[:, 1]
-        ):
-            raise ReleaseGuardError("R3 in-memory serialization check failed")
+    _verify_serialization_round_trip(calibrated, selection_features, probabilities)
     metrics["serialization_check_passed"] = True
     reproduction = compare_development_metrics(metrics)
     if not reproduction["all_metrics_reproduced"]:

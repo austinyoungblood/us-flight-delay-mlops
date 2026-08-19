@@ -375,6 +375,71 @@ def test_final_evidence_manifest_has_complete_required_evidence_modes() -> None:
         "screenshot",
         "supplemental",
     }
+    captures = {item["criterion"]: item for item in manifest["captures"]}
+    assert captures["app.final_live_smoke"]["status"] == "captured"
+    for criterion in {
+        "aws.ec2_instances",
+        "aws.security_groups",
+        "aws.instance_profile",
+        "app.api_docs",
+    }:
+        assert captures[criterion]["publication_status"] == "public-ready"
+
+
+def test_every_curated_screenshot_is_captured_and_manifest_indexed() -> None:
+    manifest = evidence_inputs()
+    captured: set[str] = set()
+    for item in manifest["captures"]:
+        if item["evidence_mode"] != "public_url" and item["status"] == "captured":
+            values = item.get("filenames", [item.get("filename")])
+            captured.update(str(value) for value in values if str(value).endswith(".png"))
+    curated_paths = list((ROOT / "aws/screenshots").glob("*.png"))
+    curated = {path.name for path in curated_paths}
+    assert curated == captured
+    assert all(path.suffixes == [".png"] for path in curated_paths)
+
+
+def test_final_live_smoke_summary_is_compact_sanitized_evidence() -> None:
+    summary = json.loads((ROOT / "evidence/final_live_smoke_summary.json").read_text())
+    assert set(summary) == {
+        "schema_version",
+        "mode",
+        "status",
+        "model",
+        "predictions",
+        "feedback_persisted",
+        "interfaces",
+        "raw_ignored_smoke_evidence_sha256",
+    }
+    assert summary["schema_version"] == 1
+    assert summary["mode"] == "live"
+    assert summary["status"] == "passed"
+    assert summary["model"] == {
+        "alias": "production",
+        "version": "v0",
+        "registry_digest": "865ddd18f6debd44f24a79fc71739f2a",
+        "bundle_sha256": ("2677b7093d66637852705d33bca006c3b78d8119f4d7268801453aa18c22f572"),
+        "deployment_purpose": "academic_demo",
+        "internal_production_gate_passed": False,
+    }
+    assert summary["predictions"] == {
+        "count": 2,
+        "unique_ids": True,
+        "retrieved": 2,
+        "second_cache_hit": True,
+    }
+    assert summary["feedback_persisted"] is True
+    assert summary["interfaces"] == {
+        "api": "ready",
+        "traveler": "ready",
+        "monitor": "ready",
+    }
+    assert summary["raw_ignored_smoke_evidence_sha256"] == (
+        "6a6af69da3b5b930fa6127387e7abf0de020f3095dc728f7ce8ab2d6ad988b54"
+    )
+    serialized = json.dumps(summary)
+    for forbidden in ("http://", "https://", "amazonaws.com", "/home/", "request_payload"):
+        assert forbidden not in serialized
 
 
 @pytest.mark.parametrize(
@@ -452,7 +517,9 @@ def test_evidence_filenames_must_be_unambiguous_and_unique() -> None:
 
 def test_redaction_and_required_file_failures_are_explicit(tmp_path: Path) -> None:
     manifest = evidence_inputs()
-    manifest["captures"][6].pop("redaction_notes")
+    pending_capture = manifest["captures"][6]
+    pending_capture["publication_status"] = "redaction-required"
+    pending_capture.pop("redaction_notes", None)
     with pytest.raises(EvidenceValidationError, match="missing redaction notes"):
         validate_evidence_manifest(manifest)
 

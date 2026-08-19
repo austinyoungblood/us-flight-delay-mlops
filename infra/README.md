@@ -1,9 +1,8 @@
 # DynamoDB infrastructure
 
-`provision_dynamodb.py` is the non-destructive table provisioner shared by DynamoDB Local and a future
-reviewed AWS deployment. It
-creates the table only when absent and otherwise validates the exact contract. It never deletes or
-recreates an incompatible table.
+`provision_dynamodb.py` is the non-destructive table provisioner shared by DynamoDB Local and the
+validated time-bounded AWS deployment. It creates the table only when absent and otherwise validates
+the exact contract. It never deletes or recreates an incompatible table.
 
 ```bash
 docker compose up -d dynamodb-local table-init
@@ -22,5 +21,6 @@ arguments. The required default is:
   key, and ALL projection.
 
 `DYNAMODB_ENDPOINT_URL`/`--endpoint-url` is development-only. When absent, boto3 retains its standard
-production endpoint behavior; local development did not exercise that path. Starting the AWS Academy
-Learner Lab or calling any AWS service was deferred to a separately reviewed deployment session.
+AWS endpoint behavior. Local development did not exercise that path; a later, separately authorized,
+time-bounded deployment validated the live table contract. Running the local command above does not
+authorize an AWS call, and operators must not omit the local endpoint accidentally.

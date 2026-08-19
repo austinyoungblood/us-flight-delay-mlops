@@ -2,7 +2,6 @@
 
 from flight_delay.contracts.api import (
     DependencyHealth,
-    ErrorResponse,
     FeedbackRecord,
     FeedbackRequest,
     FlightPredictionRequest,
@@ -17,7 +16,6 @@ from flight_delay.contracts.api import (
 
 __all__ = [
     "DependencyHealth",
-    "ErrorResponse",
     "FeedbackRecord",
     "FeedbackRequest",
     "FlightPredictionRequest",

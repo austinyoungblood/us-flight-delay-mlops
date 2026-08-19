@@ -1,7 +1,13 @@
-.PHONY: build download-data format-check install lint log-dataset prepare-data prepare-v3-data test train-candidate-a train-dummy validate validate-v3 v3-dry-run
+.PHONY: build compose-check download-data format-check install lint log-dataset prepare-data \
+	prepare-v3-data shell-check test train-candidate-a train-dummy validate validate-deployment \
+	validate-evidence validate-final validate-v1 validate-v2 validate-v3 v3-dry-run
 
 install:
-	python -m pip install -c requirements.lock -c requirements-v1.lock ".[dev,v1]"
+	python -m pip install \
+		-c requirements.lock \
+		-c requirements-v1.lock \
+		-c requirements-v2.lock \
+		-e ".[dev,v1,v2]"
 
 lint:
 	ruff check .
@@ -10,9 +16,42 @@ format-check:
 	ruff format --check .
 
 test:
-	pytest --cov=flight_delay --cov-branch --cov-report=term-missing --cov-fail-under=82
+	WANDB_MODE=disabled pytest --cov=flight_delay --cov-branch --cov-report=term-missing --cov-fail-under=86
 
-validate: lint format-check test
+validate-v1:
+	python scripts/validate_v1_protocol.py
+	python scripts/run_v1_development.py
+	python scripts/run_v1_december_qualification.py
+
+validate-v2:
+	python scripts/validate_v2_protocol.py
+	python scripts/validate_v2_runtime.py
+	python scripts/run_v2_development.py
+	python scripts/run_v2_december_qualification.py
+
+validate-v3:
+	python scripts/validate_v3_protocol.py
+	python scripts/run_v3_development.py
+	python scripts/run_v3_december_qualification.py
+
+validate-deployment:
+	python scripts/validate_deployment_manifest.py
+
+validate-evidence:
+	python scripts/validate_evidence_manifest.py --require-files
+
+shell-check:
+	bash -n deploy/*.sh deploy/lib/*.sh
+
+compose-check:
+	docker compose --env-file deploy/env/local-compose.env.template config --quiet
+
+# CI-aligned and offline: no AWS/W&B calls, data preparation, training, or publishing.
+validate-final: export WANDB_MODE := disabled
+validate-final: lint format-check test validate-v1 validate-v2 validate-v3 validate-deployment \
+	validate-evidence shell-check compose-check
+
+validate: validate-final
 
 build:
 	docker build -f services/api/Dockerfile -t flight-delay-api:scaffold .
@@ -36,9 +75,6 @@ train-candidate-a:
 
 prepare-v3-data:
 	python scripts/prepare_v3_data.py --max-workers 8
-
-validate-v3:
-	python scripts/validate_v3_protocol.py
 
 v3-dry-run:
 	python scripts/run_v3_development.py

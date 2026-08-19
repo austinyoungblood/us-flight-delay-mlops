@@ -29,6 +29,25 @@ def test_model_promotion_workflow_fails_closed_without_wandb_key() -> None:
     assert "exit 1" in preflight["run"]
 
 
+def test_wandb_key_and_candidate_input_are_scoped_to_promotion_steps() -> None:
+    workflow = yaml.safe_load((ROOT / ".github/workflows/model-promotion.yml").read_text())
+    job = workflow["jobs"]["promotion"]
+    assert "WANDB_API_KEY" not in job.get("env", {})
+    steps = job["steps"]
+    credential_steps = [
+        step.get("name") for step in steps if "WANDB_API_KEY" in step.get("env", {})
+    ]
+    assert credential_steps == ["Require W&B API key", "Select candidate and emit audit"]
+
+    selection = next(
+        step for step in steps if step.get("name") == "Select candidate and emit audit"
+    )
+    assert selection["env"]["CANDIDATE_VERSION"] == "${{ inputs.candidate_version }}"
+    assert "inputs.candidate_version" not in selection["run"]
+    assert '[[ -n "${CANDIDATE_VERSION}" ]]' in selection["run"]
+    assert '--candidate-version "${CANDIDATE_VERSION}"' in selection["run"]
+
+
 def test_stale_promotion_audit_is_removed_and_never_uploaded_after_failure() -> None:
     workflow = yaml.safe_load((ROOT / ".github/workflows/model-promotion.yml").read_text())
     steps = workflow["jobs"]["promotion"]["steps"]

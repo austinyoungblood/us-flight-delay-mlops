@@ -176,9 +176,3 @@ class ModelInfoResponse(StrictContract):
     deployment_purpose: Literal["academic_demo", "operational"]
     governance_notice: str
     serving_stage_notice: str
-
-
-class ErrorResponse(StrictContract):
-    """Sanitized API error body."""
-
-    detail: str

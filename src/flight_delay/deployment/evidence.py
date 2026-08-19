@@ -14,8 +14,11 @@ STATUS_BY_MODE = {
     "public_url": {"available", "unavailable"},
     "supplemental": {"captured", "missing", "not-applicable"},
 }
-ALLOWED_PUBLICATION_STATUS = {"ready", "redaction-required"}
-FILENAME_PATTERN = re.compile(r"^[0-9]{2}[a-z]?_[a-z0-9][a-z0-9_-]*\.(png|json|txt|md)$")
+ALLOWED_PUBLICATION_STATUS = {"public-ready", "redaction-required"}
+FILENAME_PATTERN = re.compile(
+    r"^(?:[0-9]{2}[a-z]?_[a-z0-9][a-z0-9_-]*\.(?:png|json|txt|md)"
+    r"|final_live_smoke_summary\.json)$"
+)
 LIVE_SESSION_LOCATOR_PATTERN = re.compile(r"^live-session://[a-z0-9][a-z0-9/_-]*$")
 REQUIRED_CRITERIA = {
     "github.repository",
@@ -37,7 +40,11 @@ REQUIRED_CRITERIA = {
     "app.monitor_drift",
     "app.monitor_feedback",
 }
-SUPPLEMENTAL_CRITERIA = {"app.health", "app.model_info"}
+SUPPLEMENTAL_CRITERIA = {
+    "app.final_live_smoke",
+    "app.health",
+    "app.model_info",
+}
 KNOWN_CRITERIA = REQUIRED_CRITERIA | SUPPLEMENTAL_CRITERIA
 
 
@@ -151,7 +158,7 @@ def validate_evidence_manifest(
             duplicate_files = seen_files.intersection(filenames)
             if duplicate_files:
                 raise EvidenceValidationError(f"duplicate filename: {sorted(duplicate_files)[0]}")
-        publication_status = capture.get("publication_status", "ready")
+        publication_status = capture.get("publication_status", "public-ready")
         if publication_status not in ALLOWED_PUBLICATION_STATUS:
             raise EvidenceValidationError(f"unsupported publication status: {publication_status}")
         if (

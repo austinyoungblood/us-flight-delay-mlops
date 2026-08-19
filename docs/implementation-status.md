@@ -205,7 +205,7 @@ evidence manifest, curated captures, and experiment result reports provide the u
 
 ## Current repository validation
 
-- 802 tests pass with 86.65% branch-inclusive coverage; CI enforces an 86% minimum
+- 809 tests pass with 86.69% branch-inclusive coverage; CI enforces an 86% minimum
 - Coverage includes failure and edge behavior for API clients/contracts, persistence, monitoring,
   deployment/evidence validation, promotion policy/metadata, governed monitoring traffic, and
   persisted prediction-source provenance, plus v1/v2/v3 protocol drift, temporal-state parity, and

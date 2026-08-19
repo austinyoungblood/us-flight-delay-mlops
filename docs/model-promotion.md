@@ -32,22 +32,27 @@ PYTHONPATH=src python scripts/promote_model.py validate-policy
 pytest tests/unit/test_promotion.py tests/integration/test_promotion_workflow.py
 ```
 
-Run a real read-only decision (the default mode is dry-run):
+Run a Registry-backed dry-run decision. This contacts W&B and reads Registry state, but does not move
+an alias because the default mode is `dry-run`:
 
 ```bash
 PYTHONPATH=src python scripts/promote_model.py run \
   --mode dry-run \
   --target-alias production \
-  --output promotion_decision.json \
-  --log-wandb-run
+  --output promotion_decision.json
 ```
 
+Adding `--log-wandb-run` is **not read-only**: it creates a W&B tracking run and uploads the
+sanitized decision artifact. Use that option only when the tracking mutation is explicitly
+authorized.
+
 Apply mode is permitted only by a deliberate manual GitHub `workflow_dispatch` with `dry_run=false`.
-Ordinary pull-request CI never has Registry mutation behavior. Each attempt writes sanitized
+Ordinary pull-request CI never has Registry mutation behavior. Each attempt writes a sanitized
 `promotion_decision.json` containing policy/Git identity, candidates, metrics used, rejection reasons,
 ranking, requested and actual actions, before/after alias identity, verification, and workflow
 identity. Credentials are neither read into the record nor uploaded as evidence.
 
-The current `production` alias is an academic/course deployment label. It does not certify the
-model against the project's stricter internal production-quality gate, which remains failed and is
-disclosed by release metadata, API responses, both user interfaces, deployment evidence, and docs.
+The current `production` alias is an academic-demonstration deployment label. It does not certify
+the model against the project's stricter internal production-quality gate, which remains failed and
+is disclosed by release metadata, API responses, both user interfaces, deployment evidence, and
+docs.
