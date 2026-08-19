@@ -81,8 +81,25 @@ the README, this checklist, and the v1/v2/v3 result reports describe the final p
   `30adc1841ea31dc263407eea6e96f347cfb41964d8ae8b816e035b8350ac9bb3`) and
   `2026-08-15-batch-150.success` (SHA-256
   `303d8558dee360c33c6d4fe44e74ec66ecf9ab81a86365220c6f16381a0cc6aa`).
-- [x] No successful August 16 or 17 monitoring batch is claimed; the available files for those
-  dates are timeout logs only.
+- [x] The ignored August 19, 2026 audit records 150 planned, 150 successful, zero failed, 150 unique
+  prediction IDs, `traffic_source=synthetic_load_test`, and
+  `persistence_validation_passed=true`. It identifies model `v0`, digest
+  `865ddd18f6debd44f24a79fc71739f2a`, load-generator source Git SHA
+  `aa681b2ecdf3ac09b58c97556d5fa44dabb55748`, and first prediction ID
+  `bf1835cd-ecd7-41c2-9a9a-3e0b059dd6f3`. The local audit SHA-256 is
+  `4369f05df2eb816440a5bf18de9800ad388038fdfa0b0706a24e1d195b4433fd`; its success-sentinel
+  SHA-256 is `1664dbe1ead21b78ded234a7b826e4a3afdbcc06dd12222b2cca1b407d604328`.
+  The ignored files are `artifacts/monitoring-load/2026-08-19-batch-150.json` and
+  `2026-08-19-batch-150.success`.
+- [x] The live Monitor for UTC August 14–19 with demo data excluded reported 461 requests, 461
+  successes (`100%`), zero errors, 34 cache hits (`7.4%`), and `28.353 ms` p95 latency. Source
+  counts were 305 `synthetic_load_test`, 155 `legacy_unattributed`, and one `traveler_ui`.
+- [x] A fresh Streamlit session filtered to `traffic_source=synthetic_load_test` returned 305
+  requests, correctly reducing the monitored population from 461. The 305 synthetic events are
+  five provenance-canary events plus the August 15 and August 19 batches of 150; they are not all
+  scheduled-batch events and are not organic traveler traffic.
+- [x] The August 16 and 17 scheduled attempts timed out before generation. Their availability
+  failures remain documented; no successful batch is claimed for either date.
 
 ## Testing and coverage
 
@@ -118,8 +135,9 @@ the README, this checklist, and the v1/v2/v3 result reports describe the final p
   endpoint after the lab session.
 - The original captured monitoring views contain one organic end-to-end example; those drift and
   feedback values prove system wiring, not statistical production performance.
-- The August 15 batch is explicitly synthetic load, not organic traveler behavior, and contains no
-  fabricated feedback.
+- The August 15 and August 19 batches are explicitly synthetic load, not organic traveler behavior,
+  and contain no fabricated feedback. The five provenance-canary events explain why the filtered
+  synthetic total is 305 rather than 300.
 - V1, v2, and v3 all stopped at November threshold eligibility. V3's additional history,
   seasonality, weighting, calibration, and ensembles still could not produce a simultaneous
   `P >= .30 / R >= .60 / PPR <= .50` operating point, so precision/recall generalization remains an
